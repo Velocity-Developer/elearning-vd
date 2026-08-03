@@ -1,0 +1,44 @@
+{
+    "name": "velocitydeveloper/elearning-vd",
+    "description": "Plugin elearning untuk sekolah SD, SMP, dan SMA.",
+    "type": "wordpress-plugin",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "ElearningVD\\": "src/"
+        },
+        "files": [
+            "inc/elvd-activate.php",
+            "inc/elvd-deactivate.php",
+            "inc/elvd-load-page-template.php",
+            "inc/elvd-register-frontend-assets.php",
+            "inc/elvd-register-page-template.php",
+            "inc/elvd-register-roles.php",
+            "inc/db/elvd-create-tables.php",
+            "inc/db/elvd-db-formats.php",
+            "inc/db/elvd-table-name.php",
+            "inc/post-provider/elvd-can-manage-meta.php",
+            "inc/post-provider/elvd-register-post-meta.php",
+            "inc/post-provider/elvd-register-post-types.php",
+            "inc/post-provider/elvd-sanitize-quiz-type.php",
+            "inc/restapi/elvd-can-manage-rest.php",
+            "inc/restapi/elvd-can-read-rest.php",
+            "inc/restapi/elvd-get-resource-from-request.php",
+            "inc/restapi/elvd-register-rest-routes.php",
+            "inc/restapi/elvd-rest-create-item.php",
+            "inc/restapi/elvd-rest-delete-item.php",
+            "inc/restapi/elvd-rest-get-item.php",
+            "inc/restapi/elvd-rest-list-items.php",
+            "inc/restapi/elvd-rest-resources.php",
+            "inc/restapi/elvd-rest-update-item.php",
+            "inc/restapi/elvd-sanitize-date.php",
+            "inc/restapi/elvd-sanitize-datetime.php",
+            "inc/restapi/elvd-sanitize-payload.php",
+            "inc/restapi/elvd-sanitize-time.php",
+            "inc/shortcodes/elvd-app-shortcode.php"
+        ]
+    },
+    "require": {
+        "php": ">=7.4"
+    }
+}
