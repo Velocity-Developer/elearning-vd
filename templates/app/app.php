@@ -118,6 +118,7 @@ wp_localize_script(
 
 <div
     class="elvd-app"
+    @elvd-items-updated.window="items = Array.isArray($event.detail.items) ? $event.detail.items : []"
     x-data='{
         tabs: ["dashboard", "tahun-ajaran", "kelas", "mata-pelajaran", "jadwal-pelajaran", "guru", "siswa", "quiz"],
         labels: {
@@ -335,7 +336,7 @@ wp_localize_script(
             }
             ?>
 
-            <div class="elvd-table-panel" x-show="active !== 'dashboard'">
+            <div class="elvd-table-panel" x-show="active !== 'dashboard' && active !== 'tahun-ajaran'">
                 <div class="table-responsive">
                     <table class="table align-middle mb-0 elvd-table">
                         <thead>
