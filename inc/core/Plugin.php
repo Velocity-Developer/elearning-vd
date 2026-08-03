@@ -2,9 +2,6 @@
 
 namespace ElearningVD;
 
-use ElearningVD\Profiles\Guru;
-use ElearningVD\Profiles\Siswa;
-
 defined('ABSPATH') || exit;
 
 final class Plugin

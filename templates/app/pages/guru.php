@@ -2,4 +2,4 @@
 
 defined('ABSPATH') || exit;
 
-echo ElearningVD\Profiles\Guru::render_current_user_form(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+echo ElearningVD\Guru::render_current_user_form(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

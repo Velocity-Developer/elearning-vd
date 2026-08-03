@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ElearningVD\Profiles;
+namespace ElearningVD;
 
 use WP_Error;
 use WP_User;

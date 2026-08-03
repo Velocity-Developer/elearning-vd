@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ElearningVD\Profiles;
+namespace ElearningVD;
 
 defined('ABSPATH') || exit;
 
