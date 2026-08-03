@@ -19,7 +19,13 @@ define('ELVD_PLUGIN_FILE', __FILE__);
 define('ELVD_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ELVD_REST_NAMESPACE', 'elvd/v1');
 
-foreach ([ELVD_PLUGIN_DIR . 'inc/*.php', ELVD_PLUGIN_DIR . 'inc/shortcodes/*.php'] as $elvd_pattern) {
+foreach (
+    [
+        ELVD_PLUGIN_DIR . 'inc/*.php',
+        ELVD_PLUGIN_DIR . 'inc/restapi/*.php',
+        ELVD_PLUGIN_DIR . 'inc/shortcodes/*.php',
+    ] as $elvd_pattern
+) {
     foreach (glob($elvd_pattern) as $elvd_file) {
         require_once $elvd_file;
     }
