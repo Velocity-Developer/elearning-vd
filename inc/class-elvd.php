@@ -16,7 +16,8 @@ final class ELVD
     public const OPTION_SCHOOL_NAME = 'elvd_school_name';
     public const OPTION_SCHOOL_LOGO_ID = 'elvd_school_logo_id';
     public const OPTION_ELEARNING_PAGE_ID = 'elvd_elearning_page_id';
-    public const ADMIN_MENU_SLUG = 'elvd-settings';
+    public const ADMIN_MENU_SLUG = 'elvd-dashboard';
+    public const SETTINGS_MENU_SLUG = 'elvd-settings';
 
     public static function plugin_file(): string
     {

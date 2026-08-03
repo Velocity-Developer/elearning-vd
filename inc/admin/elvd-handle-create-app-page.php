@@ -16,7 +16,7 @@ function elvd_handle_create_app_page(): void
     wp_safe_redirect(
         add_query_arg(
             [
-                'page' => ELVD::ADMIN_MENU_SLUG,
+                'page' => ELVD::SETTINGS_MENU_SLUG,
                 'elvd_app_page' => $status,
             ],
             admin_url('admin.php')

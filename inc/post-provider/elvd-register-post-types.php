@@ -40,6 +40,7 @@ function elvd_register_post_types(): void
                     'not_found' => __('Tidak ada data ditemukan.', 'elearning-vd'),
                 ],
                 'public' => true,
+                'show_in_menu' => ELVD::ADMIN_MENU_SLUG,
                 'show_in_rest' => true,
                 'menu_icon' => $config['menu_icon'],
                 'supports' => ['title', 'editor', 'excerpt', 'author', 'thumbnail', 'custom-fields'],

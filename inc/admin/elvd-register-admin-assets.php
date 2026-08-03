@@ -4,7 +4,11 @@ defined('ABSPATH') || exit;
 
 function elvd_register_admin_assets(string $hook_suffix): void
 {
-    if ('toplevel_page_' . ELVD::ADMIN_MENU_SLUG !== $hook_suffix) {
+    unset($hook_suffix);
+
+    $page = isset($_GET['page']) ? sanitize_key((string) $_GET['page']) : '';
+
+    if (ELVD::SETTINGS_MENU_SLUG !== $page) {
         return;
     }
 
