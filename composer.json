@@ -8,6 +8,7 @@
             "ElearningVD\\": "src/"
         },
         "files": [
+            "inc/class-elvd.php",
             "inc/elvd-activate.php",
             "inc/elvd-deactivate.php",
             "inc/elvd-load-page-template.php",

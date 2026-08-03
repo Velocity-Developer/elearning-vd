@@ -12,14 +12,15 @@
  * Requires PHP: 7.4
  */
 
+define('ELVD_PLUGIN_FILE', __FILE__);
+
 defined('ABSPATH') || exit;
 
-define('ELVD_VERSION', '1.0.0');
-define('ELVD_PLUGIN_FILE', __FILE__);
-define('ELVD_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('ELVD_REST_NAMESPACE', 'elvd/v1');
+require_once __DIR__ . '/vendor/autoload.php';
 
-require_once ELVD_PLUGIN_DIR . 'vendor/autoload.php';
+define('ELVD_VERSION', ELVD::VERSION);
+define('ELVD_PLUGIN_DIR', ELVD::plugin_dir());
+define('ELVD_REST_NAMESPACE', ELVD::REST_NAMESPACE);
 
 register_activation_hook(__FILE__, [ElearningVD\Plugin::class, 'activate']);
 register_deactivation_hook(__FILE__, [ElearningVD\Plugin::class, 'deactivate']);

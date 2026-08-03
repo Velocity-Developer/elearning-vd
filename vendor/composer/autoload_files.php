@@ -6,6 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    '764982ffaf23954f1d989912f80b74d5' => $baseDir . '/inc/class-elvd.php',
     '6b8b053e256311754486ebdd9eae19f9' => $baseDir . '/inc/elvd-activate.php',
     'f408bd971d8492453d814eb7dc0a3b9e' => $baseDir . '/inc/elvd-deactivate.php',
     '8a81f2d9418078d10e1d624beaa30291' => $baseDir . '/inc/elvd-load-page-template.php',
