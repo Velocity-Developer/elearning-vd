@@ -2,12 +2,18 @@
 
 namespace ElearningVD;
 
+use ElearningVD\Profiles\Guru;
+use ElearningVD\Profiles\Siswa;
+
 defined('ABSPATH') || exit;
 
 final class Plugin
 {
     public static function boot(): void
     {
+        class_exists(Siswa::class);
+        class_exists(Guru::class);
+
         add_action('init', 'elvd_register_roles');
         add_action('init', 'elvd_register_post_types');
         add_action('init', 'elvd_register_post_meta');
