@@ -32,6 +32,14 @@ function elvd_register_frontend_assets(): void
         true
     );
 
+    wp_register_script(
+        'elvd-chartjs',
+        'https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js',
+        [],
+        '4.4.8',
+        true
+    );
+
     wp_register_style(
         'elvd-main',
         ELVD_PLUGIN_URL . '/assets/main.css',
@@ -43,7 +51,7 @@ function elvd_register_frontend_assets(): void
     wp_register_script(
         'elvd-main',
         ELVD_PLUGIN_URL . '/assets/main.js',
-        $is_velocity_theme ? ['elvd-alpine'] : ['elvd-bootstrap-bundle', 'elvd-alpine'],
+        $is_velocity_theme ? ['elvd-chartjs', 'elvd-alpine'] : ['elvd-bootstrap-bundle', 'elvd-chartjs', 'elvd-alpine'],
         ELVD_PLUGIN_VERSION,
         true
     );

@@ -13,7 +13,6 @@
     --elvd-hairline: #e8e8e8;
     --elvd-shadow-soft: 0 2px 8px rgba(26, 26, 26, 0.08);
     color: var(--elvd-ink);
-    font-family: "Forma DJR Micro", Manrope, Inter, Arial, sans-serif;
     min-height: 80vh;
     background: var(--elvd-canvas);
 }
@@ -387,6 +386,24 @@
     gap: 16px;
 }
 
+.elvd-chart-wrap {
+    height: 340px;
+    margin-bottom: 20px;
+    min-height: 260px;
+    position: relative;
+    width: 100%;
+}
+
+.elvd-chart-wrap canvas {
+    display: block;
+    max-height: 100%;
+    width: 100% !important;
+}
+
+.elvd-panel.has-chart .elvd-bars {
+    display: none;
+}
+
 .elvd-bar-label {
     align-items: center;
     display: flex;
@@ -543,7 +560,6 @@
 
 .elvd-mobile-sheet {
     color: var(--elvd-ink);
-    font-family: "Forma DJR Micro", Manrope, Inter, Arial, sans-serif;
 }
 
 .elvd-mobile-sheet .offcanvas-header {

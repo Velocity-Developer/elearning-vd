@@ -100,6 +100,15 @@ $dashboard_metrics = [
 ];
 
 $max_dashboard_value = max(array_column($dashboard_metrics, 'value'));
+
+wp_localize_script(
+    'elvd-main',
+    'elvdDashboardChartData',
+    [
+        'labels' => array_map(static fn (array $metric): string => (string) $metric['label'], $dashboard_metrics),
+        'values' => array_map(static fn (array $metric): int => (int) $metric['value'], $dashboard_metrics),
+    ]
+);
 ?>
 
 <div
@@ -253,6 +262,9 @@ $max_dashboard_value = max(array_column($dashboard_metrics, 'value'));
                                 <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Statistik', 'elearning-vd'); ?></p>
                                 <h2><?php echo esc_html__('Ringkasan Data', 'elearning-vd'); ?></h2>
                             </div>
+                        </div>
+                        <div class="elvd-chart-wrap">
+                            <canvas id="elvdDashboardChart" aria-label="<?php echo esc_attr__('Chart ringkasan data elearning', 'elearning-vd'); ?>" role="img"></canvas>
                         </div>
                         <div class="elvd-bars">
                             <?php foreach ($dashboard_metrics as $metric) {

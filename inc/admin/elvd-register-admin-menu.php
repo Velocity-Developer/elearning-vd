@@ -41,6 +41,33 @@ function elvd_render_dashboard_page(): void
 
     $summary = elvd_dashboard_summary();
     $max_value = max(1, ...array_column($summary, 'value'));
+
+    wp_enqueue_script(
+        'elvd-chartjs',
+        'https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js',
+        [],
+        '4.4.8',
+        true
+    );
+
+    wp_register_script(
+        'elvd-admin-dashboard',
+        '',
+        ['elvd-chartjs'],
+        ELVD_PLUGIN_VERSION,
+        true
+    );
+
+    wp_enqueue_script('elvd-admin-dashboard');
+    wp_localize_script(
+        'elvd-admin-dashboard',
+        'elvdAdminDashboardChartData',
+        [
+            'labels' => array_map(static fn (array $item): string => (string) $item['label'], $summary),
+            'values' => array_map(static fn (array $item): int => (int) $item['value'], $summary),
+        ]
+    );
+    wp_add_inline_script('elvd-admin-dashboard', elvd_admin_dashboard_chart_script());
     ?>
     <div class="wrap">
         <h1><?php esc_html_e('Elearning Dashboard', ELVD::TEXT_DOMAIN); ?></h1>
@@ -57,7 +84,7 @@ function elvd_render_dashboard_page(): void
             .elvd-dashboard-chart {
                 background: #fff;
                 border: 1px solid #dcdcde;
-                border-radius: 4px;
+                border-radius: 8px;
                 padding: 16px;
             }
 
@@ -71,6 +98,23 @@ function elvd_render_dashboard_page(): void
             .elvd-dashboard-card span,
             .elvd-chart-label {
                 color: #50575e;
+            }
+
+            .elvd-admin-chart-wrap {
+                height: 360px;
+                margin-top: 16px;
+                position: relative;
+                width: 100%;
+            }
+
+            .elvd-admin-chart-wrap canvas {
+                display: block;
+                max-height: 100%;
+                width: 100% !important;
+            }
+
+            .elvd-dashboard-chart.has-chart .elvd-chart-fallback {
+                display: none;
             }
 
             .elvd-chart-row {
@@ -107,19 +151,121 @@ function elvd_render_dashboard_page(): void
         <div class="elvd-dashboard-chart">
             <h2><?php esc_html_e('Ringkasan Data Elearning', ELVD::TEXT_DOMAIN); ?></h2>
 
-            <?php foreach ($summary as $item) : ?>
-                <?php $width = ((int) $item['value'] / $max_value) * 100; ?>
-                <div class="elvd-chart-row">
-                    <div class="elvd-chart-label"><?php echo esc_html($item['label']); ?></div>
-                    <div class="elvd-chart-track" aria-hidden="true">
-                        <div class="elvd-chart-bar" style="width: <?php echo esc_attr((string) $width); ?>%;"></div>
+            <div class="elvd-admin-chart-wrap">
+                <canvas id="elvdAdminDashboardChart" aria-label="<?php echo esc_attr__('Chart ringkasan data elearning', ELVD::TEXT_DOMAIN); ?>" role="img"></canvas>
+            </div>
+
+            <div class="elvd-chart-fallback">
+                <?php foreach ($summary as $item) : ?>
+                    <?php $width = ((int) $item['value'] / $max_value) * 100; ?>
+                    <div class="elvd-chart-row">
+                        <div class="elvd-chart-label"><?php echo esc_html($item['label']); ?></div>
+                        <div class="elvd-chart-track" aria-hidden="true">
+                            <div class="elvd-chart-bar" style="width: <?php echo esc_attr((string) $width); ?>%;"></div>
+                        </div>
+                        <div><?php echo esc_html(number_format_i18n((int) $item['value'])); ?></div>
                     </div>
-                    <div><?php echo esc_html(number_format_i18n((int) $item['value'])); ?></div>
-                </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            </div>
         </div>
     </div>
     <?php
+}
+
+function elvd_admin_dashboard_chart_script(): string
+{
+    return <<<'JS'
+(function () {
+    function createAdminDashboardChart() {
+        var canvas = document.getElementById('elvdAdminDashboardChart');
+        var chartData = window.elvdAdminDashboardChartData;
+
+        if (!canvas || !window.Chart || !chartData || canvas.dataset.elvdChartReady === 'true') {
+            return;
+        }
+
+        var labels = Array.isArray(chartData.labels) ? chartData.labels : [];
+        var values = Array.isArray(chartData.values)
+            ? chartData.values.map(function (value) { return Number(value) || 0; })
+            : [];
+
+        canvas.dataset.elvdChartReady = 'true';
+
+        if (canvas.closest) {
+            var panel = canvas.closest('.elvd-dashboard-chart');
+
+            if (panel) {
+                panel.classList.add('has-chart');
+            }
+        }
+
+        new window.Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: '#024ad8',
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    barThickness: 28,
+                    maxBarThickness: 36
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1a1a1a',
+                        bodyColor: '#ffffff',
+                        displayColors: false,
+                        padding: 12,
+                        titleColor: '#ffffff'
+                    }
+                },
+                scales: {
+                    x: {
+                        border: {
+                            display: false
+                        },
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#3d3d3d',
+                            maxRotation: 0,
+                            minRotation: 0
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        border: {
+                            display: false
+                        },
+                        grid: {
+                            color: '#e8e8e8'
+                        },
+                        ticks: {
+                            color: '#636363',
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', createAdminDashboardChart);
+        return;
+    }
+
+    createAdminDashboardChart();
+})();
+JS;
 }
 
 /**
