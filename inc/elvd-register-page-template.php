@@ -12,7 +12,7 @@ function elvd_register_page_template(array $post_templates, WP_Theme $theme, ?WP
         return $post_templates;
     }
 
-    $post_templates['templates/page-elearning.php'] = __('Elearning VD', 'elearning-vd');
+    $post_templates[ELVD::PAGE_TEMPLATE] = __('Elearning VD', ELVD::TEXT_DOMAIN);
 
     return $post_templates;
 }

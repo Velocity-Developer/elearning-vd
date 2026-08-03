@@ -9,6 +9,7 @@
         },
         "files": [
             "inc/class-elvd.php",
+            "inc/admin/elvd-handle-create-app-page.php",
             "inc/admin/elvd-register-admin-assets.php",
             "inc/admin/elvd-register-admin-menu.php",
             "inc/admin/elvd-register-settings.php",
@@ -19,6 +20,7 @@
             "inc/elvd-register-frontend-assets.php",
             "inc/elvd-register-page-template.php",
             "inc/elvd-register-roles.php",
+            "inc/services/elvd-create-default-app-page.php",
             "inc/db/elvd-create-tables.php",
             "inc/db/elvd-db-formats.php",
             "inc/db/elvd-table-name.php",

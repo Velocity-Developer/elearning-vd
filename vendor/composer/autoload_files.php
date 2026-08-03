@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     '764982ffaf23954f1d989912f80b74d5' => $baseDir . '/inc/class-elvd.php',
+    '9c2f803c34e454e242684cf18a54cb5f' => $baseDir . '/inc/admin/elvd-handle-create-app-page.php',
     'e267df26cfe7ff037b46b9cf41a1b77c' => $baseDir . '/inc/admin/elvd-register-admin-assets.php',
     'ed7a95ebbc2692c156fd90b5645a2781' => $baseDir . '/inc/admin/elvd-register-admin-menu.php',
     '8487d9feb97c61221e06570623fe60f3' => $baseDir . '/inc/admin/elvd-register-settings.php',
@@ -17,6 +18,7 @@ return array(
     'c565244f9ca1997ad672aaad5904c133' => $baseDir . '/inc/elvd-register-frontend-assets.php',
     'eff6425ffca0b6275e99c253f24d743f' => $baseDir . '/inc/elvd-register-page-template.php',
     '35ffe43c1354b87dc25197b8826c8a1f' => $baseDir . '/inc/elvd-register-roles.php',
+    '4a3d0285f4ec5bb36e8ecf51dcb5707c' => $baseDir . '/inc/services/elvd-create-default-app-page.php',
     '04f242ccf0f7fb2c0a828d13e57f97fa' => $baseDir . '/inc/db/elvd-create-tables.php',
     '0062017a8f1647d13330c1a09244038b' => $baseDir . '/inc/db/elvd-db-formats.php',
     '02e2c7a7073076e478146377bb801bca' => $baseDir . '/inc/db/elvd-table-name.php',

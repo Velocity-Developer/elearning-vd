@@ -16,6 +16,16 @@ function elvd_render_settings_page(): void
     <div class="wrap">
         <h1><?php esc_html_e('Pengaturan Elearning', ELVD::TEXT_DOMAIN); ?></h1>
 
+        <?php if (isset($_GET['elvd_app_page']) && 'created' === sanitize_key((string) $_GET['elvd_app_page'])) : ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php esc_html_e('Halaman App Elearning berhasil dibuat atau diperbarui.', ELVD::TEXT_DOMAIN); ?></p>
+            </div>
+        <?php elseif (isset($_GET['elvd_app_page']) && 'failed' === sanitize_key((string) $_GET['elvd_app_page'])) : ?>
+            <div class="notice notice-error is-dismissible">
+                <p><?php esc_html_e('Halaman App Elearning gagal dibuat.', ELVD::TEXT_DOMAIN); ?></p>
+            </div>
+        <?php endif; ?>
+
         <form method="post" action="options.php">
             <?php settings_fields(ELVD::OPTION_GROUP); ?>
 
@@ -81,6 +91,14 @@ function elvd_render_settings_page(): void
                                 ]
                             );
                             ?>
+                            <p>
+                                <a
+                                    href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=elvd_create_app_page'), 'elvd_create_app_page')); ?>"
+                                    class="button"
+                                >
+                                    <?php esc_html_e('Buat Halaman App', ELVD::TEXT_DOMAIN); ?>
+                                </a>
+                            </p>
                         </td>
                     </tr>
                 </tbody>

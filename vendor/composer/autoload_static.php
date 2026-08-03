@@ -8,6 +8,7 @@ class ComposerStaticInit36e9431b74c5a9fa498458d8d4127fef
 {
     public static $files = array (
         '764982ffaf23954f1d989912f80b74d5' => __DIR__ . '/../..' . '/inc/class-elvd.php',
+        '9c2f803c34e454e242684cf18a54cb5f' => __DIR__ . '/../..' . '/inc/admin/elvd-handle-create-app-page.php',
         'e267df26cfe7ff037b46b9cf41a1b77c' => __DIR__ . '/../..' . '/inc/admin/elvd-register-admin-assets.php',
         'ed7a95ebbc2692c156fd90b5645a2781' => __DIR__ . '/../..' . '/inc/admin/elvd-register-admin-menu.php',
         '8487d9feb97c61221e06570623fe60f3' => __DIR__ . '/../..' . '/inc/admin/elvd-register-settings.php',
@@ -18,6 +19,7 @@ class ComposerStaticInit36e9431b74c5a9fa498458d8d4127fef
         'c565244f9ca1997ad672aaad5904c133' => __DIR__ . '/../..' . '/inc/elvd-register-frontend-assets.php',
         'eff6425ffca0b6275e99c253f24d743f' => __DIR__ . '/../..' . '/inc/elvd-register-page-template.php',
         '35ffe43c1354b87dc25197b8826c8a1f' => __DIR__ . '/../..' . '/inc/elvd-register-roles.php',
+        '4a3d0285f4ec5bb36e8ecf51dcb5707c' => __DIR__ . '/../..' . '/inc/services/elvd-create-default-app-page.php',
         '04f242ccf0f7fb2c0a828d13e57f97fa' => __DIR__ . '/../..' . '/inc/db/elvd-create-tables.php',
         '0062017a8f1647d13330c1a09244038b' => __DIR__ . '/../..' . '/inc/db/elvd-db-formats.php',
         '02e2c7a7073076e478146377bb801bca' => __DIR__ . '/../..' . '/inc/db/elvd-table-name.php',

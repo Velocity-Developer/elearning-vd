@@ -18,7 +18,6 @@ get_header();
         <div id="post-<?php the_ID(); ?>" <?php post_class('elvd-page-template'); ?>>
 
             <?php
-            the_content();
             echo do_shortcode('[elvd_app]');
             ?>
 

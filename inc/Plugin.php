@@ -16,6 +16,7 @@ final class Plugin
         add_action('admin_init', 'elvd_register_settings');
         add_action('admin_menu', 'elvd_register_admin_menu');
         add_action('admin_enqueue_scripts', 'elvd_register_admin_assets');
+        add_action('admin_post_elvd_create_app_page', 'elvd_handle_create_app_page');
 
         add_filter('theme_page_templates', 'elvd_register_page_template', 10, 4);
         add_filter('template_include', 'elvd_load_page_template');
