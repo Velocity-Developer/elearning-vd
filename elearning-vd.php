@@ -22,6 +22,7 @@ define('ELVD_REST_NAMESPACE', 'elvd/v1');
 foreach (
     [
         ELVD_PLUGIN_DIR . 'inc/*.php',
+        ELVD_PLUGIN_DIR . 'inc/post-provider/*.php',
         ELVD_PLUGIN_DIR . 'inc/restapi/*.php',
         ELVD_PLUGIN_DIR . 'inc/shortcodes/*.php',
     ] as $elvd_pattern
