@@ -13,6 +13,8 @@
  */
 
 define('ELVD_PLUGIN_FILE', __FILE__);
+define('ELVD_PLUGIN_URL', plugins_url('', __FILE__));
+define('ELVD_PLUGIN_VERSION', '1.0.0');
 
 defined('ABSPATH') || exit;
 

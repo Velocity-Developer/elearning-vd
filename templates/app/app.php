@@ -11,8 +11,8 @@ if (! is_user_logged_in()) {
     return '<div class="alert alert-warning">' . esc_html__('Silakan login untuk mengakses elearning.', 'elearning-vd') . '</div>';
 }
 
-wp_enqueue_style('elvd-bootstrap');
-wp_enqueue_script('elvd-alpine');
+wp_enqueue_style('elvd-main');
+wp_enqueue_script('elvd-main');
 
 $config = [
     'restUrl' => esc_url_raw(rest_url(ELVD_REST_NAMESPACE)),
@@ -148,8 +148,30 @@ $max_dashboard_value = max(array_column($dashboard_metrics, 'value'));
             window.location.href = `${this.appRoute}/${tab}/`;
         }
     }'>
+    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="elvdMobileMenu" aria-labelledby="elvdMobileMenuLabel">
+        <div class="offcanvas-header border-bottom">
+            <div>
+                <h2 class="h5 mb-1" id="elvdMobileMenuLabel"><?php echo esc_html__('Elearning VD', 'elearning-vd'); ?></h2>
+                <p class="small text-muted mb-0"><?php echo esc_html__('Dashboard sekolah', 'elearning-vd'); ?></p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="<?php echo esc_attr__('Tutup menu', 'elearning-vd'); ?>"></button>
+        </div>
+        <div class="offcanvas-body p-2">
+            <nav class="nav nav-pills flex-column gap-1" aria-label="<?php echo esc_attr__('Menu Elearning Mobile', 'elearning-vd'); ?>">
+                <template x-for="tab in tabs" :key="tab">
+                    <button
+                        type="button"
+                        class="nav-link text-start"
+                        :class="active === tab ? 'active' : 'text-dark'"
+                        @click="select(tab)"
+                        x-text="labels[tab]"></button>
+                </template>
+            </nav>
+        </div>
+    </div>
+
     <div class="row g-4">
-        <aside class="col-12 col-lg-3 col-xl-2">
+        <aside class="d-none d-lg-block col-lg-3 col-xl-2">
             <div class="border rounded bg-white shadow-sm">
                 <div class="border-bottom p-3">
                     <h2 class="h5 mb-1"><?php echo esc_html__('Elearning VD', 'elearning-vd'); ?></h2>
@@ -170,8 +192,19 @@ $max_dashboard_value = max(array_column($dashboard_metrics, 'value'));
 
         <section class="col-12 col-lg-9 col-xl-10">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-                <div>
-                    <h1 class="h3 mb-0" x-text="labels[active] || defaultLabel"></h1>
+                <div class="d-flex align-items-center gap-3">
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary d-lg-none"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#elvdMobileMenu"
+                        aria-controls="elvdMobileMenu"
+                        aria-label="<?php echo esc_attr__('Buka menu', 'elearning-vd'); ?>">
+                        <?php echo esc_html__('Menu', 'elearning-vd'); ?>
+                    </button>
+                    <div>
+                        <h1 class="h3 mb-0" x-text="labels[active] || defaultLabel"></h1>
+                    </div>
                 </div>
                 <div class="badge text-bg-light border px-3 py-2" x-show="active !== 'dashboard' && !loading">
                     <span x-text="items.length"></span>

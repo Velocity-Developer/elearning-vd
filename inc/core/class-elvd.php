@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 
 final class ELVD
 {
-    public const VERSION = '1.0.0';
+    public const VERSION = ELVD_PLUGIN_VERSION;
     public const REST_NAMESPACE = 'elvd/v1';
     public const TEXT_DOMAIN = 'elearning-vd';
     public const PAGE_TEMPLATE = 'templates/page-elearning.php';
