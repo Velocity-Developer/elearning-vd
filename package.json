@@ -1,0 +1,27 @@
+{
+  "name": "elearning-vd",
+  "version": "1.0.0",
+  "description": "Plugin WordPress Elearning",
+  "keywords": [
+    "wordpress",
+    "elearning",
+    "plugin",
+    "wordpress"
+  ],
+  "homepage": "https://github.com/Velocity-Developer/elearning-vd#readme",
+  "bugs": {
+    "url": "https://github.com/Velocity-Developer/elearning-vd/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Velocity-Developer/elearning-vd.git"
+  },
+  "license": "ISC",
+  "author": "Team Dev Velocity Developer",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "node src/build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
