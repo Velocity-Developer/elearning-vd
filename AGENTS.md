@@ -21,6 +21,7 @@ Plugin elearning-vd adalah plugin elearning untuk sekolah sd, smp, sma. dengan f
 # Aturan
 - Plugin ini harus diinstal di Wordpress.
 - Menggunakan Bootstrap 5 untuk desain.
+- Jika style class bootstrap 5 tidak ditersedia, maka buat class sendiri di assets/main.css, beri prefix elvd-.
 - Menggunakan Alpine.js untuk interaksi.
 - Menggunakan WordPress REST API untuk komunikasi.
 - custom table gunakan prefix elvd_.
