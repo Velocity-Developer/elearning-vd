@@ -236,7 +236,6 @@ wp_localize_script(
                         <span aria-hidden="true"></span>
                     </button>
                     <div class="min-w-0">
-                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Aplikasi sekolah', 'elearning-vd'); ?></p>
                         <h1 class="elvd-page-title mb-0" x-text="labels[active] || defaultLabel"></h1>
                     </div>
                 </div>
@@ -337,12 +336,6 @@ wp_localize_script(
             ?>
 
             <div class="elvd-table-panel" x-show="active !== 'dashboard'">
-                <div class="elvd-panel-heading">
-                    <div>
-                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Daftar data', 'elearning-vd'); ?></p>
-                        <h2 x-text="labels[active] || defaultLabel"></h2>
-                    </div>
-                </div>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0 elvd-table">
                         <thead>
