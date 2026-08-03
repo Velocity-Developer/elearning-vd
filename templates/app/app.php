@@ -103,7 +103,7 @@ $max_dashboard_value = max(array_column($dashboard_metrics, 'value'));
 ?>
 
 <div
-    class="elvd-app container-fluid my-4 px-3 px-lg-4"
+    class="elvd-app"
     x-data='{
         tabs: ["dashboard", "tahun-ajaran", "kelas", "mata-pelajaran", "jadwal-pelajaran", "guru", "siswa", "quiz"],
         labels: {
@@ -148,21 +148,22 @@ $max_dashboard_value = max(array_column($dashboard_metrics, 'value'));
             window.location.href = `${this.appRoute}/${tab}/`;
         }
     }'>
-    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="elvdMobileMenu" aria-labelledby="elvdMobileMenuLabel">
-        <div class="offcanvas-header border-bottom">
+
+    <div class="offcanvas offcanvas-start d-lg-none elvd-mobile-sheet" tabindex="-1" id="elvdMobileMenu" aria-labelledby="elvdMobileMenuLabel">
+        <div class="offcanvas-header">
             <div>
-                <h2 class="h5 mb-1" id="elvdMobileMenuLabel"><?php echo esc_html__('Elearning VD', 'elearning-vd'); ?></h2>
-                <p class="small text-muted mb-0"><?php echo esc_html__('Dashboard sekolah', 'elearning-vd'); ?></p>
+                <h2 class="elvd-brand-title mb-1" id="elvdMobileMenuLabel"><?php echo esc_html__('Elearning VD', 'elearning-vd'); ?></h2>
+                <p class="elvd-caption mb-0"><?php echo esc_html__('Dashboard sekolah', 'elearning-vd'); ?></p>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="<?php echo esc_attr__('Tutup menu', 'elearning-vd'); ?>"></button>
         </div>
-        <div class="offcanvas-body p-2">
-            <nav class="nav nav-pills flex-column gap-1" aria-label="<?php echo esc_attr__('Menu Elearning Mobile', 'elearning-vd'); ?>">
+        <div class="offcanvas-body">
+            <nav class="elvd-nav" aria-label="<?php echo esc_attr__('Menu Elearning Mobile', 'elearning-vd'); ?>">
                 <template x-for="tab in tabs" :key="tab">
                     <button
                         type="button"
-                        class="nav-link text-start"
-                        :class="active === tab ? 'active' : 'text-dark'"
+                        class="elvd-nav-link"
+                        :class="active === tab ? 'is-active' : ''"
                         @click="select(tab)"
                         x-text="labels[tab]"></button>
                 </template>
@@ -170,101 +171,125 @@ $max_dashboard_value = max(array_column($dashboard_metrics, 'value'));
         </div>
     </div>
 
-    <div class="row g-4">
-        <aside class="d-none d-lg-block col-lg-3 col-xl-2">
-            <div class="border rounded bg-white shadow-sm">
-                <div class="border-bottom p-3">
-                    <h2 class="h5 mb-1"><?php echo esc_html__('Elearning VD', 'elearning-vd'); ?></h2>
-                    <p class="small text-muted mb-0"><?php echo esc_html__('Dashboard sekolah', 'elearning-vd'); ?></p>
+    <div class="elvd-shell">
+        <aside class="elvd-sidebar d-none d-lg-flex">
+            <div class="elvd-sidebar-inner">
+                <div class="elvd-brand">
+                    <span class="elvd-mark" aria-hidden="true">VD</span>
+                    <div>
+                        <h2 class="elvd-brand-title mb-1"><?php echo esc_html__('Elearning VD', 'elearning-vd'); ?></h2>
+                        <p class="elvd-caption mb-0"><?php echo esc_html__('Dashboard sekolah', 'elearning-vd'); ?></p>
+                    </div>
                 </div>
-                <nav class="nav nav-pills flex-column gap-1 p-2" aria-label="<?php echo esc_attr__('Menu Elearning', 'elearning-vd'); ?>">
+                <nav class="elvd-nav" aria-label="<?php echo esc_attr__('Menu Elearning', 'elearning-vd'); ?>">
                     <template x-for="tab in tabs" :key="tab">
                         <button
                             type="button"
-                            class="nav-link text-start"
-                            :class="active === tab ? 'active' : 'text-dark'"
+                            class="elvd-nav-link"
+                            :class="active === tab ? 'is-active' : ''"
                             @click="select(tab)"
                             x-text="labels[tab]"></button>
                     </template>
                 </nav>
+                <div class="elvd-sidebar-note">
+                    <span><?php echo esc_html__('Status', 'elearning-vd'); ?></span>
+                    <strong><?php echo esc_html__('Aktif', 'elearning-vd'); ?></strong>
+                </div>
             </div>
         </aside>
 
-        <section class="col-12 col-lg-9 col-xl-10">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-                <div class="d-flex align-items-center gap-3">
+        <section class="elvd-main">
+            <div class="elvd-topbar">
+                <div class="d-flex align-items-center gap-3 min-w-0">
                     <button
                         type="button"
-                        class="btn btn-outline-primary d-lg-none"
+                        class="elvd-icon-button d-lg-none"
                         data-bs-toggle="offcanvas"
                         data-bs-target="#elvdMobileMenu"
                         aria-controls="elvdMobileMenu"
                         aria-label="<?php echo esc_attr__('Buka menu', 'elearning-vd'); ?>">
-                        <?php echo esc_html__('Menu', 'elearning-vd'); ?>
+                        <span aria-hidden="true"></span>
                     </button>
-                    <div>
-                        <h1 class="h3 mb-0" x-text="labels[active] || defaultLabel"></h1>
+                    <div class="min-w-0">
+                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Aplikasi sekolah', 'elearning-vd'); ?></p>
+                        <h1 class="elvd-page-title mb-0" x-text="labels[active] || defaultLabel"></h1>
                     </div>
                 </div>
-                <div class="badge text-bg-light border px-3 py-2" x-show="active !== 'dashboard' && !loading">
+                <div class="elvd-data-badge" x-show="active !== 'dashboard' && !loading">
                     <span x-text="items.length"></span>
                     <?php echo esc_html__('data', 'elearning-vd'); ?>
                 </div>
             </div>
 
             <div x-show="active === 'dashboard'">
-                <div class="row g-3 mb-4">
+                <div class="elvd-hero">
+                    <div class="elvd-chevron elvd-chevron-left" aria-hidden="true"></div>
+                    <div class="elvd-chevron elvd-chevron-right" aria-hidden="true"></div>
+                    <div class="elvd-hero-copy">
+                        <p class="elvd-eyebrow mb-2"><?php echo esc_html__('Ringkasan akademik', 'elearning-vd'); ?></p>
+                        <h2><?php echo esc_html__('Kelola pembelajaran dari satu ruang kerja.', 'elearning-vd'); ?></h2>
+                        <p><?php echo esc_html__('Pantau siswa, guru, kelas, mata pelajaran, konten, dan quiz dengan ritme visual yang bersih.', 'elearning-vd'); ?></p>
+                    </div>
+                    <div class="elvd-hero-stat">
+                        <span><?php echo esc_html__('Total entitas', 'elearning-vd'); ?></span>
+                        <strong><?php echo esc_html(number_format_i18n(array_sum(array_column($dashboard_metrics, 'value')))); ?></strong>
+                    </div>
+                </div>
+
+                <div class="elvd-metric-grid">
                     <?php foreach (array_slice($dashboard_metrics, 0, 4) as $metric) { ?>
-                        <div class="col-6 col-xl-3">
-                            <div class="border rounded bg-white shadow-sm p-3 h-100">
-                                <div class="d-flex align-items-center justify-content-between gap-2">
-                                    <span class="small text-muted"><?php echo esc_html($metric['label']); ?></span>
-                                    <span class="badge text-bg-<?php echo esc_attr($metric['tone']); ?>">&nbsp;</span>
-                                </div>
-                                <div class="display-6 fw-semibold mt-2"><?php echo esc_html(number_format_i18n($metric['value'])); ?></div>
-                            </div>
+                        <div class="elvd-metric-card">
+                            <span class="elvd-metric-kicker"><?php echo esc_html($metric['label']); ?></span>
+                            <strong><?php echo esc_html(number_format_i18n($metric['value'])); ?></strong>
+                            <span class="elvd-metric-line" aria-hidden="true"></span>
                         </div>
                     <?php } ?>
                 </div>
 
-                <div class="row g-4">
-                    <div class="col-12 col-xl-8">
-                        <div class="border rounded bg-white shadow-sm p-3">
-                            <h2 class="h5 mb-3"><?php echo esc_html__('Ringkasan Data', 'elearning-vd'); ?></h2>
-                            <div class="d-flex flex-column gap-3">
-                                <?php foreach ($dashboard_metrics as $metric) {
-                                    $bar_width = 0 < $max_dashboard_value ? max(6, (int) round(($metric['value'] / $max_dashboard_value) * 100)) : 0;
-                                ?>
-                                    <div>
-                                        <div class="d-flex align-items-center justify-content-between gap-3 mb-1">
-                                            <span class="small fw-semibold"><?php echo esc_html($metric['label']); ?></span>
-                                            <span class="small text-muted"><?php echo esc_html(number_format_i18n($metric['value'])); ?></span>
-                                        </div>
-                                        <div class="progress" role="progressbar" aria-label="<?php echo esc_attr($metric['label']); ?>" aria-valuenow="<?php echo esc_attr((string) $metric['value']); ?>" aria-valuemin="0" aria-valuemax="<?php echo esc_attr((string) max(1, $max_dashboard_value)); ?>" style="height: 0.75rem;">
-                                            <div class="progress-bar bg-<?php echo esc_attr($metric['tone']); ?>" style="width: <?php echo esc_attr((string) $bar_width); ?>%;"></div>
-                                        </div>
-                                    </div>
-                                <?php } ?>
+                <div class="elvd-dashboard-grid">
+                    <div class="elvd-panel">
+                        <div class="elvd-panel-heading">
+                            <div>
+                                <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Statistik', 'elearning-vd'); ?></p>
+                                <h2><?php echo esc_html__('Ringkasan Data', 'elearning-vd'); ?></h2>
                             </div>
+                        </div>
+                        <div class="elvd-bars">
+                            <?php foreach ($dashboard_metrics as $metric) {
+                                $bar_width = 0 < $max_dashboard_value ? max(6, (int) round(($metric['value'] / $max_dashboard_value) * 100)) : 0;
+                            ?>
+                                <div class="elvd-bar-row">
+                                    <div class="elvd-bar-label">
+                                        <span><?php echo esc_html($metric['label']); ?></span>
+                                        <strong><?php echo esc_html(number_format_i18n($metric['value'])); ?></strong>
+                                    </div>
+                                    <div class="elvd-progress" role="progressbar" aria-label="<?php echo esc_attr($metric['label']); ?>" aria-valuenow="<?php echo esc_attr((string) $metric['value']); ?>" aria-valuemin="0" aria-valuemax="<?php echo esc_attr((string) max(1, $max_dashboard_value)); ?>">
+                                        <span style="width: <?php echo esc_attr((string) $bar_width); ?>%;"></span>
+                                    </div>
+                                </div>
+                            <?php } ?>
                         </div>
                     </div>
 
-                    <div class="col-12 col-xl-4">
-                        <div class="border rounded bg-white shadow-sm p-3 h-100">
-                            <h2 class="h5 mb-3"><?php echo esc_html__('Aktivitas Pembelajaran', 'elearning-vd'); ?></h2>
-                            <div class="list-group list-group-flush">
-                                <div class="list-group-item px-0 d-flex justify-content-between">
-                                    <span><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></span>
-                                    <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_tahun_ajaran'))); ?></strong>
-                                </div>
-                                <div class="list-group-item px-0 d-flex justify-content-between">
-                                    <span><?php echo esc_html__('Pengerjaan Quiz', 'elearning-vd'); ?></span>
-                                    <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_pengerjaan_quiz'))); ?></strong>
-                                </div>
-                                <div class="list-group-item px-0 d-flex justify-content-between">
-                                    <span><?php echo esc_html__('Konten Belajar', 'elearning-vd'); ?></span>
-                                    <strong><?php echo esc_html(number_format_i18n((isset($tugas_counts->publish) ? (int) $tugas_counts->publish : 0) + (isset($materi_counts->publish) ? (int) $materi_counts->publish : 0) + (isset($quiz_counts->publish) ? (int) $quiz_counts->publish : 0))); ?></strong>
-                                </div>
+                    <div class="elvd-panel elvd-panel-dark">
+                        <div class="elvd-panel-heading">
+                            <div>
+                                <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Aktivitas', 'elearning-vd'); ?></p>
+                                <h2><?php echo esc_html__('Aktivitas Pembelajaran', 'elearning-vd'); ?></h2>
+                            </div>
+                        </div>
+                        <div class="elvd-activity-list">
+                            <div class="elvd-activity-item">
+                                <span><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></span>
+                                <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_tahun_ajaran'))); ?></strong>
+                            </div>
+                            <div class="elvd-activity-item">
+                                <span><?php echo esc_html__('Pengerjaan Quiz', 'elearning-vd'); ?></span>
+                                <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_pengerjaan_quiz'))); ?></strong>
+                            </div>
+                            <div class="elvd-activity-item">
+                                <span><?php echo esc_html__('Konten Belajar', 'elearning-vd'); ?></span>
+                                <strong><?php echo esc_html(number_format_i18n((isset($tugas_counts->publish) ? (int) $tugas_counts->publish : 0) + (isset($materi_counts->publish) ? (int) $materi_counts->publish : 0) + (isset($quiz_counts->publish) ? (int) $quiz_counts->publish : 0))); ?></strong>
                             </div>
                         </div>
                     </div>
@@ -283,31 +308,39 @@ $max_dashboard_value = max(array_column($dashboard_metrics, 'value'));
             }
             ?>
 
-            <div class="table-responsive border rounded bg-white shadow-sm" x-show="active !== 'dashboard'">
-                <table class="table table-striped table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col"><?php echo esc_html__('ID', 'elearning-vd'); ?></th>
-                            <th scope="col"><?php echo esc_html__('Nama', 'elearning-vd'); ?></th>
-                            <th scope="col"><?php echo esc_html__('Detail', 'elearning-vd'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr x-show="loading">
-                            <td colspan="3"><?php echo esc_html__('Memuat data...', 'elearning-vd'); ?></td>
-                        </tr>
-                        <template x-for="item in items" :key="item.id">
+            <div class="elvd-table-panel" x-show="active !== 'dashboard'">
+                <div class="elvd-panel-heading">
+                    <div>
+                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Daftar data', 'elearning-vd'); ?></p>
+                        <h2 x-text="labels[active] || defaultLabel"></h2>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 elvd-table">
+                        <thead>
                             <tr>
-                                <td x-text="item.id"></td>
-                                <td x-text="item.nama || item.hari || '-'"></td>
-                                <td x-text="Object.entries(item).filter(([key]) => !['id','nama','created_at','updated_at'].includes(key)).map(([key, value]) => `${key}: ${value ?? '-'}`).join(' | ')"></td>
+                                <th scope="col"><?php echo esc_html__('ID', 'elearning-vd'); ?></th>
+                                <th scope="col"><?php echo esc_html__('Nama', 'elearning-vd'); ?></th>
+                                <th scope="col"><?php echo esc_html__('Detail', 'elearning-vd'); ?></th>
                             </tr>
-                        </template>
-                        <tr x-show="!loading && items.length === 0">
-                            <td colspan="3"><?php echo esc_html__('Belum ada data.', 'elearning-vd'); ?></td>
-                        </tr>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <tr x-show="loading">
+                                <td colspan="3"><?php echo esc_html__('Memuat data...', 'elearning-vd'); ?></td>
+                            </tr>
+                            <template x-for="item in items" :key="item.id">
+                                <tr>
+                                    <td x-text="item.id"></td>
+                                    <td x-text="item.nama || item.hari || '-'"></td>
+                                    <td x-text="Object.entries(item).filter(([key]) => !['id','nama','created_at','updated_at'].includes(key)).map(([key, value]) => `${key}: ${value ?? '-'}`).join(' | ')"></td>
+                                </tr>
+                            </template>
+                            <tr x-show="!loading && items.length === 0">
+                                <td colspan="3"><?php echo esc_html__('Belum ada data.', 'elearning-vd'); ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </div>
