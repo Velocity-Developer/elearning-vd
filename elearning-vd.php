@@ -31,3 +31,6 @@ add_action('init', 'elvd_register_post_meta');
 add_action('rest_api_init', 'elvd_register_rest_routes');
 add_action('wp_enqueue_scripts', 'elvd_register_frontend_assets');
 add_shortcode('elvd_app', 'elvd_render_app_shortcode');
+
+add_filter('theme_page_templates', 'elvd_register_page_template', 10, 4);
+add_filter('template_include', 'elvd_load_page_template');
