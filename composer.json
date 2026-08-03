@@ -5,7 +5,7 @@
     "license": "proprietary",
     "autoload": {
         "psr-4": {
-            "ElearningVD\\": "src/"
+            "ElearningVD\\": "inc/"
         },
         "files": [
             "inc/class-elvd.php",

@@ -52,7 +52,7 @@ class ComposerStaticInit36e9431b74c5a9fa498458d8d4127fef
     public static $prefixDirsPsr4 = array (
         'ElearningVD\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/src',
+            0 => __DIR__ . '/../..' . '/inc',
         ),
     );
 
