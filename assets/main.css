@@ -71,6 +71,23 @@
     line-height: 1;
 }
 
+.elvd-school-logo {
+    background: var(--elvd-canvas);
+    border: 1px solid var(--elvd-hairline);
+    border-radius: 8px;
+    display: block;
+    flex: 0 0 44px;
+    height: 44px;
+    object-fit: contain;
+    padding: 4px;
+    width: 44px;
+}
+
+.elvd-brand-mobile {
+    border-bottom: 0;
+    padding: 0;
+}
+
 .elvd-brand-title {
     color: var(--elvd-ink);
     font-size: 20px;
@@ -109,9 +126,8 @@
 }
 
 .elvd-nav-link.is-active {
-    background: var(--elvd-cloud);
-    border-left-color: var(--elvd-primary);
-    color: var(--elvd-ink);
+    background: var(--elvd-primary);
+    color: var(--elvd-on-ink);
     font-weight: 500;
 }
 

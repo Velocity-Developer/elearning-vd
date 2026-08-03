@@ -20,6 +20,11 @@ $config = [
     'isManager' => elvd_can_manage_rest(),
 ];
 
+$school_name = trim((string) get_option(ELVD::OPTION_SCHOOL_NAME, get_bloginfo('name')));
+$school_name = '' !== $school_name ? $school_name : (string) get_bloginfo('name');
+$school_logo_id = absint(get_option(ELVD::OPTION_SCHOOL_LOGO_ID, 0));
+$school_logo_url = 0 < $school_logo_id ? (string) wp_get_attachment_image_url($school_logo_id, 'thumbnail') : '';
+
 $route_page = sanitize_key((string) get_query_var(ELVD::APP_PAGE_QUERY_VAR, ''));
 $default_page = 'tahun-ajaran';
 $page_file = '';
@@ -105,8 +110,8 @@ wp_localize_script(
     'elvd-main',
     'elvdDashboardChartData',
     [
-        'labels' => array_map(static fn (array $metric): string => (string) $metric['label'], $dashboard_metrics),
-        'values' => array_map(static fn (array $metric): int => (int) $metric['value'], $dashboard_metrics),
+        'labels' => array_map(static fn(array $metric): string => (string) $metric['label'], $dashboard_metrics),
+        'values' => array_map(static fn(array $metric): int => (int) $metric['value'], $dashboard_metrics),
     ]
 );
 ?>
@@ -161,8 +166,16 @@ wp_localize_script(
     <div class="offcanvas offcanvas-start d-lg-none elvd-mobile-sheet" tabindex="-1" id="elvdMobileMenu" aria-labelledby="elvdMobileMenuLabel">
         <div class="offcanvas-header">
             <div>
-                <h2 class="elvd-brand-title mb-1" id="elvdMobileMenuLabel"><?php echo esc_html__('Elearning VD', 'elearning-vd'); ?></h2>
-                <p class="elvd-caption mb-0"><?php echo esc_html__('Dashboard sekolah', 'elearning-vd'); ?></p>
+                <div class="elvd-brand elvd-brand-mobile">
+                    <?php if ('' !== $school_logo_url) { ?>
+                        <img class="elvd-school-logo" src="<?php echo esc_url($school_logo_url); ?>" alt="<?php echo esc_attr($school_name); ?>">
+                    <?php } else { ?>
+                        <span class="elvd-mark" aria-hidden="true">VD</span>
+                    <?php } ?>
+                    <div>
+                        <h2 class="elvd-brand-title mb-1" id="elvdMobileMenuLabel"><?php echo esc_html($school_name); ?></h2>
+                    </div>
+                </div>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="<?php echo esc_attr__('Tutup menu', 'elearning-vd'); ?>"></button>
         </div>
@@ -184,10 +197,13 @@ wp_localize_script(
         <aside class="elvd-sidebar d-none d-lg-flex">
             <div class="elvd-sidebar-inner">
                 <div class="elvd-brand">
-                    <span class="elvd-mark" aria-hidden="true">VD</span>
+                    <?php if ('' !== $school_logo_url) { ?>
+                        <img class="elvd-school-logo" src="<?php echo esc_url($school_logo_url); ?>" alt="<?php echo esc_attr($school_name); ?>">
+                    <?php } else { ?>
+                        <span class="elvd-mark" aria-hidden="true">VD</span>
+                    <?php } ?>
                     <div>
-                        <h2 class="elvd-brand-title mb-1"><?php echo esc_html__('Elearning VD', 'elearning-vd'); ?></h2>
-                        <p class="elvd-caption mb-0"><?php echo esc_html__('Dashboard sekolah', 'elearning-vd'); ?></p>
+                        <h2 class="elvd-brand-title mb-1"><?php echo esc_html($school_name); ?></h2>
                     </div>
                 </div>
                 <nav class="elvd-nav" aria-label="<?php echo esc_attr__('Menu Elearning', 'elearning-vd'); ?>">
