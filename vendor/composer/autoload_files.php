@@ -7,6 +7,10 @@ $baseDir = dirname($vendorDir);
 
 return array(
     '764982ffaf23954f1d989912f80b74d5' => $baseDir . '/inc/class-elvd.php',
+    'e267df26cfe7ff037b46b9cf41a1b77c' => $baseDir . '/inc/admin/elvd-register-admin-assets.php',
+    'ed7a95ebbc2692c156fd90b5645a2781' => $baseDir . '/inc/admin/elvd-register-admin-menu.php',
+    '8487d9feb97c61221e06570623fe60f3' => $baseDir . '/inc/admin/elvd-register-settings.php',
+    '5f33374961e4c81a2235f272658f00ba' => $baseDir . '/inc/admin/elvd-render-settings-page.php',
     '6b8b053e256311754486ebdd9eae19f9' => $baseDir . '/inc/elvd-activate.php',
     'f408bd971d8492453d814eb7dc0a3b9e' => $baseDir . '/inc/elvd-deactivate.php',
     '8a81f2d9418078d10e1d624beaa30291' => $baseDir . '/inc/elvd-load-page-template.php',

@@ -9,6 +9,10 @@
         },
         "files": [
             "inc/class-elvd.php",
+            "inc/admin/elvd-register-admin-assets.php",
+            "inc/admin/elvd-register-admin-menu.php",
+            "inc/admin/elvd-register-settings.php",
+            "inc/admin/elvd-render-settings-page.php",
             "inc/elvd-activate.php",
             "inc/elvd-deactivate.php",
             "inc/elvd-load-page-template.php",
