@@ -336,7 +336,7 @@ wp_localize_script(
             }
             ?>
 
-            <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas'].includes(active)">
+            <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran'].includes(active)">
                 <div class="table-responsive">
                     <table class="table align-middle mb-0 elvd-table">
                         <thead>
