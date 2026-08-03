@@ -8,6 +8,7 @@ final class ELVD
     public const REST_NAMESPACE = 'elvd/v1';
     public const TEXT_DOMAIN = 'elearning-vd';
     public const PAGE_TEMPLATE = 'templates/page-elearning.php';
+    public const APP_PAGE_QUERY_VAR = 'elvd_app_page';
     public const APP_PAGE_TITLE = 'Elearning';
     public const APP_PAGE_SLUG = 'elearning';
     public const APP_SHORTCODE = '[elvd_app]';
@@ -50,5 +51,20 @@ final class ELVD
         }
 
         return home_url('/' . self::APP_PAGE_SLUG . '/');
+    }
+
+    public static function app_route_path(): string
+    {
+        $page_id = absint(get_option(self::OPTION_ELEARNING_PAGE_ID, 0));
+
+        if ($page_id > 0) {
+            $page_uri = get_page_uri($page_id);
+
+            if (is_string($page_uri) && '' !== $page_uri) {
+                return trim($page_uri, '/');
+            }
+        }
+
+        return self::APP_PAGE_SLUG;
     }
 }

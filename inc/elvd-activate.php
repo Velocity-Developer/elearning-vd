@@ -12,5 +12,6 @@ function elvd_activate(): void
     elvd_register_post_meta();
     elvd_create_tables();
     elvd_create_default_app_page();
+    elvd_register_app_rewrite_rules();
     flush_rewrite_rules();
 }

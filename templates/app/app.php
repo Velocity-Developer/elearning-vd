@@ -19,19 +19,40 @@ $config = [
     'nonce' => wp_create_nonce('wp_rest'),
     'isManager' => elvd_can_manage_rest(),
 ];
+
+$route_page = sanitize_key((string) get_query_var(ELVD::APP_PAGE_QUERY_VAR, ''));
+$default_page = 'tahun-ajaran';
+$page_file = '';
+
+if ('' !== $route_page) {
+    $candidate_page_file = ELVD_PLUGIN_DIR . 'templates/app/pages/' . $route_page . '.php';
+
+    if (file_exists($candidate_page_file)) {
+        $page_file = $candidate_page_file;
+    } else {
+        status_header(404);
+        nocache_headers();
+    }
+}
+
+$active_page = '' !== $route_page ? $route_page : $default_page;
 ?>
 
 <div
     class="elvd-app container my-4"
     x-data="{
-        tabs: ['tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran'],
+        tabs: ['tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'quiz'],
         labels: {
             'tahun-ajaran': 'Tahun Ajaran',
             'kelas': 'Kelas',
             'mata-pelajaran': 'Mata Pelajaran',
-            'jadwal-pelajaran': 'Jadwal Pelajaran'
+            'jadwal-pelajaran': 'Jadwal Pelajaran',
+            'guru': 'Guru',
+            'siswa': 'Siswa',
+            'quiz': 'Quiz'
         },
-        active: 'tahun-ajaran',
+        active: <?php echo wp_json_encode($active_page); ?>,
+        appRoute: <?php echo wp_json_encode(untrailingslashit(ELVD::app_route())); ?>,
         items: [],
         loading: false,
         config: <?php echo wp_json_encode($config); ?>,
@@ -47,7 +68,7 @@ $config = [
         },
         select(tab) {
             this.active = tab;
-            this.load();
+            window.location.href = `${this.appRoute}/${tab}/`;
         }
     }">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
@@ -63,6 +84,18 @@ $config = [
             </template>
         </div>
     </div>
+
+    <?php
+    if ('' !== $route_page && '' === $page_file) {
+    ?>
+        <div class="alert alert-warning mb-3">
+            <?php echo esc_html__('Halaman elearning tidak ditemukan.', 'elearning-vd'); ?>
+        </div>
+    <?php
+    } elseif ('' !== $page_file) {
+        require $page_file;
+    }
+    ?>
 
     <div class="table-responsive border rounded">
         <table class="table table-striped table-hover align-middle mb-0">
