@@ -6,7 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    '764982ffaf23954f1d989912f80b74d5' => $baseDir . '/inc/class-elvd.php',
+    '19798fe24ae45092d85af05c4d7befc0' => $baseDir . '/inc/core/class-elvd.php',
     '9c2f803c34e454e242684cf18a54cb5f' => $baseDir . '/inc/admin/elvd-handle-create-app-page.php',
     'e267df26cfe7ff037b46b9cf41a1b77c' => $baseDir . '/inc/admin/elvd-register-admin-assets.php',
     'ed7a95ebbc2692c156fd90b5645a2781' => $baseDir . '/inc/admin/elvd-register-admin-menu.php',

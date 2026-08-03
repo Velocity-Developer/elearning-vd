@@ -5,10 +5,10 @@
     "license": "proprietary",
     "autoload": {
         "psr-4": {
-            "ElearningVD\\": "inc/"
+            "ElearningVD\\": "inc/core/"
         },
         "files": [
-            "inc/class-elvd.php",
+            "inc/core/class-elvd.php",
             "inc/admin/elvd-handle-create-app-page.php",
             "inc/admin/elvd-register-admin-assets.php",
             "inc/admin/elvd-register-admin-menu.php",

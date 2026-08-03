@@ -7,7 +7,7 @@ namespace Composer\Autoload;
 class ComposerStaticInit36e9431b74c5a9fa498458d8d4127fef
 {
     public static $files = array (
-        '764982ffaf23954f1d989912f80b74d5' => __DIR__ . '/../..' . '/inc/class-elvd.php',
+        '19798fe24ae45092d85af05c4d7befc0' => __DIR__ . '/../..' . '/inc/core/class-elvd.php',
         '9c2f803c34e454e242684cf18a54cb5f' => __DIR__ . '/../..' . '/inc/admin/elvd-handle-create-app-page.php',
         'e267df26cfe7ff037b46b9cf41a1b77c' => __DIR__ . '/../..' . '/inc/admin/elvd-register-admin-assets.php',
         'ed7a95ebbc2692c156fd90b5645a2781' => __DIR__ . '/../..' . '/inc/admin/elvd-register-admin-menu.php',
@@ -54,7 +54,7 @@ class ComposerStaticInit36e9431b74c5a9fa498458d8d4127fef
     public static $prefixDirsPsr4 = array (
         'ElearningVD\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/inc',
+            0 => __DIR__ . '/../..' . '/inc/core',
         ),
     );
 
