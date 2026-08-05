@@ -69,6 +69,7 @@ $elvd_siswa_items = array_map(
 <div
     x-show="active === 'siswa'"
     x-data="{
+        siswaProfilUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(ELVD::app_route()) . '/siswa-profil/')); ?>,
         students: <?php echo esc_attr(wp_json_encode($elvd_siswa_items)); ?>,
         years: <?php echo esc_attr(wp_json_encode($elvd_years)); ?>,
         classes: <?php echo esc_attr(wp_json_encode($elvd_classes)); ?>,
@@ -186,6 +187,7 @@ $elvd_siswa_items = array_map(
                         <th scope="col"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Tanggal Lahir', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Telepon', 'elearning-vd'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -201,10 +203,15 @@ $elvd_siswa_items = array_map(
                             <td x-text="yearName(item.tahun_ajaran_id)"></td>
                             <td x-text="formatDate(item.tanggal_lahir)"></td>
                             <td x-text="item.telepon || '-'"></td>
+                            <td>
+                                <a class="btn btn-outline-primary btn-sm elvd-row-action" :href="`${siswaProfilUrl}?id=${item.id}`">
+                                    <?php echo esc_html__('Profil', 'elearning-vd'); ?>
+                                </a>
+                            </td>
                         </tr>
                     </template>
                     <tr x-show="filteredStudents().length === 0">
-                        <td colspan="7"><?php echo esc_html__('Belum ada siswa sesuai filter.', 'elearning-vd'); ?></td>
+                        <td colspan="8"><?php echo esc_html__('Belum ada siswa sesuai filter.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
             </table>
