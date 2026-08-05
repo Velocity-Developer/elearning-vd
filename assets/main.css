@@ -703,9 +703,21 @@
     font-weight: 700;
     height: 72px;
     justify-content: center;
+    overflow: hidden;
     width: 72px;
 }
 
+.elvd-avatar img {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.elvd-avatar-lg {
+    font-size: 40px;
+    height: 128px;
+    width: 128px;
+}
 .elvd-mobile-sheet {
     color: var(--elvd-ink);
 }
