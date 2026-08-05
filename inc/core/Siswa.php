@@ -23,41 +23,12 @@ final class Siswa extends UserProfile
      */
     protected static function default_fields(): array
     {
-        return [
-            'nama' => [
-                'label' => __('Nama Lengkap', 'elearning-vd'),
-                'type' => 'text',
-                'target' => 'display_name',
-                'required' => true,
-            ],
-            'email' => [
-                'label' => __('Email', 'elearning-vd'),
-                'type' => 'email',
-                'target' => 'user_email',
-                'required' => true,
-            ],
-            'nis' => [
-                'label' => __('NIS', 'elearning-vd'),
-                'type' => 'text',
-                'required' => true,
-            ],
-            'kelas' => [
-                'label' => __('Kelas', 'elearning-vd'),
-                'type' => 'text',
-            ],
-            'tanggal_lahir' => [
-                'label' => __('Tanggal Lahir', 'elearning-vd'),
-                'type' => 'date',
-            ],
-            'telepon' => [
-                'label' => __('No. Telepon', 'elearning-vd'),
-                'type' => 'tel',
-            ],
-            'alamat' => [
-                'label' => __('Alamat', 'elearning-vd'),
-                'type' => 'textarea',
-                'wrapper_class' => 'col-12',
-            ],
-        ];
+        $fields = get_option(\ELVD::OPTION_SISWA_PROFILE_FIELDS, []);
+
+        if (is_array($fields) && [] !== $fields) {
+            return $fields;
+        }
+
+        return \elvd_default_siswa_profile_fields();
     }
 }

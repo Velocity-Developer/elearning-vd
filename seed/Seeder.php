@@ -64,18 +64,16 @@ final class Seeder
             $result['kelas'] = self::seedKelas($tahunAjaranId);
         }
 
-        $kelasId = ! empty($result['kelas']['6A'])
-            ? (int) $result['kelas']['6A']
-            : self::findRowId('elvd_kelas', ['nama' => 'Kelas 6A']);
-        $mataPelajaranId = ! empty($result['mata_pelajaran']['MAT'])
-            ? (int) $result['mata_pelajaran']['MAT']
-            : self::findRowId('elvd_mata_pelajaran', ['kode' => 'MAT']);
+        $kelasIds = ! empty($result['kelas']) ? $result['kelas'] : self::findSeededKelasIds();
+        $mataPelajaranIds = ! empty($result['mata_pelajaran']) ? $result['mata_pelajaran'] : self::findSeededMataPelajaranIds();
+        $kelasId = ! empty($kelasIds['6A']) ? (int) $kelasIds['6A'] : 0;
+        $mataPelajaranId = ! empty($mataPelajaranIds['MAT']) ? (int) $mataPelajaranIds['MAT'] : 0;
 
         if (! empty($options['jadwal_pelajaran'])) {
             $result['jadwal_pelajaran'] = self::seedJadwalPelajaran(
-                $kelasId,
-                $mataPelajaranId,
-                self::findUserIdByRole('guru')
+                $kelasIds,
+                $mataPelajaranIds,
+                self::findUserIdsByRole('guru', 20)
             );
         }
 
@@ -368,29 +366,64 @@ final class Seeder
         return self::seedRows('elvd_kelas', 'nama', $rows);
     }
 
-    private static function seedJadwalPelajaran(int $kelasId, int $mataPelajaranId, int $guruId): int
+    /**
+     * @param array<string, int> $kelasIds
+     * @param array<string, int> $mataPelajaranIds
+     * @param array<int, int> $guruIds
+     * @return array<string, int>
+     */
+    private static function seedJadwalPelajaran(array $kelasIds, array $mataPelajaranIds, array $guruIds): array
     {
-        if ($kelasId <= 0 || $mataPelajaranId <= 0 || $guruId <= 0) {
-            return 0;
+        $kelasIds = array_filter(array_map('absint', $kelasIds));
+        $mataPelajaranIds = array_filter(array_map('absint', $mataPelajaranIds));
+        $guruIds = array_values(array_filter(array_map('absint', $guruIds)));
+
+        if (empty($kelasIds) || empty($mataPelajaranIds) || empty($guruIds)) {
+            return [
+                'jadwal_01' => 0,
+            ];
         }
 
-        return self::insertIfMissing(
-            'elvd_jadwal_pelajaran',
-            [
-                'kelas_id' => $kelasId,
-                'mata_pelajaran_id' => $mataPelajaranId,
-                'hari' => 'Senin',
-                'jam_mulai' => '08:00:00',
-            ],
-            [
-                'kelas_id' => $kelasId,
-                'mata_pelajaran_id' => $mataPelajaranId,
-                'guru_id' => $guruId,
-                'hari' => 'Senin',
-                'jam_mulai' => '08:00:00',
-                'jam_selesai' => '09:30:00',
-            ]
-        );
+        $hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+        $jam = [
+            ['07:30:00', '08:30:00'],
+            ['08:30:00', '09:30:00'],
+            ['10:00:00', '11:00:00'],
+            ['11:00:00', '12:00:00'],
+        ];
+        $mataPelajaranValues = array_values($mataPelajaranIds);
+        $result = [];
+        $index = 0;
+
+        foreach ($kelasIds as $kelasKey => $kelasId) {
+            foreach ($hari as $hariIndex => $namaHari) {
+                foreach ($jam as $jamIndex => $rentangJam) {
+                    $mataPelajaranId = $mataPelajaranValues[$index % count($mataPelajaranValues)];
+                    $guruId = $guruIds[$index % count($guruIds)];
+                    $result[$kelasKey . '_' . $namaHari . '_' . ($jamIndex + 1)] = self::insertIfMissing(
+                        'elvd_jadwal_pelajaran',
+                        [
+                            'kelas_id' => $kelasId,
+                            'hari' => $namaHari,
+                            'jam_mulai' => $rentangJam[0],
+                        ],
+                        [
+                            'kelas_id' => $kelasId,
+                            'mata_pelajaran_id' => $mataPelajaranId,
+                            'guru_id' => $guruId,
+                            'hari' => $namaHari,
+                            'jam_mulai' => $rentangJam[0],
+                            'jam_selesai' => $rentangJam[1],
+                        ]
+                    );
+                    $index++;
+                }
+
+                $index += $hariIndex;
+            }
+        }
+
+        return $result;
     }
 
     private static function seedMateri(int $kelasId, int $mataPelajaranId): int
@@ -609,6 +642,86 @@ final class Seeder
         }
 
         return '%s';
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private static function findSeededKelasIds(): array
+    {
+        $kelasNames = [
+            '6A' => 'Kelas 6A',
+            '7A' => 'Kelas 7A',
+            '10A' => 'Kelas 10A',
+            '6B' => 'Kelas 6B',
+            '7B' => 'Kelas 7B',
+            '8A' => 'Kelas 8A',
+            '8B' => 'Kelas 8B',
+            '9A' => 'Kelas 9A',
+            '9B' => 'Kelas 9B',
+            '10B' => 'Kelas 10B',
+        ];
+        $ids = [];
+
+        foreach ($kelasNames as $key => $name) {
+            $ids[$key] = self::findRowId('elvd_kelas', ['nama' => $name]);
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private static function findSeededMataPelajaranIds(): array
+    {
+        $codes = [
+            'MAT',
+            'BIN',
+            'IPA',
+            'IPS',
+            'BIG',
+            'PKN',
+            'PAI',
+            'SBD',
+            'PJO',
+            'TIK',
+            'BIO',
+            'FIS',
+            'KIM',
+            'SEJ',
+            'GEO',
+            'EKO',
+            'SOS',
+            'ANT',
+            'PRA',
+            'BJD',
+        ];
+        $ids = [];
+
+        foreach ($codes as $code) {
+            $ids[$code] = self::findRowId('elvd_mata_pelajaran', ['kode' => $code]);
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private static function findUserIdsByRole(string $role, int $number = 20): array
+    {
+        $users = get_users(
+            [
+                'role' => $role,
+                'number' => $number,
+                'fields' => 'ID',
+                'orderby' => 'ID',
+                'order' => 'ASC',
+            ]
+        );
+
+        return array_values(array_map('absint', $users));
     }
 
     private static function findUserIdByRole(string $role): int

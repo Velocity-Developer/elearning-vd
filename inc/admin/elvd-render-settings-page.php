@@ -13,7 +13,24 @@ function elvd_render_settings_page(): void
     $logo_url = $logo_id > 0 ? wp_get_attachment_image_url($logo_id, 'thumbnail') : '';
     $elearning_page_id = absint(get_option(ELVD::OPTION_ELEARNING_PAGE_ID, 0));
     $active_tab = isset($_GET['tab']) ? sanitize_key((string) wp_unslash($_GET['tab'])) : 'umum';
-    $active_tab = in_array($active_tab, ['umum', 'seeder'], true) ? $active_tab : 'umum';
+    $active_tab = in_array($active_tab, ['umum', 'profil-siswa', 'seeder'], true) ? $active_tab : 'umum';
+    $siswa_profile_fields = get_option(ELVD::OPTION_SISWA_PROFILE_FIELDS, elvd_default_siswa_profile_fields());
+    $siswa_profile_fields = is_array($siswa_profile_fields) && [] !== $siswa_profile_fields
+        ? $siswa_profile_fields
+        : elvd_default_siswa_profile_fields();
+    $field_types = [
+        'text' => __('Text', ELVD::TEXT_DOMAIN),
+        'email' => __('Email', ELVD::TEXT_DOMAIN),
+        'number' => __('Angka', ELVD::TEXT_DOMAIN),
+        'date' => __('Tanggal', ELVD::TEXT_DOMAIN),
+        'tel' => __('Telepon', ELVD::TEXT_DOMAIN),
+        'textarea' => __('Textarea', ELVD::TEXT_DOMAIN),
+    ];
+    $field_targets = [
+        'meta' => __('User Meta', ELVD::TEXT_DOMAIN),
+        'display_name' => __('Nama Tampilan User', ELVD::TEXT_DOMAIN),
+        'user_email' => __('Email User', ELVD::TEXT_DOMAIN),
+    ];
     $seed_items = [
         'users' => __('User Guru dan Siswa', ELVD::TEXT_DOMAIN),
         'tahun_ajaran' => __('Tahun Ajaran', ELVD::TEXT_DOMAIN),
@@ -34,6 +51,12 @@ function elvd_render_settings_page(): void
                 class="nav-tab <?php echo 'umum' === $active_tab ? 'nav-tab-active' : ''; ?>"
             >
                 <?php esc_html_e('Umum', ELVD::TEXT_DOMAIN); ?>
+            </a>
+            <a
+                href="<?php echo esc_url(add_query_arg(['page' => ELVD::SETTINGS_MENU_SLUG, 'tab' => 'profil-siswa'], admin_url('admin.php'))); ?>"
+                class="nav-tab <?php echo 'profil-siswa' === $active_tab ? 'nav-tab-active' : ''; ?>"
+            >
+                <?php esc_html_e('Profil Siswa', ELVD::TEXT_DOMAIN); ?>
             </a>
             <a
                 href="<?php echo esc_url(add_query_arg(['page' => ELVD::SETTINGS_MENU_SLUG, 'tab' => 'seeder'], admin_url('admin.php'))); ?>"
@@ -152,6 +175,101 @@ function elvd_render_settings_page(): void
 
             <?php submit_button(__('Simpan Pengaturan', ELVD::TEXT_DOMAIN)); ?>
         </form>
+        <?php elseif ('profil-siswa' === $active_tab) : ?>
+            <form method="post" action="options.php">
+                <?php settings_fields(ELVD::OPTION_GROUP_SISWA_PROFILE); ?>
+
+                <h2><?php esc_html_e('Profile Fields Siswa', ELVD::TEXT_DOMAIN); ?></h2>
+                <p><?php esc_html_e('Key di bawah ini dipakai sebagai nama field pada form profil siswa dan disimpan sebagai meta user dengan prefix elvd_.', ELVD::TEXT_DOMAIN); ?></p>
+
+                <table class="widefat striped" id="elvd-siswa-profile-fields">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Key', ELVD::TEXT_DOMAIN); ?></th>
+                            <th><?php esc_html_e('Label', ELVD::TEXT_DOMAIN); ?></th>
+                            <th><?php esc_html_e('Tipe', ELVD::TEXT_DOMAIN); ?></th>
+                            <th><?php esc_html_e('Target', ELVD::TEXT_DOMAIN); ?></th>
+                            <th><?php esc_html_e('Wajib', ELVD::TEXT_DOMAIN); ?></th>
+                            <th><?php esc_html_e('Aksi', ELVD::TEXT_DOMAIN); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $field_index = 0; ?>
+                        <?php foreach ($siswa_profile_fields as $field_key => $field) : ?>
+                            <?php
+                            if (! is_array($field)) {
+                                continue;
+                            }
+
+                            $field_target = (string) ($field['target'] ?? 'meta');
+                            ?>
+                            <tr>
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="<?php echo esc_attr(ELVD::OPTION_SISWA_PROFILE_FIELDS); ?>[<?php echo esc_attr((string) $field_index); ?>][key]"
+                                        value="<?php echo esc_attr((string) $field_key); ?>"
+                                        class="regular-text"
+                                        required
+                                    >
+                                </td>
+                                <td>
+                                    <input
+                                        type="text"
+                                        name="<?php echo esc_attr(ELVD::OPTION_SISWA_PROFILE_FIELDS); ?>[<?php echo esc_attr((string) $field_index); ?>][label]"
+                                        value="<?php echo esc_attr((string) ($field['label'] ?? $field_key)); ?>"
+                                        class="regular-text"
+                                        required
+                                    >
+                                </td>
+                                <td>
+                                    <select name="<?php echo esc_attr(ELVD::OPTION_SISWA_PROFILE_FIELDS); ?>[<?php echo esc_attr((string) $field_index); ?>][type]">
+                                        <?php foreach ($field_types as $type_key => $type_label) : ?>
+                                            <option value="<?php echo esc_attr($type_key); ?>" <?php selected((string) ($field['type'] ?? 'text'), $type_key); ?>>
+                                                <?php echo esc_html($type_label); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="<?php echo esc_attr(ELVD::OPTION_SISWA_PROFILE_FIELDS); ?>[<?php echo esc_attr((string) $field_index); ?>][target]">
+                                        <?php foreach ($field_targets as $target_key => $target_label) : ?>
+                                            <option value="<?php echo esc_attr($target_key); ?>" <?php selected($field_target, $target_key); ?>>
+                                                <?php echo esc_html($target_label); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </td>
+                                <td>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            name="<?php echo esc_attr(ELVD::OPTION_SISWA_PROFILE_FIELDS); ?>[<?php echo esc_attr((string) $field_index); ?>][required]"
+                                            value="1"
+                                            <?php checked(! empty($field['required'])); ?>
+                                        >
+                                        <?php esc_html_e('Ya', ELVD::TEXT_DOMAIN); ?>
+                                    </label>
+                                </td>
+                                <td>
+                                    <button type="button" class="button elvd-remove-profile-field">
+                                        <?php esc_html_e('Hapus', ELVD::TEXT_DOMAIN); ?>
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php ++$field_index; ?>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+
+                <p>
+                    <button type="button" class="button" id="elvd-add-siswa-profile-field">
+                        <?php esc_html_e('Tambah Field', ELVD::TEXT_DOMAIN); ?>
+                    </button>
+                </p>
+
+                <?php submit_button(__('Simpan Profile Fields', ELVD::TEXT_DOMAIN)); ?>
+            </form>
         <?php else : ?>
             <div class="card" style="max-width: 720px; margin-top: 20px;">
                 <h2><?php esc_html_e('Jalankan Seeder', ELVD::TEXT_DOMAIN); ?></h2>
