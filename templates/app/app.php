@@ -139,7 +139,7 @@ wp_localize_script(
         config: <?php echo esc_attr(wp_json_encode($config)); ?>,
         init() { this.load(); },
         load() {
-            if (["dashboard", "guru"].includes(this.active)) {
+            if (["dashboard", "guru", "siswa"].includes(this.active)) {
                 this.items = [];
                 this.loading = false;
                 return;
@@ -336,7 +336,7 @@ wp_localize_script(
             }
             ?>
 
-            <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru'].includes(active)">
+            <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa'].includes(active)">
                 <div class="table-responsive">
                     <table class="table align-middle mb-0 elvd-table">
                         <thead>

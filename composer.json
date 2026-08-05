@@ -42,7 +42,8 @@
             "inc/restapi/elvd-sanitize-datetime.php",
             "inc/restapi/elvd-sanitize-payload.php",
             "inc/restapi/elvd-sanitize-time.php",
-            "inc/shortcodes/elvd-app-shortcode.php"
+            "inc/shortcodes/elvd-app-shortcode.php",
+            "seed/Seeder.php"
         ]
     },
     "require": {

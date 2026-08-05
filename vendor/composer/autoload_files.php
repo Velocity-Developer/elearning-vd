@@ -41,4 +41,5 @@ return array(
     'e9cb60ff0bfdcb0671ef143f4fcf21a7' => $baseDir . '/inc/restapi/elvd-sanitize-payload.php',
     '0b20f469aeb130f90b5fc08f2357021f' => $baseDir . '/inc/restapi/elvd-sanitize-time.php',
     '17f12ad83e79d3fa0b51be0246825114' => $baseDir . '/inc/shortcodes/elvd-app-shortcode.php',
+    'b8f81f6715baacba2adc1000fd0ad141' => $baseDir . '/seed/Seeder.php',
 );
