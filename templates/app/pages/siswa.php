@@ -70,6 +70,7 @@ $elvd_siswa_items = array_map(
     x-show="active === 'siswa'"
     x-data="{
         siswaProfilUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(ELVD::app_route()) . '/siswa-profil/')); ?>,
+        siswaProfilTab: 'profil',
         students: <?php echo esc_attr(wp_json_encode($elvd_siswa_items)); ?>,
         years: <?php echo esc_attr(wp_json_encode($elvd_years)); ?>,
         classes: <?php echo esc_attr(wp_json_encode($elvd_classes)); ?>,
@@ -204,7 +205,7 @@ $elvd_siswa_items = array_map(
                             <td x-text="formatDate(item.tanggal_lahir)"></td>
                             <td x-text="item.telepon || '-'"></td>
                             <td>
-                                <a class="btn btn-outline-primary btn-sm elvd-row-action" :href="`${siswaProfilUrl}?id=${item.id}`">
+                                <a class="btn btn-outline-primary btn-sm elvd-row-action" :href="`${siswaProfilUrl}${item.id}/${siswaProfilTab}`">
                                     <?php echo esc_html__('Profil', 'elearning-vd'); ?>
                                 </a>
                             </td>

@@ -4,7 +4,10 @@ defined('ABSPATH') || exit;
 
 global $wpdb;
 
-$elvd_siswa_id = absint((int) ($_GET['id'] ?? 0));
+$elvd_siswa_id = absint((int) get_query_var('elvd_siswa_id', 0));
+$elvd_profile_tab = sanitize_key((string) get_query_var('elvd_siswa_tab', ''));
+$elvd_profile_tab = in_array($elvd_profile_tab, ['profil', 'edit', 'foto'], true) ? $elvd_profile_tab : 'profil';
+$elvd_siswa_base_url = untrailingslashit(ELVD::app_route()) . '/siswa-profil';
 $elvd_siswa_back_url = untrailingslashit(ELVD::app_route()) . '/siswa/';
 $elvd_siswa_notice = '';
 
@@ -166,7 +169,15 @@ if ($elvd_siswa_valid && $elvd_siswa instanceof WP_User) {
 <div x-show="active === 'siswa-profil'" x-data="{
     siswa: <?php echo esc_attr(wp_json_encode($elvd_siswa_data)); ?>,
     canEdit: <?php echo $elvd_can_edit ? 'true' : 'false'; ?>,
-    activeTab: 'profil',
+    profileBaseUrl: <?php echo esc_attr(wp_json_encode($elvd_siswa_base_url)); ?>,
+    activeTab: <?php echo esc_attr(wp_json_encode($elvd_profile_tab)); ?>,
+    setTab(tab) {
+        if (history.pushState) {
+            history.pushState({}, '', this.profileBaseUrl + '/' + this.siswa.id + '/' + tab);
+        }
+
+        this.activeTab = tab;
+    },
     formatDate(value) {
         if (!value) {
             return '-';
@@ -210,17 +221,17 @@ if ($elvd_siswa_valid && $elvd_siswa instanceof WP_User) {
 
                 <ul class="nav nav-tabs mb-4" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button type="button" class="nav-link" :class="{ active: activeTab === 'profil' }" @click="activeTab = 'profil'">
+                        <button type="button" class="nav-link" :class="{ active: activeTab === 'profil' }" @click="setTab('profil')">
                             <?php echo esc_html__('Profil', 'elearning-vd'); ?>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button type="button" class="nav-link" :class="{ active: activeTab === 'edit' }" @click="activeTab = 'edit'" x-show="canEdit">
+                        <button type="button" class="nav-link" :class="{ active: activeTab === 'edit' }" @click="setTab('edit')" x-show="canEdit">
                             <?php echo esc_html__('Edit', 'elearning-vd'); ?>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button type="button" class="nav-link" :class="{ active: activeTab === 'foto' }" @click="activeTab = 'foto'" x-show="canEdit">
+                        <button type="button" class="nav-link" :class="{ active: activeTab === 'foto' }" @click="setTab('foto')" x-show="canEdit">
                             <?php echo esc_html__('Ubah Foto', 'elearning-vd'); ?>
                         </button>
                     </li>

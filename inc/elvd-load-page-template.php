@@ -14,6 +14,12 @@ function elvd_register_app_rewrite_rules(): void
     $query_target = $page_id > 0 ? 'page_id=' . $page_id : 'pagename=' . $app_route_path;
 
     add_rewrite_rule(
+        '^' . preg_quote($app_route_path, '#') . '/siswa-profil/([0-9]+)(?:/([^/]+))?/?$',
+        'index.php?' . $query_target . '&' . ELVD::APP_PAGE_QUERY_VAR . '=siswa-profil&elvd_siswa_id=$matches[1]&elvd_siswa_tab=$matches[2]',
+        'top'
+    );
+
+    add_rewrite_rule(
         '^' . preg_quote($app_route_path, '#') . '/([^/]+)/?$',
         'index.php?' . $query_target . '&' . ELVD::APP_PAGE_QUERY_VAR . '=$matches[1]',
         'top'
@@ -27,6 +33,8 @@ function elvd_register_app_rewrite_rules(): void
 function elvd_register_app_query_vars(array $query_vars): array
 {
     $query_vars[] = ELVD::APP_PAGE_QUERY_VAR;
+    $query_vars[] = 'elvd_siswa_id';
+    $query_vars[] = 'elvd_siswa_tab';
 
     return $query_vars;
 }
