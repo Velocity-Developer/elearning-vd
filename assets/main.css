@@ -222,7 +222,7 @@
 
 .elvd-page-title {
     color: var(--elvd-ink);
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 500;
     line-height: 1;
 }
@@ -748,7 +748,7 @@
 @media (max-width: 767.98px) {
 
     .elvd-page-title {
-        font-size: 24px;
+        font-size: 16px;
         line-height: 1.17;
     }
 

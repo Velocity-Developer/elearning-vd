@@ -240,11 +240,7 @@ wp_localize_script(
                     <div class="min-w-0">
                         <h1 class="elvd-page-title mb-0" x-text="labels[active] || defaultLabel"></h1>
                     </div>
-                </div>
-                <div class="elvd-data-badge" x-show="active !== 'dashboard' && !loading">
-                    <span x-text="items.length"></span>
-                    <?php echo esc_html__('data', 'elearning-vd'); ?>
-                </div>
+                </div>s
             </div>
 
             <div x-show="active === 'dashboard'">
