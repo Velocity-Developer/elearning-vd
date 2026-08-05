@@ -16,48 +16,79 @@ final class Seeder
     {
         $options = array_merge(
             [
-                'create_users' => true,
-                'create_posts' => true,
+                'users' => true,
+                'tahun_ajaran' => true,
+                'kelas' => true,
+                'mata_pelajaran' => true,
+                'jadwal_pelajaran' => true,
+                'materi' => true,
+                'tugas' => true,
+                'quiz' => true,
             ],
             $options
         );
+
+        if (array_key_exists('create_users', $options)) {
+            $options['users'] = ! empty($options['create_users']);
+        }
+
+        if (array_key_exists('create_posts', $options)) {
+            $options['materi'] = ! empty($options['create_posts']);
+            $options['tugas'] = ! empty($options['create_posts']);
+            $options['quiz'] = ! empty($options['create_posts']);
+        }
 
         if (function_exists('elvd_create_tables')) {
             \elvd_create_tables();
         }
 
-        $result = [
-            'users' => [],
-            'tahun_ajaran' => [],
-            'mata_pelajaran' => [],
-            'kelas' => [],
-            'jadwal_pelajaran' => [],
-            'posts' => [],
-            'pengerjaan_quiz' => [],
-        ];
+        $result = [];
 
-        if (! empty($options['create_users'])) {
+        if (! empty($options['users'])) {
             $result['users'] = self::seedUsers();
         }
 
-        $result['tahun_ajaran'] = self::seedTahunAjaran();
-        $result['mata_pelajaran'] = self::seedMataPelajaran();
-        $result['kelas'] = self::seedKelas((int) $result['tahun_ajaran']['2026/2027']);
-        $result['jadwal_pelajaran'] = self::seedJadwalPelajaran(
-            (int) $result['kelas']['6A'],
-            (int) $result['mata_pelajaran']['MAT'],
-            self::findUserIdByRole('guru')
-        );
+        if (! empty($options['tahun_ajaran'])) {
+            $result['tahun_ajaran'] = self::seedTahunAjaran();
+        }
 
-        if (! empty($options['create_posts'])) {
-            $result['posts'] = self::seedPosts(
-                (int) $result['kelas']['6A'],
-                (int) $result['mata_pelajaran']['MAT']
+        if (! empty($options['mata_pelajaran'])) {
+            $result['mata_pelajaran'] = self::seedMataPelajaran();
+        }
+
+        $tahunAjaranId = ! empty($result['tahun_ajaran']['2026/2027'])
+            ? (int) $result['tahun_ajaran']['2026/2027']
+            : self::findRowId('elvd_tahun_ajaran', ['nama' => '2026/2027']);
+
+        if (! empty($options['kelas'])) {
+            $result['kelas'] = self::seedKelas($tahunAjaranId);
+        }
+
+        $kelasId = ! empty($result['kelas']['6A'])
+            ? (int) $result['kelas']['6A']
+            : self::findRowId('elvd_kelas', ['nama' => 'Kelas 6A']);
+        $mataPelajaranId = ! empty($result['mata_pelajaran']['MAT'])
+            ? (int) $result['mata_pelajaran']['MAT']
+            : self::findRowId('elvd_mata_pelajaran', ['kode' => 'MAT']);
+
+        if (! empty($options['jadwal_pelajaran'])) {
+            $result['jadwal_pelajaran'] = self::seedJadwalPelajaran(
+                $kelasId,
+                $mataPelajaranId,
+                self::findUserIdByRole('guru')
             );
-            $result['pengerjaan_quiz'] = self::seedPengerjaanQuiz(
-                (int) $result['posts']['quiz'],
-                self::findUserIdByRole('siswa')
-            );
+        }
+
+        if (! empty($options['materi'])) {
+            $result['materi'] = self::seedMateri($kelasId, $mataPelajaranId);
+        }
+
+        if (! empty($options['tugas'])) {
+            $result['tugas'] = self::seedTugas($kelasId, $mataPelajaranId);
+        }
+
+        if (! empty($options['quiz'])) {
+            $result['quiz'] = self::seedQuiz($kelasId, $mataPelajaranId);
         }
 
         return $result;
@@ -72,10 +103,25 @@ final class Seeder
             \elvd_register_roles();
         }
 
-        return [
-            'guru' => self::seedUser('elvd_guru_demo', 'guru.demo@example.test', 'Guru Demo', 'guru'),
-            'siswa' => self::seedUser('elvd_siswa_demo', 'siswa.demo@example.test', 'Siswa Demo', 'siswa'),
-        ];
+        $users = [];
+
+        for ($i = 1; $i <= 20; $i++) {
+            $number = str_pad((string) $i, 2, '0', STR_PAD_LEFT);
+            $users['guru_' . $number] = self::seedUser(
+                'elvd_guru_' . $number,
+                'guru' . $number . '.demo@example.test',
+                'Guru Demo ' . $number,
+                'guru'
+            );
+            $users['siswa_' . $number] = self::seedUser(
+                'elvd_siswa_' . $number,
+                'siswa' . $number . '.demo@example.test',
+                'Siswa Demo ' . $number,
+                'siswa'
+            );
+        }
+
+        return $users;
     }
 
     private static function seedUser(string $login, string $email, string $displayName, string $role): int
@@ -146,6 +192,91 @@ final class Seeder
                 'kode' => 'IPA',
                 'deskripsi' => 'Makhluk hidup, energi, bumi, dan lingkungan.',
             ],
+            'IPS' => [
+                'nama' => 'Ilmu Pengetahuan Sosial',
+                'kode' => 'IPS',
+                'deskripsi' => 'Masyarakat, ekonomi, sejarah, dan geografi.',
+            ],
+            'BIG' => [
+                'nama' => 'Bahasa Inggris',
+                'kode' => 'BIG',
+                'deskripsi' => 'Kosakata, tata bahasa, membaca, dan percakapan.',
+            ],
+            'PKN' => [
+                'nama' => 'Pendidikan Pancasila',
+                'kode' => 'PKN',
+                'deskripsi' => 'Nilai Pancasila, kewarganegaraan, dan konstitusi.',
+            ],
+            'PAI' => [
+                'nama' => 'Pendidikan Agama Islam',
+                'kode' => 'PAI',
+                'deskripsi' => 'Akidah, ibadah, akhlak, dan sejarah Islam.',
+            ],
+            'SBD' => [
+                'nama' => 'Seni Budaya',
+                'kode' => 'SBD',
+                'deskripsi' => 'Seni rupa, musik, tari, dan apresiasi budaya.',
+            ],
+            'PJO' => [
+                'nama' => 'PJOK',
+                'kode' => 'PJO',
+                'deskripsi' => 'Pendidikan jasmani, olahraga, dan kesehatan.',
+            ],
+            'TIK' => [
+                'nama' => 'Informatika',
+                'kode' => 'TIK',
+                'deskripsi' => 'Komputasi, perangkat lunak, data, dan literasi digital.',
+            ],
+            'BIO' => [
+                'nama' => 'Biologi',
+                'kode' => 'BIO',
+                'deskripsi' => 'Sel, organisme, ekosistem, dan proses kehidupan.',
+            ],
+            'FIS' => [
+                'nama' => 'Fisika',
+                'kode' => 'FIS',
+                'deskripsi' => 'Gerak, energi, gaya, gelombang, dan listrik.',
+            ],
+            'KIM' => [
+                'nama' => 'Kimia',
+                'kode' => 'KIM',
+                'deskripsi' => 'Materi, reaksi, atom, molekul, dan larutan.',
+            ],
+            'SEJ' => [
+                'nama' => 'Sejarah',
+                'kode' => 'SEJ',
+                'deskripsi' => 'Peristiwa, tokoh, dan perubahan masyarakat.',
+            ],
+            'GEO' => [
+                'nama' => 'Geografi',
+                'kode' => 'GEO',
+                'deskripsi' => 'Ruang, wilayah, lingkungan, dan peta.',
+            ],
+            'EKO' => [
+                'nama' => 'Ekonomi',
+                'kode' => 'EKO',
+                'deskripsi' => 'Kebutuhan, produksi, distribusi, pasar, dan keuangan.',
+            ],
+            'SOS' => [
+                'nama' => 'Sosiologi',
+                'kode' => 'SOS',
+                'deskripsi' => 'Interaksi sosial, kelompok, budaya, dan perubahan sosial.',
+            ],
+            'ANT' => [
+                'nama' => 'Antropologi',
+                'kode' => 'ANT',
+                'deskripsi' => 'Manusia, kebudayaan, tradisi, dan keragaman.',
+            ],
+            'PRA' => [
+                'nama' => 'Prakarya',
+                'kode' => 'PRA',
+                'deskripsi' => 'Keterampilan, kerajinan, pengolahan, dan kewirausahaan.',
+            ],
+            'BJD' => [
+                'nama' => 'Bahasa Jawa',
+                'kode' => 'BJD',
+                'deskripsi' => 'Bahasa, aksara, sastra, dan budaya Jawa.',
+            ],
         ];
 
         return self::seedRows('elvd_mata_pelajaran', 'kode', $rows);
@@ -156,6 +287,21 @@ final class Seeder
      */
     private static function seedKelas(int $tahunAjaranId): array
     {
+        if ($tahunAjaranId <= 0) {
+            return [
+                '6A' => 0,
+                '7A' => 0,
+                '10A' => 0,
+                '6B' => 0,
+                '7B' => 0,
+                '8A' => 0,
+                '8B' => 0,
+                '9A' => 0,
+                '9B' => 0,
+                '10B' => 0,
+            ];
+        }
+
         $rows = [
             '6A' => [
                 'nama' => 'Kelas 6A',
@@ -171,6 +317,48 @@ final class Seeder
             ],
             '10A' => [
                 'nama' => 'Kelas 10A',
+                'tingkat' => 'SMA',
+                'wali_guru_id' => self::findUserIdByRole('guru'),
+                'tahun_ajaran_id' => $tahunAjaranId,
+            ],
+            '6B' => [
+                'nama' => 'Kelas 6B',
+                'tingkat' => 'SD',
+                'wali_guru_id' => self::findUserIdByRole('guru'),
+                'tahun_ajaran_id' => $tahunAjaranId,
+            ],
+            '7B' => [
+                'nama' => 'Kelas 7B',
+                'tingkat' => 'SMP',
+                'wali_guru_id' => self::findUserIdByRole('guru'),
+                'tahun_ajaran_id' => $tahunAjaranId,
+            ],
+            '8A' => [
+                'nama' => 'Kelas 8A',
+                'tingkat' => 'SMP',
+                'wali_guru_id' => self::findUserIdByRole('guru'),
+                'tahun_ajaran_id' => $tahunAjaranId,
+            ],
+            '8B' => [
+                'nama' => 'Kelas 8B',
+                'tingkat' => 'SMP',
+                'wali_guru_id' => self::findUserIdByRole('guru'),
+                'tahun_ajaran_id' => $tahunAjaranId,
+            ],
+            '9A' => [
+                'nama' => 'Kelas 9A',
+                'tingkat' => 'SMP',
+                'wali_guru_id' => self::findUserIdByRole('guru'),
+                'tahun_ajaran_id' => $tahunAjaranId,
+            ],
+            '9B' => [
+                'nama' => 'Kelas 9B',
+                'tingkat' => 'SMP',
+                'wali_guru_id' => self::findUserIdByRole('guru'),
+                'tahun_ajaran_id' => $tahunAjaranId,
+            ],
+            '10B' => [
+                'nama' => 'Kelas 10B',
                 'tingkat' => 'SMA',
                 'wali_guru_id' => self::findUserIdByRole('guru'),
                 'tahun_ajaran_id' => $tahunAjaranId,
@@ -205,58 +393,69 @@ final class Seeder
         );
     }
 
-    /**
-     * @return array<string, int>
-     */
-    private static function seedPosts(int $kelasId, int $mataPelajaranId): array
+    private static function seedMateri(int $kelasId, int $mataPelajaranId): int
     {
-        if (function_exists('elvd_register_post_types')) {
-            \elvd_register_post_types();
+        if ($kelasId <= 0 || $mataPelajaranId <= 0) {
+            return 0;
         }
 
-        return [
-            'materi' => self::seedPost(
-                'elvd_materi',
-                'Materi Demo: Pecahan',
-                'Ringkasan materi tentang pecahan dan contoh penerapannya.',
-                [
-                    'elvd_kelas_id' => $kelasId,
-                    'elvd_mata_pelajaran_id' => $mataPelajaranId,
-                    'elvd_file_url' => '',
-                ]
-            ),
-            'tugas' => self::seedPost(
-                'elvd_tugas',
-                'Tugas Demo: Latihan Pecahan',
-                'Kerjakan latihan pecahan pada buku paket halaman 24.',
-                [
-                    'elvd_kelas_id' => $kelasId,
-                    'elvd_mata_pelajaran_id' => $mataPelajaranId,
-                    'elvd_deadline' => '2026-08-10 23:59:00',
-                    'elvd_instruksi' => 'Tuliskan cara pengerjaan untuk setiap nomor.',
-                ]
-            ),
-            'quiz' => self::seedPost(
-                'elvd_quiz',
-                'Quiz Demo: Pecahan Dasar',
-                'Quiz singkat untuk menguji pemahaman pecahan.',
-                [
-                    'elvd_kelas_id' => $kelasId,
-                    'elvd_mata_pelajaran_id' => $mataPelajaranId,
-                    'elvd_quiz_tipe' => 'pilihan_ganda',
-                    'elvd_durasi_menit' => 30,
-                    'elvd_pertanyaan' => wp_json_encode(
+        return self::seedPost(
+            'elvd_materi',
+            'Materi Demo: Pecahan',
+            'Ringkasan materi tentang pecahan dan contoh penerapannya.',
+            [
+                'elvd_kelas_id' => $kelasId,
+                'elvd_mata_pelajaran_id' => $mataPelajaranId,
+                'elvd_file_url' => '',
+            ]
+        );
+    }
+
+    private static function seedTugas(int $kelasId, int $mataPelajaranId): int
+    {
+        if ($kelasId <= 0 || $mataPelajaranId <= 0) {
+            return 0;
+        }
+
+        return self::seedPost(
+            'elvd_tugas',
+            'Tugas Demo: Latihan Pecahan',
+            'Kerjakan latihan pecahan pada buku paket halaman 24.',
+            [
+                'elvd_kelas_id' => $kelasId,
+                'elvd_mata_pelajaran_id' => $mataPelajaranId,
+                'elvd_deadline' => '2026-08-10 23:59:00',
+                'elvd_instruksi' => 'Tuliskan cara pengerjaan untuk setiap nomor.',
+            ]
+        );
+    }
+
+    private static function seedQuiz(int $kelasId, int $mataPelajaranId): int
+    {
+        if ($kelasId <= 0 || $mataPelajaranId <= 0) {
+            return 0;
+        }
+
+        return self::seedPost(
+            'elvd_quiz',
+            'Quiz Demo: Pecahan Dasar',
+            'Quiz singkat untuk menguji pemahaman pecahan.',
+            [
+                'elvd_kelas_id' => $kelasId,
+                'elvd_mata_pelajaran_id' => $mataPelajaranId,
+                'elvd_quiz_tipe' => 'pilihan_ganda',
+                'elvd_durasi_menit' => 30,
+                'elvd_pertanyaan' => wp_json_encode(
+                    [
                         [
-                            [
-                                'pertanyaan' => 'Berapakah hasil dari 1/2 + 1/4?',
-                                'pilihan' => ['1/4', '2/4', '3/4', '4/4'],
-                                'jawaban' => '3/4',
-                            ],
-                        ]
-                    ),
-                ]
-            ),
-        ];
+                            'pertanyaan' => 'Berapakah hasil dari 1/2 + 1/4?',
+                            'pilihan' => ['1/4', '2/4', '3/4', '4/4'],
+                            'jawaban' => '3/4',
+                        ],
+                    ]
+                ),
+            ]
+        );
     }
 
     /**
@@ -264,6 +463,10 @@ final class Seeder
      */
     private static function seedPost(string $postType, string $title, string $content, array $meta): int
     {
+        if (function_exists('elvd_register_post_types')) {
+            \elvd_register_post_types();
+        }
+
         if (! function_exists('post_exists')) {
             require_once ABSPATH . 'wp-admin/includes/post.php';
         }

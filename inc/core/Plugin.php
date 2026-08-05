@@ -21,6 +21,7 @@ final class Plugin
         add_action('admin_menu', 'elvd_register_admin_menu');
         add_action('admin_enqueue_scripts', 'elvd_register_admin_assets');
         add_action('admin_post_elvd_create_app_page', 'elvd_handle_create_app_page');
+        add_action('admin_post_elvd_seed_data', 'elvd_handle_seed_data');
         add_action('update_option_' . \ELVD::OPTION_ELEARNING_PAGE_ID, 'elvd_flush_app_rewrite_rules', 10, 3);
 
         add_filter('theme_page_templates', 'elvd_register_page_template', 10, 4);
