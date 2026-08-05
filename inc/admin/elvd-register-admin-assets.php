@@ -73,17 +73,17 @@ jQuery(function ($) {
         $removeButton.addClass('hidden');
     });
 
-    var profileFieldIndex = $('#elvd-siswa-profile-fields tbody tr').length;
-
-    $('#elvd-add-siswa-profile-field').on('click', function (event) {
+    $('.elvd-add-profile-field').on('click', function (event) {
         event.preventDefault();
 
-        var index = profileFieldIndex++;
+        var option = $(this).data('field-option');
+        var $tbody = $($(this).data('target') + ' tbody');
+        var index = $tbody.find('tr').length;
         var row = ''
             + '<tr>'
-            + '<td><input type="text" name="elvd_siswa_profile_fields[' + index + '][key]" value="" class="regular-text" required></td>'
-            + '<td><input type="text" name="elvd_siswa_profile_fields[' + index + '][label]" value="" class="regular-text" required></td>'
-            + '<td><select name="elvd_siswa_profile_fields[' + index + '][type]">'
+            + '<td><input type="text" name="' + option + '[' + index + '][key]" value="" class="regular-text" required></td>'
+            + '<td><input type="text" name="' + option + '[' + index + '][label]" value="" class="regular-text" required></td>'
+            + '<td><select name="' + option + '[' + index + '][type]">'
             + '<option value="text">Text</option>'
             + '<option value="email">Email</option>'
             + '<option value="number">Angka</option>'
@@ -91,19 +91,19 @@ jQuery(function ($) {
             + '<option value="tel">Telepon</option>'
             + '<option value="textarea">Textarea</option>'
             + '</select></td>'
-            + '<td><select name="elvd_siswa_profile_fields[' + index + '][target]">'
+            + '<td><select name="' + option + '[' + index + '][target]">'
             + '<option value="meta">User Meta</option>'
             + '<option value="display_name">Nama Tampilan User</option>'
             + '<option value="user_email">Email User</option>'
             + '</select></td>'
-            + '<td><label><input type="checkbox" name="elvd_siswa_profile_fields[' + index + '][required]" value="1"> Ya</label></td>'
+            + '<td><label><input type="checkbox" name="' + option + '[' + index + '][required]" value="1"> Ya</label></td>'
             + '<td><button type="button" class="button elvd-remove-profile-field">Hapus</button></td>'
             + '</tr>';
 
-        $('#elvd-siswa-profile-fields tbody').append(row);
+        $tbody.append(row);
     });
 
-    $('#elvd-siswa-profile-fields').on('click', '.elvd-remove-profile-field', function (event) {
+    $('.elvd-profile-fields').on('click', '.elvd-remove-profile-field', function (event) {
         event.preventDefault();
 
         $(this).closest('tr').remove();

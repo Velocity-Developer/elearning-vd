@@ -23,36 +23,12 @@ final class Guru extends UserProfile
      */
     protected static function default_fields(): array
     {
-        return [
-            'nama' => [
-                'label' => __('Nama Lengkap', 'elearning-vd'),
-                'type' => 'text',
-                'target' => 'display_name',
-                'required' => true,
-            ],
-            'email' => [
-                'label' => __('Email', 'elearning-vd'),
-                'type' => 'email',
-                'target' => 'user_email',
-                'required' => true,
-            ],
-            'nip' => [
-                'label' => __('NIP', 'elearning-vd'),
-                'type' => 'text',
-            ],
-            'mata_pelajaran' => [
-                'label' => __('Mata Pelajaran', 'elearning-vd'),
-                'type' => 'text',
-            ],
-            'telepon' => [
-                'label' => __('No. Telepon', 'elearning-vd'),
-                'type' => 'tel',
-            ],
-            'alamat' => [
-                'label' => __('Alamat', 'elearning-vd'),
-                'type' => 'textarea',
-                'wrapper_class' => 'col-12',
-            ],
-        ];
+        $fields = get_option(\ELVD::OPTION_GURU_PROFILE_FIELDS, []);
+
+        if (is_array($fields) && [] !== $fields) {
+            return $fields;
+        }
+
+        return \elvd_default_guru_profile_fields();
     }
 }

@@ -39,6 +39,15 @@ function elvd_register_settings(): void
             'sanitize_callback' => 'elvd_sanitize_siswa_profile_fields',
         ]
     );
+
+    register_setting(
+        ELVD::OPTION_GROUP_GURU_PROFILE,
+        ELVD::OPTION_GURU_PROFILE_FIELDS,
+        [
+            'type' => 'array',
+            'sanitize_callback' => 'elvd_sanitize_guru_profile_fields',
+        ]
+    );
 }
 
 /**
@@ -85,13 +94,70 @@ function elvd_default_siswa_profile_fields(): array
 }
 
 /**
+ * @return array<string, array<string, mixed>>
+ */
+function elvd_default_guru_profile_fields(): array
+{
+    return [
+        'nama' => [
+            'label' => __('Nama Lengkap', ELVD::TEXT_DOMAIN),
+            'type' => 'text',
+            'target' => 'display_name',
+            'required' => true,
+        ],
+        'email' => [
+            'label' => __('Email', ELVD::TEXT_DOMAIN),
+            'type' => 'email',
+            'target' => 'user_email',
+            'required' => true,
+        ],
+        'nip' => [
+            'label' => __('NIP', ELVD::TEXT_DOMAIN),
+            'type' => 'text',
+        ],
+        'mata_pelajaran' => [
+            'label' => __('Mata Pelajaran', ELVD::TEXT_DOMAIN),
+            'type' => 'text',
+        ],
+        'telepon' => [
+            'label' => __('No. Telepon', ELVD::TEXT_DOMAIN),
+            'type' => 'tel',
+        ],
+        'alamat' => [
+            'label' => __('Alamat', ELVD::TEXT_DOMAIN),
+            'type' => 'textarea',
+            'wrapper_class' => 'col-12',
+        ],
+    ];
+}
+
+/**
  * @param mixed $fields
  * @return array<string, array<string, mixed>>
  */
 function elvd_sanitize_siswa_profile_fields($fields): array
 {
+    return elvd_sanitize_profile_fields($fields, elvd_default_siswa_profile_fields());
+}
+
+/**
+ * @param mixed $fields
+ * @return array<string, array<string, mixed>>
+ */
+function elvd_sanitize_guru_profile_fields($fields): array
+{
+    return elvd_sanitize_profile_fields($fields, elvd_default_guru_profile_fields());
+}
+
+/**
+ * @param mixed $fields
+ * @param array<string, array<string, mixed>> $fallback
+ * @return array<string, array<string, mixed>>
+ */
+function elvd_sanitize_profile_fields($fields, array $fallback): array
+{
     if (! is_array($fields)) {
-        return elvd_default_siswa_profile_fields();
+        return $fallback;
     }
 
     $allowed_types = ['text', 'email', 'number', 'date', 'tel', 'textarea'];
@@ -136,5 +202,5 @@ function elvd_sanitize_siswa_profile_fields($fields): array
         }
     }
 
-    return [] !== $sanitized ? $sanitized : elvd_default_siswa_profile_fields();
+    return [] !== $sanitized ? $sanitized : $fallback;
 }

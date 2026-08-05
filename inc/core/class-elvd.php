@@ -14,10 +14,12 @@ final class ELVD
     public const APP_SHORTCODE = '[elvd_app]';
     public const OPTION_GROUP = 'elvd_settings';
     public const OPTION_GROUP_SISWA_PROFILE = 'elvd_siswa_profile_settings';
+    public const OPTION_GROUP_GURU_PROFILE = 'elvd_guru_profile_settings';
     public const OPTION_SCHOOL_NAME = 'elvd_school_name';
     public const OPTION_SCHOOL_LOGO_ID = 'elvd_school_logo_id';
     public const OPTION_ELEARNING_PAGE_ID = 'elvd_elearning_page_id';
     public const OPTION_SISWA_PROFILE_FIELDS = 'elvd_siswa_profile_fields';
+    public const OPTION_GURU_PROFILE_FIELDS = 'elvd_guru_profile_fields';
     public const ADMIN_MENU_SLUG = 'elvd-dashboard';
     public const SETTINGS_MENU_SLUG = 'elvd-settings';
 
