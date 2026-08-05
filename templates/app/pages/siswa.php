@@ -72,6 +72,8 @@ $elvd_siswa_items = array_map(
         students: <?php echo esc_attr(wp_json_encode($elvd_siswa_items)); ?>,
         years: <?php echo esc_attr(wp_json_encode($elvd_years)); ?>,
         classes: <?php echo esc_attr(wp_json_encode($elvd_classes)); ?>,
+        currentPage: 1,
+        perPage: 15,
         filters: {
             tahun_ajaran_id: '',
             kelas_id: ''
@@ -84,10 +86,14 @@ $elvd_siswa_items = array_map(
                     this.filters.kelas_id = '';
                 }
 
+                this.currentPage = 1;
                 this.syncItems();
             });
 
-            this.$watch('filters.kelas_id', () => this.syncItems());
+            this.$watch('filters.kelas_id', () => {
+                this.currentPage = 1;
+                this.syncItems();
+            });
         },
         filteredClasses() {
             if (!this.filters.tahun_ajaran_id) {
@@ -103,6 +109,20 @@ $elvd_siswa_items = array_map(
 
                 return matchesYear && matchesClass;
             });
+        },
+        totalPages() {
+            return Math.max(1, Math.ceil(this.filteredStudents().length / this.perPage));
+        },
+        paginatedStudents() {
+            const start = (this.currentPage - 1) * this.perPage;
+
+            return this.filteredStudents().slice(start, start + this.perPage);
+        },
+        paginationPages() {
+            return Array.from({ length: this.totalPages() }, (_, index) => index + 1);
+        },
+        goToPage(page) {
+            this.currentPage = Math.min(Math.max(Number(page), 1), this.totalPages());
         },
         isSelectedClassAvailable() {
             if (!this.filters.kelas_id) {
@@ -169,7 +189,7 @@ $elvd_siswa_items = array_map(
                     </tr>
                 </thead>
                 <tbody>
-                    <template x-for="item in filteredStudents()" :key="item.id">
+                    <template x-for="item in paginatedStudents()" :key="item.id">
                         <tr>
                             <td>
                                 <strong x-text="item.nama || '-'"></strong>
@@ -188,6 +208,34 @@ $elvd_siswa_items = array_map(
                     </tr>
                 </tbody>
             </table>
+        </div>
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 p-3 border-top" x-show="filteredStudents().length > perPage">
+            <div class="text-muted small">
+                <span x-text="((currentPage - 1) * perPage) + 1"></span>
+                -
+                <span x-text="Math.min(currentPage * perPage, filteredStudents().length)"></span>
+                <?php echo esc_html__('dari', 'elearning-vd'); ?>
+                <span x-text="filteredStudents().length"></span>
+            </div>
+            <nav aria-label="<?php echo esc_attr__('Pagination siswa', 'elearning-vd'); ?>">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                        <button type="button" class="page-link" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">
+                            <?php echo esc_html__('Sebelumnya', 'elearning-vd'); ?>
+                        </button>
+                    </li>
+                    <template x-for="page in paginationPages()" :key="page">
+                        <li class="page-item" :class="{ active: page === currentPage }">
+                            <button type="button" class="page-link" @click="goToPage(page)" x-text="page"></button>
+                        </li>
+                    </template>
+                    <li class="page-item" :class="{ disabled: currentPage === totalPages() }">
+                        <button type="button" class="page-link" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages()">
+                            <?php echo esc_html__('Berikutnya', 'elearning-vd'); ?>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
