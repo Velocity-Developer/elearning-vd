@@ -10,7 +10,6 @@ function elvd_register_settings(): void
         [
             'type' => 'string',
             'sanitize_callback' => 'sanitize_text_field',
-            'default' => get_bloginfo('name'),
         ]
     );
 
@@ -20,7 +19,6 @@ function elvd_register_settings(): void
         [
             'type' => 'integer',
             'sanitize_callback' => 'absint',
-            'default' => 0,
         ]
     );
 
@@ -30,7 +28,6 @@ function elvd_register_settings(): void
         [
             'type' => 'integer',
             'sanitize_callback' => 'absint',
-            'default' => 0,
         ]
     );
 
@@ -40,7 +37,6 @@ function elvd_register_settings(): void
         [
             'type' => 'array',
             'sanitize_callback' => 'elvd_sanitize_siswa_profile_fields',
-            'default' => elvd_default_siswa_profile_fields(),
         ]
     );
 }
