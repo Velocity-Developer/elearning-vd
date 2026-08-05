@@ -1,0 +1,259 @@
+/*
+ * Style Material Design untuk halaman Pengaturan Elearning (wp-admin).
+ * Scope: .elvd-admin-settings agar tidak mengganggu halaman admin lain.
+ */
+.elvd-admin-settings {
+    --md-primary: #024ad8;
+    --md-primary-dark: #0e3191;
+    --md-primary-soft: #e8f0fe;
+    --md-surface: #ffffff;
+    --md-bg: #f6f7fb;
+    --md-ink: #1b1f27;
+    --md-muted: #5f6673;
+    --md-border: #e2e5ec;
+    --md-radius-sm: 8px;
+    --md-radius-md: 12px;
+    --md-radius-lg: 16px;
+    --md-shadow-1: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+    --md-shadow-2: 0 4px 8px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+    --md-elev-3: 0 12px 24px -6px rgba(16, 24, 40, 0.16);
+    max-width: 1080px;
+}
+
+.elvd-admin-settings h1 {
+    color: var(--md-ink);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 16px 0 24px;
+}
+
+.elvd-admin-settings h2 {
+    color: var(--md-ink);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 24px 0 8px;
+}
+
+.elvd-admin-settings p {
+    color: var(--md-muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* ===== Tabs (MD tab) ===== */
+.elvd-admin-settings .nav-tab-wrapper {
+    background: var(--md-surface);
+    border: 1px solid var(--md-border);
+    border-bottom: 0;
+    border-radius: var(--md-radius-md) var(--md-radius-md) 0 0;
+    box-shadow: var(--md-shadow-1);
+    display: flex;
+    gap: 4px;
+    margin: 0;
+    padding: 0 12px;
+}
+
+.elvd-admin-settings .nav-tab {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: var(--md-muted);
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+    padding: 14px 18px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.elvd-admin-settings .nav-tab:hover,
+.elvd-admin-settings .nav-tab:focus {
+    background: transparent;
+    color: var(--md-primary);
+}
+
+.elvd-admin-settings .nav-tab-active,
+.elvd-admin-settings .nav-tab-active:hover,
+.elvd-admin-settings .nav-tab-active:focus {
+    background: transparent;
+    border-bottom-color: var(--md-primary);
+    color: var(--md-primary);
+}
+
+/* ===== Form & field (MD text field) ===== */
+.elvd-admin-settings form {
+    background: var(--md-surface);
+    border: 1px solid var(--md-border);
+    border-radius: 0 0 var(--md-radius-lg) var(--md-radius-lg);
+    box-shadow: var(--md-shadow-2);
+    padding: 8px 24px 24px;
+}
+
+.elvd-admin-settings .form-table {
+    border-bottom: 1px solid var(--md-border);
+    margin: 0 0 16px;
+}
+
+.elvd-admin-settings .form-table th {
+    color: var(--md-ink);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 18px 16px 18px 0;
+    vertical-align: middle;
+}
+
+.elvd-admin-settings .form-table td {
+    padding: 18px 0;
+}
+
+.elvd-admin-settings .regular-text,
+.elvd-admin-settings input[type="text"],
+.elvd-admin-settings input[type="email"],
+.elvd-admin-settings input[type="number"],
+.elvd-admin-settings input[type="date"],
+.elvd-admin-settings input[type="tel"],
+.elvd-admin-settings select {
+    background: var(--md-surface);
+    border: 1px solid var(--md-border);
+    border-radius: var(--md-radius-sm);
+    box-shadow: none;
+    color: var(--md-ink);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 40px;
+    padding: 6px 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.elvd-admin-settings .regular-text:focus,
+.elvd-admin-settings input[type="text"]:focus,
+.elvd-admin-settings input[type="email"]:focus,
+.elvd-admin-settings input[type="number"]:focus,
+.elvd-admin-settings input[type="date"]:focus,
+.elvd-admin-settings input[type="tel"]:focus,
+.elvd-admin-settings select:focus {
+    border-color: var(--md-primary);
+    box-shadow: 0 0 0 3px rgba(2, 74, 216, 0.16);
+    outline: none;
+}
+
+.elvd-admin-settings .form-table input[type="checkbox"],
+.elvd-admin-settings table input[type="checkbox"] {
+    border: 2px solid var(--md-border);
+    border-radius: 4px;
+    box-shadow: none;
+}
+
+.elvd-admin-settings .form-table input[type="checkbox"]:checked {
+    background: var(--md-primary);
+    border-color: var(--md-primary);
+}
+
+/* ===== Button (MD filled / tonal) ===== */
+.elvd-admin-settings .button {
+    background: var(--md-surface);
+    border: 1px solid var(--md-border);
+    border-radius: var(--md-radius-sm);
+    box-shadow: var(--md-shadow-1);
+    color: var(--md-primary);
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 36px;
+    padding: 4px 16px;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.elvd-admin-settings .button:hover {
+    background: var(--md-primary-soft);
+    border-color: var(--md-primary);
+    color: var(--md-primary-dark);
+}
+
+.elvd-admin-settings .button:active {
+    box-shadow: none;
+    transform: translateY(1px);
+}
+
+.elvd-admin-settings .button-primary {
+    background: var(--md-primary);
+    border-color: var(--md-primary);
+    box-shadow: 0 2px 6px rgba(2, 74, 216, 0.35);
+    color: #ffffff;
+}
+
+.elvd-admin-settings .button-primary:hover {
+    background: var(--md-primary-dark);
+    border-color: var(--md-primary-dark);
+    color: #ffffff;
+}
+
+/* ===== Data table (MD table) ===== */
+.elvd-admin-settings .elvd-profile-fields-wrap {
+    border-radius: var(--md-radius-md);
+    margin: 12px 0 16px;
+    overflow-x: auto;
+}
+
+.elvd-admin-settings .elvd-profile-fields {
+    margin: 0;
+    min-width: 760px;
+}
+
+.elvd-admin-settings .widefat {
+    border: 1px solid var(--md-border);
+    border-radius: var(--md-radius-md);
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: var(--md-shadow-1);
+    margin: 12px 0 16px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.elvd-admin-settings .widefat thead th {
+    background: var(--md-bg);
+    border: 0;
+    color: var(--md-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 12px 14px;
+    text-transform: uppercase;
+}
+
+.elvd-admin-settings .widefat tbody th,
+.elvd-admin-settings .widefat tbody td {
+    border: 0;
+    border-top: 1px solid var(--md-border);
+    color: var(--md-ink);
+    font-size: 14px;
+    padding: 12px 14px;
+    vertical-align: middle;
+}
+
+.elvd-admin-settings .widefat tbody tr:hover {
+    background: #f6f9ff;
+}
+
+.elvd-admin-settings .widefat .regular-text {
+    min-height: 36px;
+}
+
+/* ===== Card (seeder) ===== */
+.elvd-admin-settings .card {
+    background: var(--md-surface);
+    border: 1px solid var(--md-border);
+    border-radius: var(--md-radius-lg);
+    box-shadow: var(--md-elev-3);
+    padding: 24px;
+}
+
+.elvd-admin-settings .card h2 {
+    margin-top: 0;
+}
+
+.elvd-admin-settings .card fieldset label {
+    color: var(--md-ink);
+    font-size: 14px;
+}

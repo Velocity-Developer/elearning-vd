@@ -31,82 +31,84 @@ function elvd_render_profile_fields_settings(array $args): void
         <h2><?php echo esc_html($title); ?></h2>
         <p><?php echo esc_html($description); ?></p>
 
-        <table class="widefat striped elvd-profile-fields" id="<?php echo esc_attr($table_id); ?>">
-            <thead>
-                <tr>
-                    <th><?php esc_html_e('Key', ELVD::TEXT_DOMAIN); ?></th>
-                    <th><?php esc_html_e('Label', ELVD::TEXT_DOMAIN); ?></th>
-                    <th><?php esc_html_e('Tipe', ELVD::TEXT_DOMAIN); ?></th>
-                    <th><?php esc_html_e('Target', ELVD::TEXT_DOMAIN); ?></th>
-                    <th><?php esc_html_e('Wajib', ELVD::TEXT_DOMAIN); ?></th>
-                    <th><?php esc_html_e('Aksi', ELVD::TEXT_DOMAIN); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php $field_index = 0; ?>
-                <?php foreach ($fields as $field_key => $field) : ?>
-                    <?php
-                    if (! is_array($field)) {
-                        continue;
-                    }
-
-                    $field_target = (string) ($field['target'] ?? 'meta');
-                    ?>
+        <div class="elvd-profile-fields-wrap">
+            <table class="widefat striped elvd-profile-fields" id="<?php echo esc_attr($table_id); ?>">
+                <thead>
                     <tr>
-                        <td>
-                            <input
-                                type="text"
-                                name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][key]"
-                                value="<?php echo esc_attr((string) $field_key); ?>"
-                                class="regular-text"
-                                required>
-                        </td>
-                        <td>
-                            <input
-                                type="text"
-                                name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][label]"
-                                value="<?php echo esc_attr((string) ($field['label'] ?? $field_key)); ?>"
-                                class="regular-text"
-                                required>
-                        </td>
-                        <td>
-                            <select name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][type]">
-                                <?php foreach ($field_types as $type_key => $type_label) : ?>
-                                    <option value="<?php echo esc_attr($type_key); ?>" <?php selected((string) ($field['type'] ?? 'text'), $type_key); ?>>
-                                        <?php echo esc_html($type_label); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                        <td>
-                            <select name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][target]">
-                                <?php foreach ($field_targets as $target_key => $target_label) : ?>
-                                    <option value="<?php echo esc_attr($target_key); ?>" <?php selected($field_target, $target_key); ?>>
-                                        <?php echo esc_html($target_label); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                        <td>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][required]"
-                                    value="1"
-                                    <?php checked(! empty($field['required'])); ?>>
-                                <?php esc_html_e('Ya', ELVD::TEXT_DOMAIN); ?>
-                            </label>
-                        </td>
-                        <td>
-                            <button type="button" class="button elvd-remove-profile-field">
-                                <?php esc_html_e('Hapus', ELVD::TEXT_DOMAIN); ?>
-                            </button>
-                        </td>
+                        <th><?php esc_html_e('Key', ELVD::TEXT_DOMAIN); ?></th>
+                        <th><?php esc_html_e('Label', ELVD::TEXT_DOMAIN); ?></th>
+                        <th><?php esc_html_e('Tipe', ELVD::TEXT_DOMAIN); ?></th>
+                        <th><?php esc_html_e('Target', ELVD::TEXT_DOMAIN); ?></th>
+                        <th><?php esc_html_e('Wajib', ELVD::TEXT_DOMAIN); ?></th>
+                        <th><?php esc_html_e('Aksi', ELVD::TEXT_DOMAIN); ?></th>
                     </tr>
-                    <?php ++$field_index; ?>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php $field_index = 0; ?>
+                    <?php foreach ($fields as $field_key => $field) : ?>
+                        <?php
+                        if (! is_array($field)) {
+                            continue;
+                        }
+
+                        $field_target = (string) ($field['target'] ?? 'meta');
+                        ?>
+                        <tr>
+                            <td>
+                                <input
+                                    type="text"
+                                    name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][key]"
+                                    value="<?php echo esc_attr((string) $field_key); ?>"
+                                    class="regular-text"
+                                    required>
+                            </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][label]"
+                                    value="<?php echo esc_attr((string) ($field['label'] ?? $field_key)); ?>"
+                                    class="regular-text"
+                                    required>
+                            </td>
+                            <td>
+                                <select name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][type]">
+                                    <?php foreach ($field_types as $type_key => $type_label) : ?>
+                                        <option value="<?php echo esc_attr($type_key); ?>" <?php selected((string) ($field['type'] ?? 'text'), $type_key); ?>>
+                                            <?php echo esc_html($type_label); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][target]">
+                                    <?php foreach ($field_targets as $target_key => $target_label) : ?>
+                                        <option value="<?php echo esc_attr($target_key); ?>" <?php selected($field_target, $target_key); ?>>
+                                            <?php echo esc_html($target_label); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        name="<?php echo esc_attr($option_name); ?>[<?php echo esc_attr((string) $field_index); ?>][required]"
+                                        value="1"
+                                        <?php checked(! empty($field['required'])); ?>>
+                                    <?php esc_html_e('Ya', ELVD::TEXT_DOMAIN); ?>
+                                </label>
+                            </td>
+                            <td>
+                                <button type="button" class="button elvd-remove-profile-field">
+                                    <?php esc_html_e('Hapus', ELVD::TEXT_DOMAIN); ?>
+                                </button>
+                            </td>
+                        </tr>
+                        <?php ++$field_index; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
 
         <p>
             <button
@@ -167,7 +169,7 @@ function elvd_render_settings_page(): void
         'quiz' => __('Quiz', ELVD::TEXT_DOMAIN),
     ];
 ?>
-    <div class="wrap">
+    <div class="wrap elvd-admin-settings">
         <h1><?php esc_html_e('Pengaturan Elearning', ELVD::TEXT_DOMAIN); ?></h1>
 
         <nav class="nav-tab-wrapper" aria-label="<?php esc_attr_e('Tab Pengaturan Elearning', ELVD::TEXT_DOMAIN); ?>">
