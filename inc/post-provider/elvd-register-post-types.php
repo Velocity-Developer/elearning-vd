@@ -12,21 +12,25 @@ function elvd_register_post_types(): void
             'singular' => __('Tugas', 'elearning-vd'),
             'plural' => __('Tugas', 'elearning-vd'),
             'menu_icon' => 'dashicons-welcome-write-blog',
+            'disable_single' => true,
         ],
         'elvd_materi' => [
             'singular' => __('Materi', 'elearning-vd'),
             'plural' => __('Materi', 'elearning-vd'),
             'menu_icon' => 'dashicons-book-alt',
+            'disable_single' => true,
         ],
         'elvd_quiz' => [
             'singular' => __('Quiz', 'elearning-vd'),
             'plural' => __('Quiz', 'elearning-vd'),
             'menu_icon' => 'dashicons-forms',
+            'disable_single' => true,
         ],
         'elvd_quiz_question' => [
             'singular' => __('Quiz Question', 'elearning-vd'),
             'plural' => __('Quiz Questions', 'elearning-vd'),
             'menu_icon' => 'dashicons-format-chat',
+            'disable_single' => true,
         ],
     ];
 
@@ -45,6 +49,8 @@ function elvd_register_post_types(): void
                     'not_found' => __('Tidak ada data ditemukan.', 'elearning-vd'),
                 ],
                 'public' => true,
+                'publicly_queryable' => empty($config['disable_single']),
+                'has_archive' => empty($config['disable_single']),
                 'show_in_menu' => ELVD::ADMIN_MENU_SLUG,
                 'show_in_rest' => true,
                 'menu_icon' => $config['menu_icon'],
