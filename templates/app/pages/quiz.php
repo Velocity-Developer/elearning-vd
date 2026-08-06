@@ -3,6 +3,7 @@
 defined('ABSPATH') || exit;
 
 $elvd_quiz_form_url = untrailingslashit(ELVD::app_route()) . '/quiz-form';
+$elvd_quiz_workspace_url = untrailingslashit(ELVD::app_route()) . '/quiz-workspace';
 ?>
 
 <div x-show="active === 'quiz'" x-data="{
@@ -11,6 +12,7 @@ $elvd_quiz_form_url = untrailingslashit(ELVD::app_route()) . '/quiz-form';
     subjects: [],
     restUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url('wp/v2/elvd_quiz')))); ?>,
     formUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_form_url)); ?>,
+    workspaceUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_workspace_url)); ?>,
     loading: false,
     loadingRelations: false,
     error: '',
@@ -159,6 +161,11 @@ $elvd_quiz_form_url = untrailingslashit(ELVD::app_route()) . '/quiz-form';
                             <td class="text-end">
                                 <a
                                     class="btn btn-sm btn-outline-primary elvd-row-action"
+                                    :href="`${workspaceUrl}/${item.id}/`">
+                                    <?php echo esc_html__('Kerjakan', 'elearning-vd'); ?>
+                                </a>
+                                <a
+                                    class="btn btn-sm btn-outline-secondary elvd-row-action"
                                     x-show="config.isManager"
                                     :href="`${formUrl}/${item.id}/`">
                                     <?php echo esc_html__('Edit', 'elearning-vd'); ?>

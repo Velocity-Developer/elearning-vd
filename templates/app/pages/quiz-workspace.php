@@ -1,0 +1,321 @@
+<?php
+
+defined('ABSPATH') || exit;
+
+$elvd_ws_quiz_id = absint((int) get_query_var('elvd_quiz_id', 0));
+$elvd_ws_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
+$elvd_ws_rest_quiz = untrailingslashit(rest_url('wp/v2/elvd_quiz'));
+$elvd_ws_rest_question = untrailingslashit(rest_url('wp/v2/elvd_quiz_question'));
+$elvd_ws_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pengerjaan-quiz'));
+$elvd_ws_is_preview = elvd_can_manage_rest();
+?>
+
+<div x-show="active === 'quiz-workspace'" x-data="{
+    restUrl: <?php echo esc_attr(wp_json_encode($elvd_ws_rest_quiz)); ?>,
+    questionRestUrl: <?php echo esc_attr(wp_json_encode($elvd_ws_rest_question)); ?>,
+    pengerjaanUrl: <?php echo esc_attr(wp_json_encode($elvd_ws_rest_pengerjaan)); ?>,
+    backUrl: <?php echo esc_attr(wp_json_encode($elvd_ws_back_url)); ?>,
+    isPreview: <?php echo esc_attr($elvd_ws_is_preview ? 'true' : 'false'); ?>,
+    quizId: <?php echo esc_attr((string) $elvd_ws_quiz_id); ?>,
+    view: 'intro',
+    loading: true,
+    error: '',
+    quiz: null,
+    questions: [],
+    answers: {},
+    durasiMenit: 0,
+    remaining: 0,
+    startedAt: '',
+    timerId: null,
+    submitting: false,
+    submitted: false,
+    init() {
+        if (!this.quizId) {
+            this.loading = false;
+            this.error = 'Quiz tidak ditemukan.';
+            return;
+        }
+
+        this.loadQuiz();
+    },
+    metaValue(item, key) {
+        return item.meta && item.meta[key] ? item.meta[key] : '';
+    },
+    titleOf(item) {
+        return (item.title && (item.title.rendered || item.title.raw)) ? (item.title.rendered || item.title.raw) : '';
+    },
+    contentOf(item) {
+        if (item.content && item.content.raw) {
+            return item.content.raw;
+        }
+
+        if (item.content && item.content.rendered) {
+            const div = document.createElement('div');
+            div.innerHTML = item.content.rendered;
+            return div.textContent || div.innerText || '';
+        }
+
+        return '';
+    },
+    loadQuiz() {
+        this.loading = true;
+        this.error = '';
+
+        Promise.all([
+            fetch(`${this.restUrl}/${this.quizId}`, { headers: { 'X-WP-Nonce': config.nonce } }),
+            fetch(`${this.questionRestUrl}?per_page=100`, { headers: { 'X-WP-Nonce': config.nonce } })
+        ])
+        .then((responses) => {
+            responses.forEach((response) => {
+                if (!response.ok) {
+                    throw new Error('Gagal memuat data quiz.');
+                }
+            });
+
+            return Promise.all(responses.map((response) => response.json()));
+        })
+        .then(([quiz, allQuestions]) => {
+            this.quiz = quiz;
+            this.durasiMenit = Number(this.metaValue(quiz, 'elvd_durasi_menit')) || 0;
+            this.questions = (Array.isArray(allQuestions) ? allQuestions : [])
+                .filter((item) => Number(this.metaValue(item, 'elvd_quiz_id')) === Number(this.quizId))
+                .sort((a, b) => Number(a.id) - Number(b.id));
+        })
+        .catch((error) => {
+            this.error = error.message || 'Gagal memuat data quiz.';
+        })
+        .finally(() => {
+            this.loading = false;
+        });
+    },
+    quizTipe() {
+        return this.quiz ? (this.metaValue(this.quiz, 'elvd_quiz_tipe') || 'pilihan_ganda') : 'pilihan_ganda';
+    },
+    questionTipe(item) {
+        return this.metaValue(item, 'elvd_pertanyaan_tipe') || this.quizTipe();
+    },
+    optionsOf(item) {
+        let parsed = [];
+
+        try {
+            parsed = JSON.parse(this.metaValue(item, 'elvd_opsi') || '[]');
+        } catch (err) {
+            parsed = [];
+        }
+
+        return Array.isArray(parsed) ? parsed : [];
+    },
+    answerOf(item) {
+        const value = this.answers[item.id];
+
+        return value === undefined || value === null ? '' : String(value);
+    },
+    answeredCount() {
+        return this.questions.filter((item) => this.answerOf(item).trim() !== '').length;
+    },
+    start() {
+        if (!this.questions.length) {
+            this.error = 'Quiz belum memiliki pertanyaan.';
+            return;
+        }
+
+        this.error = '';
+        this.startedAt = new Date().toISOString();
+        this.remaining = this.durasiMenit > 0 ? this.durasiMenit * 60 : 0;
+        this.view = 'work';
+
+        if (this.remaining > 0) {
+            this.timerId = setInterval(() => {
+                this.remaining -= 1;
+
+                if (this.remaining <= 0) {
+                    this.submit(true);
+                }
+            }, 1000);
+        }
+    },
+    formatTime(seconds) {
+        const total = Math.max(0, seconds);
+        const minutes = Math.floor(total / 60);
+        const rest = total % 60;
+
+        return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`;
+    },
+    submit(autoSubmit = false) {
+        if (this.submitting || this.submitted) {
+            return;
+        }
+
+        if (!autoSubmit && !window.confirm('Kumpulkan jawaban quiz sekarang?')) {
+            return;
+        }
+
+        if (this.timerId) {
+            clearInterval(this.timerId);
+            this.timerId = null;
+        }
+
+        this.submitting = true;
+        this.error = '';
+
+        if (this.isPreview) {
+            this.finish();
+            return;
+        }
+
+        fetch(`${this.pengerjaanUrl}/kerjakan`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-WP-Nonce': config.nonce
+            },
+            body: JSON.stringify({
+                quiz_id: Number(this.quizId),
+                jawaban: this.answers,
+                mulai_pada: this.startedAt
+            })
+        })
+        .then((response) => response.json().then((data) => ({ response, data })))
+        .then(({ response, data }) => {
+            if (!response.ok) {
+                throw new Error(data?.message || 'Gagal menyimpan hasil quiz.');
+            }
+
+            this.finish();
+        })
+        .catch((error) => {
+            this.error = error.message || 'Gagal menyimpan hasil quiz.';
+        })
+        .finally(() => {
+            this.submitting = false;
+        });
+    },
+    finish() {
+        this.submitted = true;
+        this.view = 'done';
+    }
+}">
+    <div class="elvd-table-panel">
+        <div class="elvd-resource-toolbar">
+            <a class="btn btn-outline-secondary elvd-text-button" :href="backUrl">
+                &larr; <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
+            </a>
+        </div>
+
+        <div class="alert alert-warning" x-show="isPreview" x-cloak>
+            <?php echo esc_html__('Mode Preview: Anda login sebagai Guru/Admin. Jawaban tidak akan disimpan.', 'elearning-vd'); ?>
+        </div>
+
+        <div class="alert alert-danger" x-show="error" x-text="error"></div>
+
+        <div x-show="loading">
+            <div class="p-4 text-muted">
+                <?php echo esc_html__('Memuat quiz...', 'elearning-vd'); ?>
+            </div>
+        </div>
+
+        <template x-if="!loading && quiz">
+            <div x-show="view === 'intro'">
+                <div class="p-4">
+                    <h2 class="h4 mb-2" x-text="titleOf(quiz)"></h2>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge rounded-pill text-bg-primary" x-text="quizTipe() === 'essay' ? 'Essay' : 'Pilihan Ganda'"></span>
+                        <span class="badge rounded-pill text-bg-secondary" x-text="questions.length + ' soal'"></span>
+                        <span class="badge rounded-pill text-bg-secondary" x-show="durasiMenit > 0" x-text="durasiMenit + ' menit'"></span>
+                    </div>
+
+                    <div class="alert alert-light border" x-show="contentOf(quiz)" x-text="contentOf(quiz)"></div>
+
+                    <button
+                        type="button"
+                        class="btn btn-primary elvd-action-button"
+                        @click="start()"
+                        x-text="isPreview ? 'Lihat Soal' : 'Mulai Kerjakan'"></button>
+                </div>
+            </div>
+        </template>
+
+        <template x-if="!loading && quiz && view === 'work'">
+            <div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-4 pb-0">
+                    <div class="min-w-0">
+                        <h2 class="h5 mb-1" x-text="titleOf(quiz)"></h2>
+                        <div class="text-muted small" x-text="`${answeredCount()} / ${questions.length} terjawab`"></div>
+                    </div>
+                    <span class="badge rounded-pill text-bg-dark fs-6" x-show="remaining > 0" x-text="formatTime(remaining)"></span>
+                </div>
+
+                <div class="px-4 py-3">
+                    <div class="alert alert-danger" x-show="error" x-text="error"></div>
+
+                    <template x-for="(item, index) in questions" :key="item.id">
+                        <div class="list-group-item border rounded-3 mb-3 p-3">
+                            <div class="d-flex gap-2 mb-2">
+                                <span class="badge rounded-pill text-bg-light border">No. <span x-text="index + 1"></span></span>
+                                <span class="badge rounded-pill text-bg-light border" x-text="questionTipe(item) === 'essay' ? 'Essay' : 'PG'"></span>
+                            </div>
+
+                            <div class="fw-semibold mb-3" x-text="titleOf(item) || '-'"></div>
+
+                            <div x-show="questionTipe(item) === 'pilihan_ganda'">
+                                <template x-for="(opsi, opsiIndex) in optionsOf(item)" :key="opsiIndex">
+                                    <div class="form-check mb-2">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            :name="`elvd-jawaban-${item.id}`"
+                                            :id="`elvd-jawaban-${item.id}-${opsiIndex}`"
+                                            :value="String(opsiIndex)"
+                                            x-model="answers[item.id]">
+                                        <label class="form-check-label" :for="`elvd-jawaban-${item.id}-${opsiIndex}`">
+                                            <span x-text="['A','B','C','D','E','F'][opsiIndex] || (opsiIndex + 1)"></span>. <span x-text="opsi"></span>
+                                        </label>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <textarea
+                                class="form-control"
+                                :id="`elvd-essai-${item.id}`"
+                                rows="4"
+                                x-model="answers[item.id]"
+                                x-show="questionTipe(item) === 'essay'"
+                                placeholder="<?php echo esc_attr__('Tulis jawaban essay di sini...', 'elearning-vd'); ?>"></textarea>
+                        </div>
+                    </template>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a class="btn btn-outline-secondary" :href="backUrl">
+                            <?php echo esc_html__('Batal', 'elearning-vd'); ?>
+                        </a>
+                        <button
+                            type="button"
+                            class="btn btn-primary elvd-action-button"
+                            :disabled="submitting"
+                            @click="submit()">
+                            <span x-show="!submitting" x-text="isPreview ? 'Selesai (Preview)' : 'Kumpulkan Jawaban'"></span>
+                            <span x-show="submitting"><?php echo esc_html__('Menyimpan...', 'elearning-vd'); ?></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template x-if="view === 'done'">
+            <div class="p-4">
+                <div class="alert alert-success mb-3">
+                    <template x-if="isPreview">
+                        <?php echo esc_html__('Preview selesai. Hasil tidak disimpan karena Anda login sebagai Guru/Admin.', 'elearning-vd'); ?>
+                    </template>
+                    <template x-if="!isPreview">
+                        <?php echo esc_html__('Jawaban quiz berhasil dikumpulkan.', 'elearning-vd'); ?>
+                    </template>
+                </div>
+                <a class="btn btn-outline-secondary" :href="backUrl">
+                    <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
+                </a>
+            </div>
+        </template>
+    </div>
+</div>

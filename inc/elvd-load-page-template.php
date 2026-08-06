@@ -20,6 +20,12 @@ function elvd_register_app_rewrite_rules(): void
     );
 
     add_rewrite_rule(
+        '^' . preg_quote($app_route_path, '#') . '/quiz-workspace/([0-9]+)/?$',
+        'index.php?' . $query_target . '&' . ELVD::APP_PAGE_QUERY_VAR . '=quiz-workspace&elvd_quiz_id=$matches[1]',
+        'top'
+    );
+
+    add_rewrite_rule(
         '^' . preg_quote($app_route_path, '#') . '/quiz-form/([0-9]+)/?$',
         'index.php?' . $query_target . '&' . ELVD::APP_PAGE_QUERY_VAR . '=quiz-form&elvd_quiz_id=$matches[1]',
         'top'
