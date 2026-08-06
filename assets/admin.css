@@ -257,3 +257,6 @@
     color: var(--md-ink);
     font-size: 14px;
 }
+.elvd-profile-fields .regular-text {
+    width: 100%;
+}
