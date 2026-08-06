@@ -23,6 +23,7 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
     quiz: null,
     questions: [],
     answers: {},
+    currentIndex: 0,
     durasiMenit: 0,
     remaining: 0,
     startedAt: '',
@@ -112,6 +113,24 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
     },
     answeredCount() {
         return this.questions.filter((item) => this.answerOf(item).trim() !== '').length;
+    },
+    currentQuestion() {
+        return this.questions[this.currentIndex] || null;
+    },
+    prev() {
+        if (this.currentIndex > 0) {
+            this.currentIndex -= 1;
+        }
+    },
+    next() {
+        if (this.currentIndex < this.questions.length - 1) {
+            this.currentIndex += 1;
+        }
+    },
+    goto(index) {
+        if (index >= 0 && index < this.questions.length) {
+            this.currentIndex = index;
+        }
     },
     start() {
         if (!this.questions.length) {
@@ -249,26 +268,26 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
                 <div class="px-4 py-3">
                     <div class="alert alert-danger" x-show="error" x-text="error"></div>
 
-                    <template x-for="(item, index) in questions" :key="item.id">
-                        <div class="list-group-item border rounded-3 mb-3 p-3">
-                            <div class="d-flex gap-2 mb-2">
-                                <span class="badge rounded-pill text-bg-light border">No. <span x-text="index + 1"></span></span>
-                                <span class="badge rounded-pill text-bg-light border" x-text="questionTipe(item) === 'essay' ? 'Essay' : 'PG'"></span>
+                    <template x-if="currentQuestion()">
+                        <div class="list-group-item border rounded-3 p-3 mb-3">
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <span class="badge rounded-pill text-bg-light border">Soal <span x-text="currentIndex + 1"></span> dari <span x-text="questions.length"></span></span>
+                                <span class="badge rounded-pill text-bg-light border" x-text="questionTipe(currentQuestion()) === 'essay' ? 'Essay' : 'PG'"></span>
                             </div>
 
-                            <div class="fw-semibold mb-3" x-text="titleOf(item) || '-'"></div>
+                            <div class="fw-semibold mb-3" x-text="titleOf(currentQuestion()) || '-'"></div>
 
-                            <div x-show="questionTipe(item) === 'pilihan_ganda'">
-                                <template x-for="(opsi, opsiIndex) in optionsOf(item)" :key="opsiIndex">
+                            <div x-show="questionTipe(currentQuestion()) === 'pilihan_ganda'">
+                                <template x-for="(opsi, opsiIndex) in optionsOf(currentQuestion())" :key="opsiIndex">
                                     <div class="form-check mb-2">
                                         <input
                                             class="form-check-input"
                                             type="radio"
-                                            :name="`elvd-jawaban-${item.id}`"
-                                            :id="`elvd-jawaban-${item.id}-${opsiIndex}`"
+                                            :name="`elvd-jawaban-${currentQuestion().id}`"
+                                            :id="`elvd-jawaban-${currentQuestion().id}-${opsiIndex}`"
                                             :value="String(opsiIndex)"
-                                            x-model="answers[item.id]">
-                                        <label class="form-check-label" :for="`elvd-jawaban-${item.id}-${opsiIndex}`">
+                                            x-model="answers[currentQuestion().id]">
+                                        <label class="form-check-label" :for="`elvd-jawaban-${currentQuestion().id}-${opsiIndex}`">
                                             <span x-text="['A','B','C','D','E','F'][opsiIndex] || (opsiIndex + 1)"></span>. <span x-text="opsi"></span>
                                         </label>
                                     </div>
@@ -277,26 +296,48 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
 
                             <textarea
                                 class="form-control"
-                                :id="`elvd-essai-${item.id}`"
+                                :id="`elvd-essai-${currentQuestion().id}`"
                                 rows="4"
-                                x-model="answers[item.id]"
-                                x-show="questionTipe(item) === 'essay'"
+                                x-model="answers[currentQuestion().id]"
+                                x-show="questionTipe(currentQuestion()) === 'essay'"
                                 placeholder="<?php echo esc_attr__('Tulis jawaban essay di sini...', 'elearning-vd'); ?>"></textarea>
                         </div>
                     </template>
 
-                    <div class="d-flex justify-content-end gap-2">
-                        <a class="btn btn-outline-secondary" :href="backUrl">
-                            <?php echo esc_html__('Batal', 'elearning-vd'); ?>
-                        </a>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary"
+                            :disabled="currentIndex === 0"
+                            @click="prev()">
+                            &larr; <?php echo esc_html__('Sebelumnya', 'elearning-vd'); ?>
+                        </button>
+
+                        <div class="d-flex flex-wrap justify-content-center gap-1">
+                            <template x-for="(item, index) in questions" :key="item.id">
+                                <button
+                                    type="button"
+                                    class="btn btn-sm"
+                                    :class="index === currentIndex ? 'btn-primary' : (answerOf(item).trim() !== '' ? 'btn-success' : 'btn-outline-secondary')"
+                                    @click="goto(index)"
+                                    x-text="index + 1"></button>
+                            </template>
+                        </div>
+
                         <button
                             type="button"
                             class="btn btn-primary elvd-action-button"
                             :disabled="submitting"
-                            @click="submit()">
-                            <span x-show="!submitting" x-text="isPreview ? 'Selesai (Preview)' : 'Kumpulkan Jawaban'"></span>
+                            @click="currentIndex < questions.length - 1 ? next() : submit()">
+                            <span x-show="!submitting" x-text="currentIndex < questions.length - 1 ? 'Berikutnya' : (isPreview ? 'Selesai (Preview)' : 'Kumpulkan Jawaban')"></span>
                             <span x-show="submitting"><?php echo esc_html__('Menyimpan...', 'elearning-vd'); ?></span>
                         </button>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <a class="btn btn-outline-secondary" :href="backUrl">
+                            <?php echo esc_html__('Batal', 'elearning-vd'); ?>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -305,12 +346,8 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
         <template x-if="view === 'done'">
             <div class="p-4">
                 <div class="alert alert-success mb-3">
-                    <template x-if="isPreview">
-                        <?php echo esc_html__('Preview selesai. Hasil tidak disimpan karena Anda login sebagai Guru/Admin.', 'elearning-vd'); ?>
-                    </template>
-                    <template x-if="!isPreview">
-                        <?php echo esc_html__('Jawaban quiz berhasil dikumpulkan.', 'elearning-vd'); ?>
-                    </template>
+                    <span x-show="isPreview" x-text="<?php echo esc_attr(wp_json_encode(__('Preview selesai. Hasil tidak disimpan karena Anda login sebagai Guru/Admin.', 'elearning-vd'))); ?>"></span>
+                    <span x-show="!isPreview" x-text="<?php echo esc_attr(wp_json_encode(__('Jawaban quiz berhasil dikumpulkan.', 'elearning-vd'))); ?>"></span>
                 </div>
                 <a class="btn btn-outline-secondary" :href="backUrl">
                     <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
