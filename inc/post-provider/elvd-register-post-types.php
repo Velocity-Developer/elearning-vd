@@ -23,6 +23,11 @@ function elvd_register_post_types(): void
             'plural' => __('Quiz', 'elearning-vd'),
             'menu_icon' => 'dashicons-forms',
         ],
+        'elvd_quiz_question' => [
+            'singular' => __('Quiz Question', 'elearning-vd'),
+            'plural' => __('Quiz Questions', 'elearning-vd'),
+            'menu_icon' => 'dashicons-format-chat',
+        ],
     ];
 
     foreach ($types as $post_type => $config) {

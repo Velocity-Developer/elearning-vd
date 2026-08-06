@@ -37,6 +37,7 @@ Plugin elearning-vd adalah plugin elearning untuk sekolah sd, smp, sma. dengan f
 - Tugas (elvd_tugas)
 - Materi (elvd_materi)
 - Quiz (elvd_quiz) | pilihan ganda dan essay
+- Quiz Question (elvd_quiz_question) | pertanyaan quiz berelasi dengan quiz.
 
 # Custom Table
 - tahun_ajaran (elvd_tahun_ajaran)
