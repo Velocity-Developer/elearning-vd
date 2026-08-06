@@ -24,6 +24,11 @@ function elvd_register_post_meta(): void
         'elvd_tugas' => array_merge(
             $shared_meta,
             [
+                'elvd_tahun_ajaran_id' => [
+                    'type' => 'integer',
+                    'single' => true,
+                    'sanitize_callback' => 'absint',
+                ],
                 'elvd_deadline' => [
                     'type' => 'string',
                     'single' => true,

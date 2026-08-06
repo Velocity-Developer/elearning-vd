@@ -9,6 +9,7 @@ defined('ABSPATH') || exit;
         tasks: [],
         classes: [],
         subjects: [],
+        years: [],
         restUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url("wp/v2/elvd_tugas")))); ?>,
         mediaUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url("wp/v2/media")))); ?>,
         loadingTasks: false,
@@ -21,6 +22,7 @@ defined('ABSPATH') || exit;
             id: null,
             judul: "",
             konten: "",
+            tahun_ajaran_id: "",
             kelas_id: "",
             mata_pelajaran_id: "",
             deadline: "",
@@ -60,6 +62,9 @@ defined('ABSPATH') || exit;
             this.loadingRelations = true;
 
             Promise.all([
+                fetch(`${config.restUrl}/tahun-ajaran?per_page=100`, {
+                    headers: { "X-WP-Nonce": config.nonce }
+                }),
                 fetch(`${config.restUrl}/kelas?per_page=100`, {
                     headers: { "X-WP-Nonce": config.nonce }
                 }),
@@ -76,7 +81,8 @@ defined('ABSPATH') || exit;
 
                 return Promise.all(responses.map((response) => response.json()));
             })
-            .then(([classes, subjects]) => {
+            .then(([years, classes, subjects]) => {
+                this.years = Array.isArray(years) ? years : [];
                 this.classes = Array.isArray(classes) ? classes : [];
                 this.subjects = Array.isArray(subjects) ? subjects : [];
             })
@@ -121,10 +127,12 @@ defined('ABSPATH') || exit;
                 id: null,
                 judul: "",
                 konten: "",
+                tahun_ajaran_id: "",
                 kelas_id: "",
                 mata_pelajaran_id: "",
                 deadline: "",
-                instruksi: ""
+                instruksi: "",
+                file_url: ""
             };
         },
         openCreate() {
@@ -137,10 +145,12 @@ defined('ABSPATH') || exit;
                 id: Number(item.id),
                 judul: this.titleOf(item),
                 konten: this.contentOf(item),
+                tahun_ajaran_id: this.metaValue(item, "elvd_tahun_ajaran_id") ? String(this.metaValue(item, "elvd_tahun_ajaran_id")) : "",
                 kelas_id: this.metaValue(item, "elvd_kelas_id") ? String(this.metaValue(item, "elvd_kelas_id")) : "",
                 mata_pelajaran_id: this.metaValue(item, "elvd_mata_pelajaran_id") ? String(this.metaValue(item, "elvd_mata_pelajaran_id")) : "",
                 deadline: this.metaValue(item, "elvd_deadline"),
-                instruksi: this.metaValue(item, "elvd_instruksi")
+                instruksi: this.metaValue(item, "elvd_instruksi"),
+                file_url: this.metaValue(item, "elvd_file_url")
             };
             this.error = "";
             this.modalOpen = true;
@@ -166,6 +176,7 @@ defined('ABSPATH') || exit;
                 content: this.form.konten,
                 status: "publish",
                 meta: {
+                    elvd_tahun_ajaran_id: this.form.tahun_ajaran_id ? Number(this.form.tahun_ajaran_id) : 0,
                     elvd_kelas_id: this.form.kelas_id ? Number(this.form.kelas_id) : 0,
                     elvd_mata_pelajaran_id: this.form.mata_pelajaran_id ? Number(this.form.mata_pelajaran_id) : 0,
                     elvd_deadline: this.form.deadline,
@@ -209,6 +220,17 @@ defined('ABSPATH') || exit;
             const classItem = this.classes.find((item) => Number(item.id) === Number(id));
 
             return classItem ? classItem.nama : "-";
+        },
+        filteredClasses() {
+            return this.classes.filter((item) => Number(item.tahun_ajaran_id) === Number(this.form.tahun_ajaran_id));
+        },
+        onYearChange() {
+            this.form.kelas_id = "";
+        },
+        yearName(id) {
+            const year = this.years.find((item) => Number(item.id) === Number(id));
+
+            return year ? year.nama : "-";
         },
         subjectName(id) {
             const subject = this.subjects.find((item) => Number(item.id) === Number(id));
@@ -291,14 +313,6 @@ defined('ABSPATH') || exit;
                         <tr>
                             <td>
                                 <strong x-text="titleOf(item)"></strong>
-                                <div class="elvd-subtext" x-show="contentOf(item)" x-text="shortDescription(contentOf(item))"></div>
-                                <div class="elvd-subtext" x-show="hasFile(item)">
-                                    <a
-                                        :href="metaValue(item, 'elvd_file_url')"
-                                        target="_blank"
-                                        rel="noopener"
-                                        x-text="metaValue(item, 'elvd_file_url')"></a>
-                                </div>
                             </td>
                             <td x-text="className(metaValue(item, 'elvd_kelas_id'))"></td>
                             <td x-text="subjectName(metaValue(item, 'elvd_mata_pelajaran_id'))"></td>
@@ -316,7 +330,7 @@ defined('ABSPATH') || exit;
                         </tr>
                     </template>
                     <tr x-show="!loadingTasks && tasks.length === 0">
-                        <td colspan="6"><?php echo esc_html__('Belum ada tugas.', 'elearning-vd'); ?></td>
+                        <td colspan="7"><?php echo esc_html__('Belum ada tugas.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
             </table>
@@ -354,16 +368,25 @@ defined('ABSPATH') || exit;
                             placeholder="<?php echo esc_attr__('Contoh: Tugas 1 - Eksponen', 'elearning-vd'); ?>">
                     </div>
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label" for="elvd-tugas-tahun-ajaran"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></label>
+                            <select class="form-select" id="elvd-tugas-tahun-ajaran" x-model="form.tahun_ajaran_id" required :disabled="loadingRelations" @change="onYearChange()">
+                                <option value="" x-text="loadingRelations ? 'Memuat tahun ajaran...' : 'Pilih tahun ajaran'"></option>
+                                <template x-for="year in years" :key="year.id">
+                                    <option :value="String(year.id)" x-text="year.nama"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label" for="elvd-tugas-kelas"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></label>
-                            <select class="form-select" id="elvd-tugas-kelas" x-model="form.kelas_id" required :disabled="loadingRelations">
-                                <option value="" x-text="loadingRelations ? 'Memuat kelas...' : 'Pilih kelas'"></option>
-                                <template x-for="classItem in classes" :key="classItem.id">
+                            <select class="form-select" id="elvd-tugas-kelas" x-model="form.kelas_id" required :disabled="!form.tahun_ajaran_id || loadingRelations">
+                                <option value="" x-text="filteredClasses().length ? 'Pilih kelas' : 'Pilih tahun ajaran dahulu'"></option>
+                                <template x-for="classItem in filteredClasses()" :key="classItem.id">
                                     <option :value="String(classItem.id)" x-text="classItem.nama"></option>
                                 </template>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label" for="elvd-tugas-mapel"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></label>
                             <select class="form-select" id="elvd-tugas-mapel" x-model="form.mata_pelajaran_id" required :disabled="loadingRelations">
                                 <option value="" x-text="loadingRelations ? 'Memuat mapel...' : 'Pilih mata pelajaran'"></option>
