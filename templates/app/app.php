@@ -120,13 +120,14 @@ wp_localize_script(
     class="elvd-app"
     @elvd-items-updated.window="items = Array.isArray($event.detail.items) ? $event.detail.items : []"
     x-data='{
-        tabs: ["dashboard", "tahun-ajaran", "kelas", "mata-pelajaran", "jadwal-pelajaran", "guru", "siswa", "quiz"],
+        tabs: ["dashboard", "tahun-ajaran", "kelas", "mata-pelajaran", "jadwal-pelajaran", "materi", "guru", "siswa", "quiz"],
         labels: {
             "dashboard": "Dashboard",
             "tahun-ajaran": "Tahun Ajaran",
             "kelas": "Kelas",
             "mata-pelajaran": "Mata Pelajaran",
             "jadwal-pelajaran": "Jadwal Pelajaran",
+            "materi": "Materi",
             "guru": "Guru",
             "siswa": "Siswa",
             "siswa-profil": "Profil Siswa",
@@ -140,7 +141,7 @@ wp_localize_script(
         config: <?php echo esc_attr(wp_json_encode($config)); ?>,
         init() { this.load(); },
         load() {
-            if (["dashboard", "guru", "siswa", "siswa-profil"].includes(this.active)) {
+            if (["dashboard", "materi", "guru", "siswa", "siswa-profil"].includes(this.active)) {
                 this.items = [];
                 this.loading = false;
                 return;
@@ -240,7 +241,7 @@ wp_localize_script(
                     <div class="min-w-0">
                         <h1 class="elvd-page-title mb-0" x-text="labels[active] || defaultLabel"></h1>
                     </div>
-                </div>s
+                </div>
             </div>
 
             <div x-show="active === 'dashboard'">
@@ -333,7 +334,7 @@ wp_localize_script(
             }
             ?>
 
-            <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'siswa-profil'].includes(active)">
+            <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'siswa-profil', 'materi'].includes(active)">
                 <div class="table-responsive">
                     <table class="table align-middle mb-0 elvd-table">
                         <thead>

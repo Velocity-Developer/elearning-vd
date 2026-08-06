@@ -39,6 +39,11 @@ function elvd_register_post_meta(): void
         'elvd_materi' => array_merge(
             $shared_meta,
             [
+                'elvd_tahun_ajaran_id' => [
+                    'type' => 'integer',
+                    'single' => true,
+                    'sanitize_callback' => 'absint',
+                ],
                 'elvd_file_url' => [
                     'type' => 'string',
                     'single' => true,
