@@ -34,6 +34,11 @@ function elvd_register_post_meta(): void
                     'single' => true,
                     'sanitize_callback' => 'sanitize_textarea_field',
                 ],
+                'elvd_file_url' => [
+                    'type' => 'string',
+                    'single' => true,
+                    'sanitize_callback' => 'esc_url_raw',
+                ],
             ]
         ),
         'elvd_materi' => array_merge(
