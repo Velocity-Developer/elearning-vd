@@ -55,3 +55,38 @@ function elvd_register_post_types(): void
         );
     }
 }
+
+/**
+ * Server-side filter for elvd_quiz REST list.
+ *
+ * @param array<string, mixed> $args
+ * @return array<string, mixed>
+ */
+function elvd_filter_quiz_rest_query(array $args, WP_REST_Request $request): array
+{
+    $tipe = sanitize_text_field((string) $request->get_param('elvd_filter_tipe'));
+    $kelas = absint((int) $request->get_param('elvd_filter_kelas'));
+
+    $meta_query = [];
+
+    if (in_array($tipe, ['pilihan_ganda', 'essay'], true)) {
+        $meta_query[] = [
+            'key' => 'elvd_quiz_tipe',
+            'value' => $tipe,
+        ];
+    }
+
+    if ($kelas > 0) {
+        $meta_query[] = [
+            'key' => 'elvd_kelas_id',
+            'value' => $kelas,
+            'compare' => '=',
+        ];
+    }
+
+    if ([] !== $meta_query) {
+        $args['meta_query'] = array_merge(['relation' => 'AND'], $meta_query);
+    }
+
+    return $args;
+}

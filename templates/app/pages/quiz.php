@@ -14,6 +14,8 @@ $elvd_quiz_form_url = untrailingslashit(ELVD::app_route()) . '/quiz-form';
     loading: false,
     loadingRelations: false,
     error: '',
+    filterTipe: '',
+    filterKelas: '',
     init() {
         this.fetchQuizzes();
         this.fetchRelations();
@@ -28,7 +30,17 @@ $elvd_quiz_form_url = untrailingslashit(ELVD::app_route()) . '/quiz-form';
         this.loading = true;
         this.error = '';
 
-        fetch(`${this.restUrl}?per_page=100`, {
+        const params = new URLSearchParams({ per_page: '100' });
+
+        if (this.filterTipe) {
+            params.set('elvd_filter_tipe', this.filterTipe);
+        }
+
+        if (this.filterKelas) {
+            params.set('elvd_filter_kelas', String(this.filterKelas));
+        }
+
+        fetch(`${this.restUrl}?${params.toString()}`, {
             headers: { 'X-WP-Nonce': config.nonce }
         })
         .then((response) => {
@@ -100,6 +112,26 @@ $elvd_quiz_form_url = untrailingslashit(ELVD::app_route()) . '/quiz-form';
         </div>
 
         <div class="alert alert-danger" x-show="error" x-text="error"></div>
+
+        <div class="d-flex flex-wrap gap-3 pb-3 pt-2">
+            <div class="col-md-3 col-12">
+                <label class="form-label" for="elvd-filter-tipe"><?php echo esc_html__('Filter Tipe', 'elearning-vd'); ?></label>
+                <select class="form-select" id="elvd-filter-tipe" x-model="filterTipe" @change="fetchQuizzes()">
+                    <option value=""><?php echo esc_html__('Semua Tipe', 'elearning-vd'); ?></option>
+                    <option value="pilihan_ganda"><?php echo esc_html__('Pilihan Ganda', 'elearning-vd'); ?></option>
+                    <option value="essay"><?php echo esc_html__('Essay', 'elearning-vd'); ?></option>
+                </select>
+            </div>
+            <div class="col-md-3 col-12">
+                <label class="form-label" for="elvd-filter-kelas"><?php echo esc_html__('Filter Kelas', 'elearning-vd'); ?></label>
+                <select class="form-select" id="elvd-filter-kelas" x-model="filterKelas" :disabled="loadingRelations" @change="fetchQuizzes()">
+                    <option value=""><?php echo esc_html__('Semua Kelas', 'elearning-vd'); ?></option>
+                    <template x-for="classItem in classes" :key="classItem.id">
+                        <option :value="String(classItem.id)" x-text="classItem.nama"></option>
+                    </template>
+                </select>
+            </div>
+        </div>
 
         <div class="table-responsive">
             <table class="table align-middle mb-0 elvd-table">

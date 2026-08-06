@@ -16,6 +16,7 @@ final class Plugin
         add_action('init', 'elvd_register_post_meta');
         add_action('init', 'elvd_register_app_rewrite_rules');
         add_action('rest_api_init', 'elvd_register_rest_routes');
+        add_filter('rest_elvd_quiz_query', 'elvd_filter_quiz_rest_query', 10, 2);
         add_action('wp_enqueue_scripts', 'elvd_register_frontend_assets');
         add_action('admin_init', 'elvd_register_settings');
         add_action('admin_menu', 'elvd_register_admin_menu');
