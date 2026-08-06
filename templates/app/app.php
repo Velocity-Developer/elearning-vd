@@ -131,7 +131,8 @@ wp_localize_script(
             "guru": "Guru",
             "siswa": "Siswa",
             "siswa-profil": "Profil Siswa",
-            "quiz": "Quiz"
+            "quiz": "Quiz",
+            "quiz-form": "Form Quiz"
         },
         defaultLabel: <?php echo esc_attr(wp_json_encode(__('Elearning VD', 'elearning-vd'))); ?>,
         active: <?php echo esc_attr(wp_json_encode('' !== $route_page ? $active_page : 'dashboard')); ?>,
@@ -141,7 +142,7 @@ wp_localize_script(
         config: <?php echo esc_attr(wp_json_encode($config)); ?>,
         init() { this.load(); },
         load() {
-            if (["dashboard", "materi", "guru", "siswa", "siswa-profil"].includes(this.active)) {
+            if (["dashboard", "materi", "guru", "siswa", "siswa-profil", "quiz-form"].includes(this.active)) {
                 this.items = [];
                 this.loading = false;
                 return;
@@ -334,7 +335,7 @@ wp_localize_script(
             }
             ?>
 
-            <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'siswa-profil', 'materi'].includes(active)">
+            <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'siswa-profil', 'materi', 'quiz-form'].includes(active)">
                 <div class="table-responsive">
                     <table class="table align-middle mb-0 elvd-table">
                         <thead>
