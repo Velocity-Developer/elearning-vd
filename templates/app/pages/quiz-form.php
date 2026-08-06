@@ -270,7 +270,7 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
             meta: {
                 elvd_quiz_id: Number(this.quizId),
                 elvd_pertanyaan_tipe: this.editingQuestion.tipe,
-                elvd_poin: Number(this.editingQuestion.poin) || 0,
+                elvd_poin: this.editingQuestion.tipe === 'essay' ? (Number(this.editingQuestion.poin) || 0) : 0,
                 elvd_opsi: this.editingQuestion.tipe === 'pilihan_ganda'
                     ? JSON.stringify(this.editingQuestion.opsi.map((o) => o.text))
                     : '',
@@ -556,14 +556,15 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
                                 </span>
                             </div>
 
-                            <div class="form-label"><?php echo esc_html__('Poin', 'elearning-vd'); ?></div>
+                            <div class="form-label" x-show="editingQuestion.tipe === 'essay'"><?php echo esc_html__('Poin', 'elearning-vd'); ?></div>
                             <input
                                 type="number"
                                 class="form-control"
                                 id="elvd-q-poin"
                                 x-model.number="editingQuestion.poin"
                                 min="0"
-                                required>
+                                required
+                                x-show="editingQuestion.tipe === 'essay'">
                             <div class="mt-2"></div>
 
                             <div class="mt-3" x-show="editingQuestion.tipe === 'pilihan_ganda'">
