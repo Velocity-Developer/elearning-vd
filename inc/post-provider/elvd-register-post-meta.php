@@ -71,6 +71,36 @@ function elvd_register_post_meta(): void
                 ],
             ]
         ),
+        'elvd_quiz_question' => array_merge(
+            $shared_meta,
+            [
+                'elvd_quiz_id' => [
+                    'type' => 'integer',
+                    'single' => true,
+                    'sanitize_callback' => 'absint',
+                ],
+                'elvd_pertanyaan_tipe' => [
+                    'type' => 'string',
+                    'single' => true,
+                    'sanitize_callback' => 'elvd_sanitize_quiz_type',
+                ],
+                'elvd_opsi' => [
+                    'type' => 'string',
+                    'single' => true,
+                    'sanitize_callback' => 'sanitize_textarea_field',
+                ],
+                'elvd_jawaban_benar' => [
+                    'type' => 'string',
+                    'single' => true,
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'elvd_poin' => [
+                    'type' => 'integer',
+                    'single' => true,
+                    'sanitize_callback' => 'absint',
+                ],
+            ]
+        ),
     ];
 
     foreach ($post_type_meta as $post_type => $meta_fields) {
