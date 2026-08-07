@@ -20,6 +20,12 @@ function elvd_register_app_rewrite_rules(): void
     );
 
     add_rewrite_rule(
+        '^' . preg_quote($app_route_path, '#') . '/guru-profil/([0-9]+)(?:/([^/]+))?/?$',
+        'index.php?' . $query_target . '&' . ELVD::APP_PAGE_QUERY_VAR . '=guru-profil&elvd_guru_id=$matches[1]&elvd_guru_tab=$matches[2]',
+        'top'
+    );
+
+    add_rewrite_rule(
         '^' . preg_quote($app_route_path, '#') . '/quiz-workspace/([0-9]+)/?$',
         'index.php?' . $query_target . '&' . ELVD::APP_PAGE_QUERY_VAR . '=quiz-workspace&elvd_quiz_id=$matches[1]',
         'top'
@@ -59,6 +65,8 @@ function elvd_register_app_query_vars(array $query_vars): array
     $query_vars[] = ELVD::APP_PAGE_QUERY_VAR;
     $query_vars[] = 'elvd_siswa_id';
     $query_vars[] = 'elvd_siswa_tab';
+    $query_vars[] = 'elvd_guru_id';
+    $query_vars[] = 'elvd_guru_tab';
     $query_vars[] = 'elvd_quiz_id';
     $query_vars[] = 'elvd_tugas_id';
 

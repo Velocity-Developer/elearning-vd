@@ -108,6 +108,7 @@ $elvd_guru_items = array_map(
 <div
     x-show="active === 'guru'"
     x-data="{
+        guruProfilUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(ELVD::app_route()) . '/guru-profil/')); ?>,
         teachers: <?php echo esc_attr(wp_json_encode($elvd_guru_items)); ?>,
         currentPage: 1,
         perPage: 15,
@@ -224,6 +225,9 @@ $elvd_guru_items = array_map(
                             <td x-text="item.mata_pelajaran || '-'"></td>
                             <td x-text="item.telepon || '-'"></td>
                             <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary elvd-row-action" :href="`${guruProfilUrl}${item.id}/profil`">
+                                    <?php echo esc_html__('Profil', 'elearning-vd'); ?>
+                                </a>
                                 <button
                                     type="button"
                                     class="btn btn-sm btn-outline-primary elvd-row-action"

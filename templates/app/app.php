@@ -214,6 +214,7 @@ if (! is_user_logged_in()) {
             "guru": "Guru",
             "siswa": "Siswa",
             "siswa-profil": "Profil Siswa",
+            "guru-profil": "Profil Guru",
             "quiz": "Quiz",
             "quiz-form": "Form Quiz",
             "quiz-workspace": "Kerjakan Quiz",
@@ -228,7 +229,7 @@ if (! is_user_logged_in()) {
         config: <?php echo esc_attr(wp_json_encode($config)); ?>,
         init() { this.load(); },
         load() {
-            if (["dashboard", "tugas", "materi", "guru", "siswa", "siswa-profil", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
+            if (["dashboard", "tugas", "materi", "guru", "siswa", "siswa-profil", "guru-profil", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
                 this.items = [];
                 this.loading = false;
                 return;
@@ -535,7 +536,7 @@ if (! is_user_logged_in()) {
                 }
                 ?>
 
-                <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'siswa-profil', 'tugas', 'materi', 'quiz', 'quiz-form', 'quiz-workspace', 'quiz-answer', 'tugas-answer'].includes(active)">
+                <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'siswa-profil', 'guru-profil', 'tugas', 'materi', 'quiz', 'quiz-form', 'quiz-workspace', 'quiz-answer', 'tugas-answer'].includes(active)">
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 elvd-table">
                             <thead>
