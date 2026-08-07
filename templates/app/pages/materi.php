@@ -155,6 +155,13 @@ defined('ABSPATH') || exit;
         titleOf(item) {
             return (item.title && (item.title.rendered || item.title.raw)) ? (item.title.rendered || item.title.raw) : "-";
         },
+        authorName(item) {
+            if (item._embedded && item._embedded.author && item._embedded.author[0]) {
+                return item._embedded.author[0].display_name || "-";
+            }
+
+            return "-";
+        },
         contentOf(item) {
             if (item.content && item.content.raw) {
                 return item.content.raw;
@@ -395,6 +402,11 @@ defined('ABSPATH') || exit;
                                     @click="openPreview(item)"
                                     x-text="titleOf(item)">
                                 </button>
+                                <small
+                                    class="d-block text-muted"
+                                    x-show="config.currentRole === 'administrator' || config.currentRole === 'siswa'">
+                                    <?php echo esc_html__('Penulis', 'elearning-vd'); ?>: <span x-text="authorName(item)"></span>
+                                </small>
                             </td>
                             <td>
                                 <div x-text="className(metaValue(item, 'elvd_kelas_id'))"></div>
