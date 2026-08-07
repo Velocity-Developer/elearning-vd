@@ -30,7 +30,13 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
     timerId: null,
     submitting: false,
     submitted: false,
+    adminBarHeight: 0,
     init() {
+        const bar = document.getElementById('wpadminbar');
+        if (bar) {
+            this.adminBarHeight = Math.ceil(bar.getBoundingClientRect().height);
+        }
+
         if (!this.quizId) {
             this.loading = false;
             this.error = 'Quiz tidak ditemukan.';
@@ -288,88 +294,90 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
         </template>
 
         <template x-if="!loading && quiz && view === 'work'">
-            <div>
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-4 pb-0">
+            <div class="position-fixed start-0 w-100 bottom-0 d-flex flex-column bg-white" :style="{ zIndex: 1050, top: adminBarHeight + 'px' }">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 px-4 py-3 border-bottom bg-white">
                     <div class="min-w-0">
-                        <h2 class="h5 mb-1" x-text="titleOf(quiz)"></h2>
+                        <h2 class="h5 mb-0" x-text="titleOf(quiz)"></h2>
                         <div class="text-muted small" x-text="`${answeredCount()} / ${questions.length} terjawab`"></div>
                     </div>
                     <span class="badge rounded-pill text-bg-dark fs-6" x-show="remaining > 0" x-text="formatTime(remaining)"></span>
                 </div>
 
-                <div class="px-4 py-3">
-                    <div class="alert alert-danger" x-show="error" x-text="error"></div>
+                <div class="flex-grow-1 overflow-auto px-3 py-4">
+                    <div class="mx-auto" style="max-width: 860px;">
+                        <div class="alert alert-danger" x-show="error" x-text="error"></div>
 
-                    <template x-if="currentQuestion()">
-                        <div class="list-group-item border rounded-3 p-3 mb-3">
-                            <div class="d-flex flex-wrap gap-2 mb-2">
-                                <span class="badge rounded-pill text-bg-light border">Soal <span x-text="currentIndex + 1"></span> dari <span x-text="questions.length"></span></span>
-                                <span class="badge rounded-pill text-bg-light border" x-text="questionTipe(currentQuestion()) === 'essay' ? 'Essay' : 'PG'"></span>
+                        <template x-if="currentQuestion()">
+                            <div class="list-group-item border rounded-3 p-3 mb-3">
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    <span class="badge rounded-pill text-bg-light border">Soal <span x-text="currentIndex + 1"></span> dari <span x-text="questions.length"></span></span>
+                                    <span class="badge rounded-pill text-bg-light border" x-text="questionTipe(currentQuestion()) === 'essay' ? 'Essay' : 'PG'"></span>
+                                </div>
+
+                                <div class="fw-semibold mb-3" x-text="titleOf(currentQuestion()) || '-'"></div>
+
+                                <div x-show="questionTipe(currentQuestion()) === 'pilihan_ganda'">
+                                    <template x-for="(opsi, opsiIndex) in optionsOf(currentQuestion())" :key="opsiIndex">
+                                        <div class="form-check mb-2">
+                                            <input
+                                                class="form-check-input"
+                                                type="radio"
+                                                :name="`elvd-jawaban-${currentQuestion().id}`"
+                                                :id="`elvd-jawaban-${currentQuestion().id}-${opsiIndex}`"
+                                                :value="String(opsiIndex)"
+                                                x-model="answers[currentQuestion().id]">
+                                            <label class="form-check-label" :for="`elvd-jawaban-${currentQuestion().id}-${opsiIndex}`">
+                                                <span x-text="['A','B','C','D','E','F'][opsiIndex] || (opsiIndex + 1)"></span>. <span x-text="opsi"></span>
+                                            </label>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <textarea
+                                    class="form-control"
+                                    :id="`elvd-essai-${currentQuestion().id}`"
+                                    rows="4"
+                                    x-model="answers[currentQuestion().id]"
+                                    x-show="questionTipe(currentQuestion()) === 'essay'"
+                                    placeholder="<?php echo esc_attr__('Tulis jawaban essay di sini...', 'elearning-vd'); ?>"></textarea>
                             </div>
+                        </template>
 
-                            <div class="fw-semibold mb-3" x-text="titleOf(currentQuestion()) || '-'"></div>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary"
+                                :disabled="currentIndex === 0"
+                                @click="prev()">
+                                &larr; <?php echo esc_html__('Sebelumnya', 'elearning-vd'); ?>
+                            </button>
 
-                            <div x-show="questionTipe(currentQuestion()) === 'pilihan_ganda'">
-                                <template x-for="(opsi, opsiIndex) in optionsOf(currentQuestion())" :key="opsiIndex">
-                                    <div class="form-check mb-2">
-                                        <input
-                                            class="form-check-input"
-                                            type="radio"
-                                            :name="`elvd-jawaban-${currentQuestion().id}`"
-                                            :id="`elvd-jawaban-${currentQuestion().id}-${opsiIndex}`"
-                                            :value="String(opsiIndex)"
-                                            x-model="answers[currentQuestion().id]">
-                                        <label class="form-check-label" :for="`elvd-jawaban-${currentQuestion().id}-${opsiIndex}`">
-                                            <span x-text="['A','B','C','D','E','F'][opsiIndex] || (opsiIndex + 1)"></span>. <span x-text="opsi"></span>
-                                        </label>
-                                    </div>
+                            <div class="d-flex flex-wrap justify-content-center gap-1">
+                                <template x-for="(item, index) in questions" :key="item.id">
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm"
+                                        :class="index === currentIndex ? 'btn-primary' : (answerOf(item).trim() !== '' ? 'btn-success' : 'btn-outline-secondary')"
+                                        @click="goto(index)"
+                                        x-text="index + 1"></button>
                                 </template>
                             </div>
 
-                            <textarea
-                                class="form-control"
-                                :id="`elvd-essai-${currentQuestion().id}`"
-                                rows="4"
-                                x-model="answers[currentQuestion().id]"
-                                x-show="questionTipe(currentQuestion()) === 'essay'"
-                                placeholder="<?php echo esc_attr__('Tulis jawaban essay di sini...', 'elearning-vd'); ?>"></textarea>
-                        </div>
-                    </template>
-
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
-                        <button
-                            type="button"
-                            class="btn btn-outline-secondary"
-                            :disabled="currentIndex === 0"
-                            @click="prev()">
-                            &larr; <?php echo esc_html__('Sebelumnya', 'elearning-vd'); ?>
-                        </button>
-
-                        <div class="d-flex flex-wrap justify-content-center gap-1">
-                            <template x-for="(item, index) in questions" :key="item.id">
-                                <button
-                                    type="button"
-                                    class="btn btn-sm"
-                                    :class="index === currentIndex ? 'btn-primary' : (answerOf(item).trim() !== '' ? 'btn-success' : 'btn-outline-secondary')"
-                                    @click="goto(index)"
-                                    x-text="index + 1"></button>
-                            </template>
+                            <button
+                                type="button"
+                                class="btn btn-primary elvd-action-button"
+                                :disabled="submitting"
+                                @click="currentIndex < questions.length - 1 ? next() : submit()">
+                                <span x-show="!submitting" x-text="currentIndex < questions.length - 1 ? 'Berikutnya' : (isPreview ? 'Selesai (Preview)' : 'Kumpulkan Jawaban')"></span>
+                                <span x-show="submitting"><?php echo esc_html__('Menyimpan...', 'elearning-vd'); ?></span>
+                            </button>
                         </div>
 
-                        <button
-                            type="button"
-                            class="btn btn-primary elvd-action-button"
-                            :disabled="submitting"
-                            @click="currentIndex < questions.length - 1 ? next() : submit()">
-                            <span x-show="!submitting" x-text="currentIndex < questions.length - 1 ? 'Berikutnya' : (isPreview ? 'Selesai (Preview)' : 'Kumpulkan Jawaban')"></span>
-                            <span x-show="submitting"><?php echo esc_html__('Menyimpan...', 'elearning-vd'); ?></span>
-                        </button>
-                    </div>
-
-                    <div class="d-flex justify-content-end mt-3">
-                        <a class="btn btn-outline-secondary" :href="backUrl">
-                            <?php echo esc_html__('Batal', 'elearning-vd'); ?>
-                        </a>
+                        <div class="d-flex justify-content-end mt-3">
+                            <a class="btn btn-outline-secondary" :href="backUrl">
+                                <?php echo esc_html__('Batal', 'elearning-vd'); ?>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
