@@ -158,7 +158,11 @@ if (! is_user_logged_in()) {
         class="elvd-app"
         @elvd-items-updated.window="items = Array.isArray($event.detail.items) ? $event.detail.items : []"
         x-data='{
-        tabs: ["dashboard", "tahun-ajaran", "kelas", "mata-pelajaran", "jadwal-pelajaran", "tugas", "materi", "guru", "siswa", "quiz"],
+        tabs: <?php echo esc_attr(wp_json_encode(
+            'siswa' === $elvd_current_role
+                ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz']
+                : ['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'tugas', 'materi', 'guru', 'siswa', 'quiz']
+        )); ?>,
         labels: {
             "dashboard": "Dashboard",
             "tahun-ajaran": "Tahun Ajaran",
