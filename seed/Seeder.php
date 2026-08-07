@@ -73,7 +73,8 @@ namespace ElearningVD {
                 $result['jadwal_pelajaran'] = self::seedJadwalPelajaran(
                     $kelasIds,
                     $mataPelajaranIds,
-                    self::findUserIdsByRole('guru', 20)
+                    self::findUserIdsByRole('guru', 20),
+                    $tahunAjaranId
                 );
             }
 
@@ -383,11 +384,12 @@ namespace ElearningVD {
          * @param array<int, int> $guruIds
          * @return array<string, int>
          */
-        private static function seedJadwalPelajaran(array $kelasIds, array $mataPelajaranIds, array $guruIds): array
+        private static function seedJadwalPelajaran(array $kelasIds, array $mataPelajaranIds, array $guruIds, int $tahunAjaranId): array
         {
             $kelasIds = array_filter(array_map('absint', $kelasIds));
             $mataPelajaranIds = array_filter(array_map('absint', $mataPelajaranIds));
             $guruIds = array_values(array_filter(array_map('absint', $guruIds)));
+            $tahunAjaranId = absint($tahunAjaranId);
 
             if (empty($kelasIds) || empty($mataPelajaranIds) || empty($guruIds)) {
                 return [
@@ -422,6 +424,7 @@ namespace ElearningVD {
                                 'kelas_id' => $kelasId,
                                 'mata_pelajaran_id' => $mataPelajaranId,
                                 'guru_id' => $guruId,
+                                'tahun_ajaran_id' => $tahunAjaranId,
                                 'hari' => $namaHari,
                                 'jam_mulai' => $rentangJam[0],
                                 'jam_selesai' => $rentangJam[1],
