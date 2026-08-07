@@ -228,13 +228,9 @@ $elvd_guru_items = array_map(
                                 <a class="btn btn-sm btn-outline-primary elvd-row-action" :href="`${guruProfilUrl}${item.id}/profil`">
                                     <?php echo esc_html__('Profil', 'elearning-vd'); ?>
                                 </a>
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-primary elvd-row-action"
-                                    x-show="canManageGuru"
-                                    @click="openEdit(item)">
+                                <a class="btn btn-sm btn-outline-primary elvd-row-action" :href="`${guruProfilUrl}${item.id}/edit`">
                                     <?php echo esc_html__('Edit', 'elearning-vd'); ?>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     </template>
