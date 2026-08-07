@@ -2,6 +2,8 @@
 
 defined('ABSPATH') || exit;
 
+$elvd_ta_answer_url = untrailingslashit(ELVD::app_route()) . '/tugas-answer';
+
 $elvd_guru_options = array_map(
     static function (WP_User $user): array {
         return [
@@ -29,6 +31,7 @@ $elvd_guru_options = array_map(
         teachers: <?php echo esc_attr(wp_json_encode($elvd_guru_options)); ?>,
         restUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url("wp/v2/elvd_tugas")))); ?>,
         mediaUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url("wp/v2/media")))); ?>,
+        answerUrl: <?php echo esc_attr(wp_json_encode($elvd_ta_answer_url)); ?>,
         loadingTasks: false,
         loadingRelations: false,
         uploadingFile: false,
@@ -489,6 +492,14 @@ $elvd_guru_options = array_map(
                             <td x-text="subjectName(metaValue(item, 'elvd_mata_pelajaran_id'))"></td>
                             <td x-text="deadlineLabel(metaValue(item, 'elvd_deadline'))"></td>
                             <td class="text-end">
+                                <a
+                                    type="button"
+                                    title="<?php echo esc_attr__('Cek Pengerjaan', 'elearning-vd'); ?>"
+                                    class="btn btn-sm btn-outline-secondary elvd-row-action"
+                                    x-show="config.isManager"
+                                    :href="`${answerUrl}/${item.id}/`">
+                                    <i class="bi bi-clipboard2-check"></i>
+                                </a>
                                 <button
                                     type="button"
                                     class="btn btn-sm btn-outline-info elvd-row-action"
