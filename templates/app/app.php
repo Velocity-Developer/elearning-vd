@@ -7,9 +7,6 @@ defined('ABSPATH') || exit;
  */
 
 
-wp_enqueue_style('elvd-main');
-wp_enqueue_script('elvd-main');
-
 if (! is_user_logged_in()) {
 
     echo '<div class="mx-auto container" style="min-height: 50vh;max-width: 33rem;">';
@@ -17,6 +14,9 @@ if (! is_user_logged_in()) {
     echo do_shortcode('[elvd-form-login]');
     echo '</div>';
 } else {
+
+    wp_enqueue_style('elvd-main');
+    wp_enqueue_script('elvd-main');
 
     $elvd_current_user = wp_get_current_user();
     $elvd_current_role = (string) current(
