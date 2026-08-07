@@ -132,11 +132,13 @@ function elvd_rest_submit_pengerjaan(WP_REST_Request $request): WP_REST_Response
 
     $mulai_pada = elvd_sanitize_datetime((string) $request->get_param('mulai_pada', ''));
 
+    $nilai = $request->get_param('nilai');
+
     $data = [
         'quiz_id' => $quiz_id,
         'siswa_id' => get_current_user_id(),
         'jawaban' => wp_json_encode($jawaban),
-        'nilai' => null,
+        'nilai' => is_numeric($nilai) ? (float) $nilai : null,
         'status' => 'selesai',
         'mulai_pada' => $mulai_pada ?: current_time('mysql'),
         'selesai_pada' => current_time('mysql'),

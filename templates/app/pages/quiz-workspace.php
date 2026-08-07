@@ -132,6 +132,37 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
             this.currentIndex = index;
         }
     },
+    correctCount() {
+        if (this.quizTipe() !== 'pilihan_ganda') {
+            return 0;
+        }
+
+        return this.questions.filter((item) => {
+            const benar = this.metaValue(item, 'elvd_jawaban_benar');
+
+            return benar !== '' && this.answerOf(item) === benar;
+        }).length;
+    },
+    score() {
+        if (this.quizTipe() !== 'pilihan_ganda' || !this.questions.length) {
+            return 0;
+        }
+
+        return Math.round((this.correctCount() / this.questions.length) * 100);
+    },
+    scoreLabel() {
+        const n = this.score();
+
+        if (n >= 80) {
+            return 'Luar biasa';
+        }
+
+        if (n >= 60) {
+            return 'Bagus';
+        }
+
+        return 'Perlu lebih banyak latihan';
+    },
     start() {
         if (!this.questions.length) {
             this.error = 'Quiz belum memiliki pertanyaan.';
@@ -191,7 +222,8 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
             body: JSON.stringify({
                 quiz_id: Number(this.quizId),
                 jawaban: this.answers,
-                mulai_pada: this.startedAt
+                mulai_pada: this.startedAt,
+                nilai: this.quizTipe() === 'pilihan_ganda' ? this.score() : null
             })
         })
         .then((response) => response.json().then((data) => ({ response, data })))
@@ -345,13 +377,46 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
 
         <template x-if="view === 'done'">
             <div class="p-4">
-                <div class="alert alert-success mb-3">
-                    <span x-show="isPreview" x-text="<?php echo esc_attr(wp_json_encode(__('Preview selesai. Hasil tidak disimpan karena Anda login sebagai Guru/Admin.', 'elearning-vd'))); ?>"></span>
-                    <span x-show="!isPreview" x-text="<?php echo esc_attr(wp_json_encode(__('Jawaban quiz berhasil dikumpulkan.', 'elearning-vd'))); ?>"></span>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="text-center" x-show="quizTipe() === 'pilihan_ganda'">
+                            <h2 class="h4 mb-3" x-text="titleOf(quiz)"></h2>
+
+                            <div
+                                class="mx-auto d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10"
+                                style="width: 9rem; height: 9rem;">
+                                <div>
+                                    <div class="text-primary fw-bold" style="font-size: 3rem; line-height: 1;" x-text="score()"></div>
+                                    <div class="text-muted small">/ 100</div>
+                                </div>
+                            </div>
+
+                            <div class="text-muted mt-3" x-text="`${correctCount()} dari ${questions.length} soal benar`"></div>
+                            <span class="badge rounded-pill text-bg-primary fs-6 mt-2 px-3 py-2" x-text="scoreLabel()"></span>
+
+                            <div class="alert alert-warning mt-3 mb-0" x-show="isPreview">
+                                <?php echo esc_html__('Mode Preview: hasil tidak disimpan.', 'elearning-vd'); ?>
+                            </div>
+
+                            <div class="d-flex justify-content-center mt-4">
+                                <a class="btn btn-primary elvd-action-button" :href="backUrl">
+                                    <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="text-center py-4" x-show="quizTipe() !== 'pilihan_ganda'">
+                            <div class="alert alert-success d-inline-block mb-3">
+                                <span x-show="isPreview" x-text="<?php echo esc_attr(wp_json_encode(__('Preview selesai. Hasil tidak disimpan karena Anda login sebagai Guru/Admin.', 'elearning-vd'))); ?>"></span>
+                                <span x-show="!isPreview" x-text="<?php echo esc_attr(wp_json_encode(__('Jawaban quiz berhasil dikumpulkan.', 'elearning-vd'))); ?>"></span>
+                            </div>
+                            <div class="text-muted mb-3"><?php echo esc_html__('Hasil jawaban essay akan dinilai oleh guru.', 'elearning-vd'); ?></div>
+                            <a class="btn btn-outline-secondary" :href="backUrl">
+                                <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <a class="btn btn-outline-secondary" :href="backUrl">
-                    <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
-                </a>
             </div>
         </template>
     </div>
