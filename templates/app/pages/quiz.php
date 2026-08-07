@@ -102,6 +102,28 @@ $elvd_quiz_answer_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
     },
     tipeLabel(value) {
         return value === 'essay' ? 'Essay' : 'Pilihan Ganda';
+    },
+    deleteQuiz(item) {
+        if (!window.confirm('Yakin hapus quiz ini?')) {
+            return;
+        }
+
+        fetch(`${this.restUrl}/${item.id}`, {
+            method: 'DELETE',
+            headers: { 'X-WP-Nonce': config.nonce }
+        })
+        .then((response) => response.json().then((data) => ({ response, data })))
+        .then(({ response }) => {
+            if (!response.ok) {
+                throw new Error('Gagal menghapus quiz.');
+            }
+
+            this.quizzes = this.quizzes.filter((quiz) => Number(quiz.id) !== Number(item.id));
+            this.$dispatch('elvd-items-updated', { items: this.quizzes });
+        })
+        .catch((error) => {
+            this.error = error.message || 'Gagal menghapus quiz.';
+        });
     }
 }">
     <div class="elvd-table-panel">
@@ -111,7 +133,7 @@ $elvd_quiz_answer_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
                 class="btn btn-primary elvd-action-button"
                 x-show="config.isManager"
                 :href="`${formUrl}/`">
-                <?php echo esc_html__('Tambah Quiz', 'elearning-vd'); ?>
+                <i class="bi bi-plus-lg me-1"></i><?php echo esc_html__('Tambah Quiz', 'elearning-vd'); ?>
             </a>
         </div>
 
@@ -162,22 +184,33 @@ $elvd_quiz_answer_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
                             <td x-text="metaValue(item, 'elvd_durasi_menit') || '-'"></td>
                             <td class="text-end">
                                 <a
+                                    title="<?php echo esc_html__('Lihat', 'elearning-vd'); ?>"
                                     class="btn btn-sm btn-outline-primary elvd-row-action"
                                     :href="`${workspaceUrl}/${item.id}/`">
-                                    <?php echo esc_html__('Kerjakan', 'elearning-vd'); ?>
+                                    <i class="bi bi-play-fill"></i>
                                 </a>
                                 <a
+                                    title="<?php echo esc_html__('Jawab', 'elearning-vd'); ?>"
                                     class="btn btn-sm btn-outline-secondary elvd-row-action"
                                     x-show="config.isManager"
                                     :href="`${answerUrl}/${item.id}/`">
-                                    <?php echo esc_html__('Nilai', 'elearning-vd'); ?>
+                                    <i class="bi bi-clipboard2-check"></i>
                                 </a>
                                 <a
+                                    title="<?php echo esc_html__('Edit', 'elearning-vd'); ?>"
                                     class="btn btn-sm btn-outline-secondary elvd-row-action"
                                     x-show="config.isManager"
                                     :href="`${formUrl}/${item.id}/`">
-                                    <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                                    <i class="bi bi-pencil"></i>
                                 </a>
+                                <button
+                                    title="<?php echo esc_html__('Hapus', 'elearning-vd'); ?>"
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    x-show="config.currentRole === 'administrator' || Number(item.author) === Number(config.userId)"
+                                    @click="deleteQuiz(item)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     </template>

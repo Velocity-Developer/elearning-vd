@@ -413,14 +413,14 @@ $elvd_guru_options = array_map(
                                     class="btn btn-sm btn-outline-primary elvd-row-action"
                                     x-show="config.isManager"
                                     @click="openEdit(item)">
-                                    <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                                    <i class="bi bi-pencil"></i>
                                 </button>
                                 <button
                                     type="button"
                                     class="btn btn-sm btn-outline-danger elvd-row-action"
                                     x-show="config.currentRole === 'administrator'"
                                     @click="deleteSchedule(item)">
-                                    <?php echo esc_html__('Hapus', 'elearning-vd'); ?>
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </td>
                         </tr>
@@ -546,10 +546,10 @@ $elvd_guru_options = array_map(
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" @click="closeModal()">
-                        <?php echo esc_html__('Batal', 'elearning-vd'); ?>
+                        <i class="bi bi-x-lg me-1"></i><?php echo esc_html__('Batal', 'elearning-vd'); ?>
                     </button>
                     <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">
-                        <span x-show="!saving"><?php echo esc_html__('Simpan', 'elearning-vd'); ?></span>
+                        <span x-show="!saving"><i class="bi bi-check-lg me-1"></i><?php echo esc_html__('Simpan', 'elearning-vd'); ?></span>
                         <span x-show="saving"><?php echo esc_html__('Menyimpan...', 'elearning-vd'); ?></span>
                     </button>
                 </div>

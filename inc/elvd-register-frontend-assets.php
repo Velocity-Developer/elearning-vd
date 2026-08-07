@@ -32,6 +32,13 @@ function elvd_register_frontend_assets(): void
         true
     );
 
+    wp_register_style(
+        'elvd-bootstrap-icons',
+        'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css',
+        [],
+        '1.11.3'
+    );
+
     wp_register_script(
         'elvd-chartjs',
         'https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js',
@@ -43,7 +50,7 @@ function elvd_register_frontend_assets(): void
     wp_register_style(
         'elvd-main',
         ELVD_PLUGIN_URL . '/assets/main.css',
-        $is_velocity_theme ? [] : ['elvd-bootstrap'],
+        $is_velocity_theme ? ['elvd-bootstrap-icons'] : ['elvd-bootstrap', 'elvd-bootstrap-icons'],
         ELVD_PLUGIN_VERSION,
         'all'
     );

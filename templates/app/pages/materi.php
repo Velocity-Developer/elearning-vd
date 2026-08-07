@@ -330,6 +330,32 @@ defined('ABSPATH') || exit;
                 this.uploadingFile = false;
                 event.target.value = "";
             });
+        },
+        deleteMatter(item) {
+            if (!window.confirm("Yakin hapus materi ini?")) {
+                return;
+            }
+
+            fetch(`${this.restUrl}/${item.id}`, {
+                method: "DELETE",
+                headers: { "X-WP-Nonce": config.nonce }
+            })
+            .then((response) => response.json().then((data) => ({ response, data })))
+            .then(({ response }) => {
+                if (!response.ok) {
+                    throw new Error("Gagal menghapus materi.");
+                }
+
+                this.matters = this.matters.filter((matter) => Number(matter.id) !== Number(item.id));
+                this.$dispatch("elvd-items-updated", { items: this.matters });
+
+                if (this.preview && Number(this.preview.id) === Number(item.id)) {
+                    this.closePreview();
+                }
+            })
+            .catch((error) => {
+                this.error = error.message || "Gagal menghapus materi.";
+            });
         }
     }'
     @keydown.escape.window="closeModal()">
@@ -419,7 +445,14 @@ defined('ABSPATH') || exit;
                                     class="btn btn-sm btn-outline-primary elvd-row-action"
                                     x-show="config.isManager"
                                     @click="openEdit(item)">
-                                    <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    x-show="config.currentRole === 'administrator' || Number(item.author) === Number(config.userId)"
+                                    @click="deleteMatter(item)">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </td>
                         </tr>
@@ -556,10 +589,10 @@ defined('ABSPATH') || exit;
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" @click="closeModal()">
-                        <?php echo esc_html__('Batal', 'elearning-vd'); ?>
+                        <i class="bi bi-x-lg me-1"></i><?php echo esc_html__('Batal', 'elearning-vd'); ?>
                     </button>
                     <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">
-                        <span x-show="!saving"><?php echo esc_html__('Simpan', 'elearning-vd'); ?></span>
+                        <span x-show="!saving"><i class="bi bi-check-lg me-1"></i><?php echo esc_html__('Simpan', 'elearning-vd'); ?></span>
                         <span x-show="saving"><?php echo esc_html__('Menyimpan...', 'elearning-vd'); ?></span>
                     </button>
                 </div>
@@ -611,7 +644,7 @@ defined('ABSPATH') || exit;
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" @click="closePreview()">
-                        <?php echo esc_html__('Tutup', 'elearning-vd'); ?>
+                        <i class="bi bi-x-lg me-1"></i><?php echo esc_html__('Tutup', 'elearning-vd'); ?>
                     </button>
                 </div>
             </div>
