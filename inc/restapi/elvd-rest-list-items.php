@@ -16,11 +16,32 @@ function elvd_rest_list_items(WP_REST_Request $request): WP_REST_Response
     $offset = ($page - 1) * $per_page;
     $table = elvd_table_name($resource['table']);
 
+    $where = '';
+
+    foreach (['quiz_id', 'siswa_id'] as $field) {
+        $value = $request->get_param($field);
+
+        if (null === $value || '' === $value || ! isset($resource['fields'][$field])) {
+            continue;
+        }
+
+        $where .= $where ? ' AND ' : 'WHERE ';
+        $where .= $wpdb->prepare(esc_sql($field) . ' = %d', absint($value));
+    }
+
     $items = $wpdb->get_results(
-        $wpdb->prepare("SELECT * FROM {$table} ORDER BY id DESC LIMIT %d OFFSET %d", $per_page, $offset),
+        $wpdb->prepare("SELECT * FROM {$table} {$where} ORDER BY id DESC LIMIT %d OFFSET %d", $per_page, $offset),
         ARRAY_A
     );
-    $total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
+    $total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} {$where}");
+
+    if ('elvd_pengerjaan_quiz' === $resource['table']) {
+        foreach ($items as &$row) {
+            $user = get_userdata((int) ($row['siswa_id'] ?? 0));
+            $row['siswa_name'] = $user ? (string) $user->display_name : '';
+        }
+        unset($row);
+    }
 
     $response = new WP_REST_Response($items);
     $response->header('X-WP-Total', (string) $total);
