@@ -99,6 +99,46 @@ if (! is_user_logged_in()) {
     $materi_counts = wp_count_posts('elvd_materi');
     $quiz_counts = wp_count_posts('elvd_quiz');
 
+    // Data dashboard untuk role siswa.
+    $elvd_siswa_jadwal = [];
+    $elvd_siswa_tugas = [];
+    $elvd_siswa_materi = [];
+    $elvd_siswa_quiz = [];
+
+    if ('siswa' === $elvd_current_role && 0 < $elvd_siswa_kelas_id) {
+        $elvd_siswa_jadwal = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT j.id, j.hari, j.jam_mulai, j.jam_selesai, mp.nama AS mata_pelajaran, u.display_name AS guru
+                 FROM %1\$s j
+                 LEFT JOIN %2\$s mp ON mp.id = j.mata_pelajaran_id
+                 LEFT JOIN {$wpdb->users} u ON u.ID = j.guru_id
+                 WHERE j.kelas_id = %3\$d
+                 ORDER BY FIELD(j.hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'), j.jam_mulai
+                 LIMIT 20",
+                elvd_table_name('elvd_jadwal_pelajaran'),
+                elvd_table_name('elvd_mata_pelajaran'),
+                $elvd_siswa_kelas_id
+            )
+        );
+
+        $elvd_kelas_args = static function (string $post_type) use ($elvd_siswa_kelas_id): array {
+            return [
+                'post_type' => $post_type,
+                'post_status' => 'publish',
+                'posts_per_page' => 5,
+                'orderby' => 'date',
+                'order' => 'DESC',
+                'meta_key' => 'elvd_kelas_id',
+                'meta_value' => $elvd_siswa_kelas_id,
+                'meta_compare' => '=',
+            ];
+        };
+
+        $elvd_siswa_tugas = get_posts($elvd_kelas_args('elvd_tugas'));
+        $elvd_siswa_materi = get_posts($elvd_kelas_args('elvd_materi'));
+        $elvd_siswa_quiz = get_posts($elvd_kelas_args('elvd_quiz'));
+    }
+
     $dashboard_metrics = [
         [
             'label' => __('Siswa', 'elearning-vd'),
@@ -159,10 +199,10 @@ if (! is_user_logged_in()) {
         @elvd-items-updated.window="items = Array.isArray($event.detail.items) ? $event.detail.items : []"
         x-data='{
         tabs: <?php echo esc_attr(wp_json_encode(
-            'siswa' === $elvd_current_role
-                ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz']
-                : ['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'tugas', 'materi', 'guru', 'siswa', 'quiz']
-        )); ?>,
+                    'siswa' === $elvd_current_role
+                        ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz']
+                        : ['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'tugas', 'materi', 'guru', 'siswa', 'quiz']
+                )); ?>,
         labels: {
             "dashboard": "Dashboard",
             "tahun-ajaran": "Tahun Ajaran",
@@ -291,83 +331,197 @@ if (! is_user_logged_in()) {
                     </div>
                 </div>
 
-                <div x-show="active === 'dashboard'">
-                    <div class="elvd-hero">
-                        <div class="elvd-chevron elvd-chevron-left" aria-hidden="true"></div>
-                        <div class="elvd-chevron elvd-chevron-right" aria-hidden="true"></div>
-                        <div class="elvd-hero-copy">
-                            <p class="elvd-eyebrow mb-2"><?php echo esc_html__('Ringkasan akademik', 'elearning-vd'); ?></p>
-                            <h2><?php echo esc_html__('Kelola pembelajaran dari satu ruang kerja.', 'elearning-vd'); ?></h2>
-                            <p><?php echo esc_html__('Pantau siswa, guru, kelas, mata pelajaran, konten, dan quiz dengan ritme visual yang bersih.', 'elearning-vd'); ?></p>
+                <?php if ('siswa' === $elvd_current_role) { ?>
+                    <div x-show="active === 'dashboard'">
+                        <div class="elvd-hero">
+                            <div class="elvd-hero-copy">
+                                <p class="elvd-eyebrow mb-2"><?php echo esc_html__('Dashboard Siswa', 'elearning-vd'); ?></p>
+                                <h2><?php echo esc_html__('Halo, selamat datang di ruang belajarmu.', 'elearning-vd'); ?></h2>
+                                <p><?php echo esc_html__('Pantau jadwal pelajaran, tugas, materi, dan quiz terbaru untuk kelasmu.', 'elearning-vd'); ?></p>
+                            </div>
                         </div>
-                        <div class="elvd-hero-stat">
-                            <span><?php echo esc_html__('Total entitas', 'elearning-vd'); ?></span>
-                            <strong><?php echo esc_html(number_format_i18n(array_sum(array_column($dashboard_metrics, 'value')))); ?></strong>
-                        </div>
-                    </div>
 
-                    <div class="elvd-metric-grid">
-                        <?php foreach (array_slice($dashboard_metrics, 0, 4) as $metric) { ?>
-                            <div class="elvd-metric-card">
-                                <span class="elvd-metric-kicker"><?php echo esc_html($metric['label']); ?></span>
-                                <strong><?php echo esc_html(number_format_i18n($metric['value'])); ?></strong>
-                                <span class="elvd-metric-line" aria-hidden="true"></span>
-                            </div>
-                        <?php } ?>
-                    </div>
-
-                    <div class="elvd-dashboard-grid">
-                        <div class="elvd-panel">
-                            <div class="elvd-panel-heading">
-                                <div>
-                                    <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Statistik', 'elearning-vd'); ?></p>
-                                    <h2><?php echo esc_html__('Ringkasan Data', 'elearning-vd'); ?></h2>
-                                </div>
-                            </div>
-                            <div class="elvd-chart-wrap">
-                                <canvas id="elvdDashboardChart" aria-label="<?php echo esc_attr__('Chart ringkasan data elearning', 'elearning-vd'); ?>" role="img"></canvas>
-                            </div>
-                            <div class="elvd-bars">
-                                <?php foreach ($dashboard_metrics as $metric) {
-                                    $bar_width = 0 < $max_dashboard_value ? max(6, (int) round(($metric['value'] / $max_dashboard_value) * 100)) : 0;
-                                ?>
-                                    <div class="elvd-bar-row">
-                                        <div class="elvd-bar-label">
-                                            <span><?php echo esc_html($metric['label']); ?></span>
-                                            <strong><?php echo esc_html(number_format_i18n($metric['value'])); ?></strong>
-                                        </div>
-                                        <div class="elvd-progress" role="progressbar" aria-label="<?php echo esc_attr($metric['label']); ?>" aria-valuenow="<?php echo esc_attr((string) $metric['value']); ?>" aria-valuemin="0" aria-valuemax="<?php echo esc_attr((string) max(1, $max_dashboard_value)); ?>">
-                                            <span style="width: <?php echo esc_attr((string) $bar_width); ?>%;"></span>
-                                        </div>
+                        <div class="elvd-dashboard-grid">
+                            <div class="elvd-panel">
+                                <div class="elvd-panel-heading">
+                                    <div>
+                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Jadwal', 'elearning-vd'); ?></p>
+                                        <h2><?php echo esc_html__('Jadwal Pelajaran', 'elearning-vd'); ?></h2>
                                     </div>
-                                <?php } ?>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table align-middle mb-0 elvd-table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col"><?php echo esc_html__('Hari', 'elearning-vd'); ?></th>
+                                                <th scope="col"><?php echo esc_html__('Jam', 'elearning-vd'); ?></th>
+                                                <th scope="col"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></th>
+                                                <th scope="col"><?php echo esc_html__('Guru', 'elearning-vd'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if ([] === $elvd_siswa_jadwal) { ?>
+                                                <tr>
+                                                    <td colspan="4"><?php echo esc_html__('Belum ada jadwal untuk kelasmu.', 'elearning-vd'); ?></td>
+                                                </tr>
+                                            <?php } ?>
+                                            <?php foreach ($elvd_siswa_jadwal as $elvd_jadwal) { ?>
+                                                <tr>
+                                                    <td><?php echo esc_html($elvd_jadwal->hari); ?></td>
+                                                    <td><?php echo esc_html($elvd_jadwal->jam_mulai . ' - ' . $elvd_jadwal->jam_selesai); ?></td>
+                                                    <td><?php echo esc_html($elvd_jadwal->mata_pelajaran ?? '-'); ?></td>
+                                                    <td><?php echo esc_html($elvd_jadwal->guru ?? '-'); ?></td>
+                                                </tr>
+                                            <?php } ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="elvd-panel elvd-panel-dark">
-                            <div class="elvd-panel-heading">
-                                <div>
-                                    <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Aktivitas', 'elearning-vd'); ?></p>
-                                    <h2><?php echo esc_html__('Aktivitas Pembelajaran', 'elearning-vd'); ?></h2>
+                            <div class="elvd-panel">
+                                <div class="elvd-panel-heading">
+                                    <div>
+                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Terbaru', 'elearning-vd'); ?></p>
+                                        <h2><?php echo esc_html__('Tugas Terbaru', 'elearning-vd'); ?></h2>
+                                    </div>
+                                </div>
+                                <div class="elvd-activity-list">
+                                    <?php if ([] === $elvd_siswa_tugas) { ?>
+                                        <div class="elvd-activity-item"><span><?php echo esc_html__('Belum ada tugas.', 'elearning-vd'); ?></span></div>
+                                    <?php } ?>
+                                    <?php foreach ($elvd_siswa_tugas as $elvd_tugas) {
+                                        $elvd_deadline = (string) get_post_meta($elvd_tugas->ID, 'elvd_deadline', true);
+                                    ?>
+                                        <div class="elvd-activity-item">
+                                            <span><?php echo esc_html($elvd_tugas->post_title); ?></span>
+                                            <strong><?php echo esc_html('' !== $elvd_deadline ? date_i18n(get_option('date_format'), strtotime($elvd_deadline)) : '&ndash;'); ?></strong>
+                                        </div>
+                                    <?php } ?>
                                 </div>
                             </div>
-                            <div class="elvd-activity-list">
-                                <div class="elvd-activity-item">
-                                    <span><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></span>
-                                    <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_tahun_ajaran'))); ?></strong>
+
+                            <div class="elvd-panel">
+                                <div class="elvd-panel-heading">
+                                    <div>
+                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Terbaru', 'elearning-vd'); ?></p>
+                                        <h2><?php echo esc_html__('Materi Terbaru', 'elearning-vd'); ?></h2>
+                                    </div>
                                 </div>
-                                <div class="elvd-activity-item">
-                                    <span><?php echo esc_html__('Pengerjaan Quiz', 'elearning-vd'); ?></span>
-                                    <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_pengerjaan_quiz'))); ?></strong>
+                                <div class="elvd-activity-list">
+                                    <?php if ([] === $elvd_siswa_materi) { ?>
+                                        <div class="elvd-activity-item"><span><?php echo esc_html__('Belum ada materi.', 'elearning-vd'); ?></span></div>
+                                    <?php } ?>
+                                    <?php foreach ($elvd_siswa_materi as $elvd_materi) { ?>
+                                        <div class="elvd-activity-item">
+                                            <span><?php echo esc_html($elvd_materi->post_title); ?></span>
+                                            <strong><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($elvd_materi->post_date))); ?></strong>
+                                        </div>
+                                    <?php } ?>
                                 </div>
-                                <div class="elvd-activity-item">
-                                    <span><?php echo esc_html__('Konten Belajar', 'elearning-vd'); ?></span>
-                                    <strong><?php echo esc_html(number_format_i18n((isset($tugas_counts->publish) ? (int) $tugas_counts->publish : 0) + (isset($materi_counts->publish) ? (int) $materi_counts->publish : 0) + (isset($quiz_counts->publish) ? (int) $quiz_counts->publish : 0))); ?></strong>
+                            </div>
+
+                            <div class="elvd-panel">
+                                <div class="elvd-panel-heading">
+                                    <div>
+                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Terbaru', 'elearning-vd'); ?></p>
+                                        <h2><?php echo esc_html__('Quiz Terbaru', 'elearning-vd'); ?></h2>
+                                    </div>
+                                </div>
+                                <div class="elvd-activity-list">
+                                    <?php if ([] === $elvd_siswa_quiz) { ?>
+                                        <div class="elvd-activity-item"><span><?php echo esc_html__('Belum ada quiz.', 'elearning-vd'); ?></span></div>
+                                    <?php } ?>
+                                    <?php foreach ($elvd_siswa_quiz as $elvd_quiz) {
+                                        $elvd_quiz_tipe = (string) get_post_meta($elvd_quiz->ID, 'elvd_quiz_tipe', true);
+                                    ?>
+                                        <div class="elvd-activity-item">
+                                            <span><?php echo esc_html($elvd_quiz->post_title); ?></span>
+                                            <strong><?php echo esc_html('' !== $elvd_quiz_tipe ? ucfirst($elvd_quiz_tipe) : date_i18n(get_option('date_format'), strtotime($elvd_quiz->post_date))); ?></strong>
+                                        </div>
+                                    <?php } ?>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                <?php } else { ?>
+                    <div x-show="active === 'dashboard'">
+                        <div class="elvd-hero">
+                            <div class="elvd-chevron elvd-chevron-left" aria-hidden="true"></div>
+                            <div class="elvd-chevron elvd-chevron-right" aria-hidden="true"></div>
+                            <div class="elvd-hero-copy">
+                                <p class="elvd-eyebrow mb-2"><?php echo esc_html__('Ringkasan akademik', 'elearning-vd'); ?></p>
+                                <h2><?php echo esc_html__('Kelola pembelajaran dari satu ruang kerja.', 'elearning-vd'); ?></h2>
+                                <p><?php echo esc_html__('Pantau siswa, guru, kelas, mata pelajaran, konten, dan quiz dengan ritme visual yang bersih.', 'elearning-vd'); ?></p>
+                            </div>
+                            <div class="elvd-hero-stat">
+                                <span><?php echo esc_html__('Total entitas', 'elearning-vd'); ?></span>
+                                <strong><?php echo esc_html(number_format_i18n(array_sum(array_column($dashboard_metrics, 'value')))); ?></strong>
+                            </div>
+                        </div>
+
+                        <div class="elvd-metric-grid">
+                            <?php foreach (array_slice($dashboard_metrics, 0, 4) as $metric) { ?>
+                                <div class="elvd-metric-card">
+                                    <span class="elvd-metric-kicker"><?php echo esc_html($metric['label']); ?></span>
+                                    <strong><?php echo esc_html(number_format_i18n($metric['value'])); ?></strong>
+                                    <span class="elvd-metric-line" aria-hidden="true"></span>
+                                </div>
+                            <?php } ?>
+                        </div>
+
+                        <div class="elvd-dashboard-grid">
+                            <div class="elvd-panel">
+                                <div class="elvd-panel-heading">
+                                    <div>
+                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Statistik', 'elearning-vd'); ?></p>
+                                        <h2><?php echo esc_html__('Ringkasan Data', 'elearning-vd'); ?></h2>
+                                    </div>
+                                </div>
+                                <div class="elvd-chart-wrap">
+                                    <canvas id="elvdDashboardChart" aria-label="<?php echo esc_attr__('Chart ringkasan data elearning', 'elearning-vd'); ?>" role="img"></canvas>
+                                </div>
+                                <div class="elvd-bars">
+                                    <?php foreach ($dashboard_metrics as $metric) {
+                                        $bar_width = 0 < $max_dashboard_value ? max(6, (int) round(($metric['value'] / $max_dashboard_value) * 100)) : 0;
+                                    ?>
+                                        <div class="elvd-bar-row">
+                                            <div class="elvd-bar-label">
+                                                <span><?php echo esc_html($metric['label']); ?></span>
+                                                <strong><?php echo esc_html(number_format_i18n($metric['value'])); ?></strong>
+                                            </div>
+                                            <div class="elvd-progress" role="progressbar" aria-label="<?php echo esc_attr($metric['label']); ?>" aria-valuenow="<?php echo esc_attr((string) $metric['value']); ?>" aria-valuemin="0" aria-valuemax="<?php echo esc_attr((string) max(1, $max_dashboard_value)); ?>">
+                                                <span style="width: <?php echo esc_attr((string) $bar_width); ?>%;"></span>
+                                            </div>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+                            </div>
+
+                            <div class="elvd-panel elvd-panel-dark">
+                                <div class="elvd-panel-heading">
+                                    <div>
+                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Aktivitas', 'elearning-vd'); ?></p>
+                                        <h2><?php echo esc_html__('Aktivitas Pembelajaran', 'elearning-vd'); ?></h2>
+                                    </div>
+                                </div>
+                                <div class="elvd-activity-list">
+                                    <div class="elvd-activity-item">
+                                        <span><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></span>
+                                        <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_tahun_ajaran'))); ?></strong>
+                                    </div>
+                                    <div class="elvd-activity-item">
+                                        <span><?php echo esc_html__('Pengerjaan Quiz', 'elearning-vd'); ?></span>
+                                        <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_pengerjaan_quiz'))); ?></strong>
+                                    </div>
+                                    <div class="elvd-activity-item">
+                                        <span><?php echo esc_html__('Konten Belajar', 'elearning-vd'); ?></span>
+                                        <strong><?php echo esc_html(number_format_i18n((isset($tugas_counts->publish) ? (int) $tugas_counts->publish : 0) + (isset($materi_counts->publish) ? (int) $materi_counts->publish : 0) + (isset($quiz_counts->publish) ? (int) $quiz_counts->publish : 0))); ?></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php } ?>
 
                 <?php
                 if ('' !== $route_page && '' === $page_file) {
