@@ -308,6 +308,28 @@ $elvd_guru_options = array_map(
             const end = this.timeValue(item.jam_selesai);
 
             return start && end ? `${start} - ${end}` : '-';
+        },
+        deleteSchedule(item) {
+            if (!window.confirm('Yakin hapus jadwal pelajaran ini?')) {
+                return;
+            }
+
+            fetch(`${config.restUrl}/jadwal-pelajaran/${item.id}`, {
+                method: 'DELETE',
+                headers: { 'X-WP-Nonce': config.nonce }
+            })
+            .then((response) => response.json().then((data) => ({ response, data })))
+            .then(({ response }) => {
+                if (!response.ok) {
+                    throw new Error('Gagal menghapus jadwal pelajaran.');
+                }
+
+                this.schedules = this.schedules.filter((schedule) => Number(schedule.id) !== Number(item.id));
+                this.syncItems();
+            })
+            .catch((error) => {
+                this.error = error.message || 'Gagal menghapus jadwal pelajaran.';
+            });
         }
     }"
     @keydown.escape.window="closeModal()">
@@ -392,6 +414,13 @@ $elvd_guru_options = array_map(
                                     x-show="config.isManager"
                                     @click="openEdit(item)">
                                     <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    x-show="config.currentRole === 'administrator'"
+                                    @click="deleteSchedule(item)">
+                                    <?php echo esc_html__('Hapus', 'elearning-vd'); ?>
                                 </button>
                             </td>
                         </tr>

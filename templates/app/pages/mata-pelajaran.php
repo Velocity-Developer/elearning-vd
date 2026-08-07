@@ -149,6 +149,28 @@ defined('ABSPATH') || exit;
             }
 
             return value.length > 120 ? `${value.slice(0, 120)}...` : value;
+        },
+        deleteSubject(item) {
+            if (!window.confirm('Yakin hapus mata pelajaran ini?')) {
+                return;
+            }
+
+            fetch(`${config.restUrl}/mata-pelajaran/${item.id}`, {
+                method: 'DELETE',
+                headers: { 'X-WP-Nonce': config.nonce }
+            })
+            .then((response) => response.json().then((data) => ({ response, data })))
+            .then(({ response }) => {
+                if (!response.ok) {
+                    throw new Error('Gagal menghapus mata pelajaran.');
+                }
+
+                this.subjects = this.subjects.filter((subject) => Number(subject.id) !== Number(item.id));
+                this.$dispatch('elvd-items-updated', { items: this.subjects });
+            })
+            .catch((error) => {
+                this.error = error.message || 'Gagal menghapus mata pelajaran.';
+            });
         }
     }"
     @keydown.escape.window="closeModal()">
@@ -198,6 +220,13 @@ defined('ABSPATH') || exit;
                                     x-show="config.isManager"
                                     @click="openEdit(item)">
                                     <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    x-show="config.currentRole === 'administrator'"
+                                    @click="deleteSubject(item)">
+                                    <?php echo esc_html__('Hapus', 'elearning-vd'); ?>
                                 </button>
                             </td>
                         </tr>

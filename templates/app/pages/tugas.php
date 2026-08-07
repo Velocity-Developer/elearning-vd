@@ -34,6 +34,13 @@ $elvd_guru_options = array_map(
         uploadingFile: false,
         saving: false,
         modalOpen: false,
+        preview: null,
+        openPreview(item) {
+            this.preview = item;
+        },
+        closePreview() {
+            this.preview = null;
+        },
         error: "",
         filters: {
             judul: "",
@@ -313,6 +320,32 @@ $elvd_guru_options = array_map(
                 this.saving = false;
             });
         },
+        deleteTask(item) {
+            if (!window.confirm("Yakin hapus tugas ini?")) {
+                return;
+            }
+
+            fetch(`${this.restUrl}/${item.id}`, {
+                method: "DELETE",
+                headers: { "X-WP-Nonce": config.nonce }
+            })
+            .then((response) => response.json().then((data) => ({ response, data })))
+            .then(({ response }) => {
+                if (!response.ok) {
+                    throw new Error("Gagal menghapus tugas.");
+                }
+
+                this.tasks = this.tasks.filter((task) => Number(task.id) !== Number(item.id));
+                this.$dispatch("elvd-items-updated", { items: this.tasks });
+
+                if (this.preview && Number(this.preview.id) === Number(item.id)) {
+                    this.closePreview();
+                }
+            })
+            .catch((error) => {
+                this.error = error.message || "Gagal menghapus tugas.";
+            });
+        },
         className(id) {
             const classItem = this.classes.find((item) => Number(item.id) === Number(id));
 
@@ -375,7 +408,7 @@ $elvd_guru_options = array_map(
             });
         }
     }'
-    @keydown.escape.window="closeModal()">
+    @keydown.escape.window="closeModal(); closePreview()">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar align-items-start flex-wrap">
             <div class="row g-2 flex-grow-1">
@@ -428,9 +461,8 @@ $elvd_guru_options = array_map(
                     <tr>
                         <th scope="col"><?php echo esc_html__('Judul', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></th>
+                        <th scope="col"><?php echo esc_html__('MaPel', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Deadline', 'elearning-vd'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Instruksi', 'elearning-vd'); ?></th>
                         <th scope="col" class="text-end"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
                     </tr>
                 </thead>
@@ -441,7 +473,12 @@ $elvd_guru_options = array_map(
                     <template x-for="item in pageItems()" :key="item.id">
                         <tr>
                             <td>
-                                <strong x-text="titleOf(item)"></strong>
+                                <button
+                                    type="button"
+                                    class="btn btn-link p-0 fw-normal text-start"
+                                    @click="openPreview(item)"
+                                    x-text="titleOf(item)">
+                                </button>
                                 <small
                                     class="d-block text-muted"
                                     x-show="config.currentRole === 'administrator' || config.currentRole === 'siswa'">
@@ -451,14 +488,20 @@ $elvd_guru_options = array_map(
                             <td x-text="className(metaValue(item, 'elvd_kelas_id'))"></td>
                             <td x-text="subjectName(metaValue(item, 'elvd_mata_pelajaran_id'))"></td>
                             <td x-text="deadlineLabel(metaValue(item, 'elvd_deadline'))"></td>
-                            <td x-text="shortDescription(metaValue(item, 'elvd_instruksi'))"></td>
                             <td class="text-end">
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-primary elvd-row-action"
+                                    class="btn btn-sm btn-outline-warning elvd-row-action"
                                     x-show="config.isManager"
                                     @click="openEdit(item)">
                                     <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    x-show="config.currentRole === 'administrator' || Number(item.author) === Number(config.userId)"
+                                    @click="deleteTask(item)">
+                                    <?php echo esc_html__('Hapus', 'elearning-vd'); ?>
                                 </button>
                             </td>
                         </tr>
@@ -620,6 +663,63 @@ $elvd_guru_options = array_map(
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="modal-backdrop fade show" x-show="preview" x-cloak></div>
+    <div
+        class="modal fade show elvd-modal"
+        tabindex="-1"
+        role="dialog"
+        aria-modal="true"
+        x-show="preview"
+        x-cloak>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" x-text="preview ? titleOf(preview) : ''"></h2>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        aria-label="<?php echo esc_attr__('Tutup', 'elearning-vd'); ?>"
+                        @click="closePreview()"></button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row mb-3">
+                        <dt class="col-sm-4"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></dt>
+                        <dd class="col-sm-8" x-text="preview ? yearName(metaValue(preview, 'elvd_tahun_ajaran_id')) : '-'"></dd>
+                        <dt class="col-sm-4"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></dt>
+                        <dd class="col-sm-8" x-text="preview ? className(metaValue(preview, 'elvd_kelas_id')) : '-'"></dd>
+                        <dt class="col-sm-4"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></dt>
+                        <dd class="col-sm-8" x-text="preview ? subjectName(metaValue(preview, 'elvd_mata_pelajaran_id')) : '-'"></dd>
+                        <dt class="col-sm-4"><?php echo esc_html__('Deadline', 'elearning-vd'); ?></dt>
+                        <dd class="col-sm-8" x-text="preview ? deadlineLabel(metaValue(preview, 'elvd_deadline')) : '-'"></dd>
+                    </dl>
+                    <div class="mb-2" x-show="preview && metaValue(preview, 'elvd_instruksi')">
+                        <strong><?php echo esc_html__('Instruksi', 'elearning-vd'); ?></strong>
+                        <p class="mb-0 mt-1 text-muted" x-text="preview ? metaValue(preview, 'elvd_instruksi') : ''"></p>
+                    </div>
+                    <div class="mb-2">
+                        <strong><?php echo esc_html__('Konten', 'elearning-vd'); ?></strong>
+                        <p class="mb-0 mt-1 text-muted" x-text="preview ? (contentOf(preview) || '-') : '-'"></p>
+                    </div>
+                    <div x-show="preview && hasFile(preview)">
+                        <strong><?php echo esc_html__('Berkas', 'elearning-vd'); ?></strong>
+                        <div class="mt-1">
+                            <a
+                                :href="preview ? metaValue(preview, 'elvd_file_url') : '#'"
+                                target="_blank"
+                                rel="noopener"
+                                x-text="preview ? metaValue(preview, 'elvd_file_url') : ''"></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @click="closePreview()">
+                        <?php echo esc_html__('Tutup', 'elearning-vd'); ?>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
