@@ -11,6 +11,29 @@ defined('ABSPATH') || exit;
         saving: false,
         modalOpen: false,
         error: '',
+        filterNama: '',
+        page: 1,
+        perPage: 10,
+        filteredSubjects() {
+            const nama = this.filterNama.trim().toLowerCase();
+
+            if (!nama) {
+                return this.subjects;
+            }
+
+            return this.subjects.filter((item) => String(item.nama || '').toLowerCase().includes(nama));
+        },
+        totalPages() {
+            return Math.max(1, Math.ceil(this.filteredSubjects().length / this.perPage));
+        },
+        pageItems() {
+            const start = (this.page - 1) * this.perPage;
+
+            return this.filteredSubjects().slice(start, start + this.perPage);
+        },
+        goPage(p) {
+            this.page = Math.min(Math.max(1, p), this.totalPages());
+        },
         form: {
             id: null,
             nama: '',
@@ -19,6 +42,7 @@ defined('ABSPATH') || exit;
         },
         init() {
             this.fetchSubjects();
+            this.$watch('filterNama', () => { this.page = 1; });
         },
         fetchSubjects() {
             this.loadingSubjects = true;
@@ -130,7 +154,11 @@ defined('ABSPATH') || exit;
     @keydown.escape.window="closeModal()">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">
-            <div></div>
+            <input
+                type="search"
+                class="form-control w-auto elvd-filter-input"
+                x-model="filterNama"
+                placeholder="<?php echo esc_attr__('Cari nama mata pelajaran', 'elearning-vd'); ?>">
             <button
                 type="button"
                 class="btn btn-primary elvd-action-button"
@@ -156,7 +184,7 @@ defined('ABSPATH') || exit;
                     <tr x-show="loadingSubjects">
                         <td colspan="4"><?php echo esc_html__('Memuat data mata pelajaran...', 'elearning-vd'); ?></td>
                     </tr>
-                    <template x-for="item in subjects" :key="item.id">
+                    <template x-for="item in pageItems()" :key="item.id">
                         <tr>
                             <td>
                                 <strong x-text="item.nama || '-'"></strong>
@@ -174,12 +202,38 @@ defined('ABSPATH') || exit;
                             </td>
                         </tr>
                     </template>
-                    <tr x-show="!loadingSubjects && subjects.length === 0">
+                    <tr x-show="!loadingSubjects && filteredSubjects().length === 0">
                         <td colspan="4"><?php echo esc_html__('Belum ada mata pelajaran.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
             </table>
         </div>
+
+        <nav
+            class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3"
+            x-show="!loadingSubjects && totalPages() > 1"
+            aria-label="<?php echo esc_attr__('Paginasi mata pelajaran', 'elearning-vd'); ?>">
+            <small class="text-muted">
+                <?php echo esc_html__('Halaman', 'elearning-vd'); ?> <span x-text="page"></span> / <span x-text="totalPages()"></span>
+            </small>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" :class="page === 1 ? 'disabled' : ''">
+                    <a class="page-link" href="#" @click.prevent="goPage(page - 1)">
+                        <?php echo esc_html__('Sebelumnya', 'elearning-vd'); ?>
+                    </a>
+                </li>
+                <template x-for="p in totalPages()" :key="p">
+                    <li class="page-item" :class="page === p ? 'active' : ''">
+                        <a class="page-link" href="#" @click.prevent="goPage(p)" x-text="p"></a>
+                    </li>
+                </template>
+                <li class="page-item" :class="page === totalPages() ? 'disabled' : ''">
+                    <a class="page-link" href="#" @click.prevent="goPage(page + 1)">
+                        <?php echo esc_html__('Berikutnya', 'elearning-vd'); ?>
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
 
     <div class="modal-backdrop fade show" x-show="modalOpen" x-cloak></div>
