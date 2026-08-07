@@ -45,3 +45,4 @@ Plugin elearning-vd adalah plugin elearning untuk sekolah sd, smp, sma. dengan f
 - mata_pelajaran (elvd_mata_pelajaran)
 - jadwal_pelajaran (elvd_jadwal_pelajaran)
 - pengerjaan_quiz (elvd_pengerjaan_quiz)
+- pengerjaan_tugas (elvd_pengerjaan_tugas)

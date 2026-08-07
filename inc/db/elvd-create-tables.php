@@ -85,6 +85,23 @@ function elvd_create_tables(): void
         KEY status (status)
     ) {$charset_collate};";
 
+    $tables[] = "CREATE TABLE {$wpdb->prefix}elvd_pengerjaan_tugas (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        tugas_id BIGINT UNSIGNED NOT NULL,
+        nama VARCHAR(200) NULL,
+        user_id BIGINT UNSIGNED NOT NULL,
+        file VARCHAR(255) NULL,
+        catatan TEXT NULL,
+        tanggal DATETIME NULL,
+        nilai DECIMAL(5,2) NULL,
+        tanggal_nilai DATETIME NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY  (id),
+        KEY tugas_id (tugas_id),
+        KEY user_id (user_id)
+    ) {$charset_collate};";
+
     foreach ($tables as $table) {
         dbDelta($table);
     }
