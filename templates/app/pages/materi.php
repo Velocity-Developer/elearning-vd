@@ -18,6 +18,54 @@ defined('ABSPATH') || exit;
         saving: false,
         modalOpen: false,
         error: "",
+        filters: {
+            judul: "",
+            tahun_ajaran_id: "",
+            kelas_id: "",
+            mata_pelajaran_id: ""
+        },
+        page: 1,
+        perPage: 20,
+        preview: null,
+        openPreview(item) {
+            this.preview = item;
+        },
+        closePreview() {
+            this.preview = null;
+        },
+        filteredMatters() {
+            const judul = this.filters.judul.trim().toLowerCase();
+
+            return this.matters.filter((item) => {
+                if (config.currentRole === "guru" && Number(item.author) !== Number(config.userId)) {
+                    return false;
+                }
+                if (config.currentRole === "siswa" && Number(this.metaValue(item, "elvd_kelas_id")) !== Number(config.siswaKelasId)) {
+                    return false;
+                }
+
+                const matchJudul = !judul || this.titleOf(item).toLowerCase().includes(judul);
+                const matchTahun = !this.filters.tahun_ajaran_id || Number(this.metaValue(item, "elvd_tahun_ajaran_id")) === Number(this.filters.tahun_ajaran_id);
+                const matchKelas = !this.filters.kelas_id || Number(this.metaValue(item, "elvd_kelas_id")) === Number(this.filters.kelas_id);
+                const matchMapel = !this.filters.mata_pelajaran_id || Number(this.metaValue(item, "elvd_mata_pelajaran_id")) === Number(this.filters.mata_pelajaran_id);
+
+                return matchJudul && matchTahun && matchKelas && matchMapel;
+            });
+        },
+        totalPages() {
+            return Math.max(1, Math.ceil(this.filteredMatters().length / this.perPage));
+        },
+        pageItems() {
+            const start = (this.page - 1) * this.perPage;
+
+            return this.filteredMatters().slice(start, start + this.perPage);
+        },
+        goPage(p) {
+            this.page = Math.min(Math.max(1, p), this.totalPages());
+        },
+        resetPage() {
+            this.page = 1;
+        },
         form: {
             id: null,
             judul: "",
@@ -30,12 +78,22 @@ defined('ABSPATH') || exit;
         init() {
             this.fetchMatters();
             this.fetchRelations();
+            this.$watch("filters.judul", () => this.resetPage());
+            this.$watch("filters.tahun_ajaran_id", () => { this.resetPage(); this.filters.kelas_id = ""; });
+            this.$watch("filters.kelas_id", () => this.resetPage());
+            this.$watch("filters.mata_pelajaran_id", () => this.resetPage());
         },
         fetchMatters() {
             this.loadingMatters = true;
             this.error = "";
 
-            fetch(`${this.restUrl}?per_page=100`, {
+            const params = new URLSearchParams({ per_page: "100", _embed: "true" });
+
+            if (config.currentRole === "guru" && config.userId) {
+                params.set("author", String(config.userId));
+            }
+
+            fetch(`${this.restUrl}?${params.toString()}`, {
                 headers: { "X-WP-Nonce": config.nonce }
             })
             .then((response) => {
@@ -269,8 +327,40 @@ defined('ABSPATH') || exit;
     }'
     @keydown.escape.window="closeModal()">
     <div class="elvd-table-panel">
-        <div class="elvd-resource-toolbar">
-            <div></div>
+        <div class="elvd-resource-toolbar align-items-start flex-wrap">
+            <div class="row g-2 flex-grow-1">
+                <div class="col-md-3">
+                    <input
+                        type="search"
+                        class="form-control elvd-filter-input"
+                        x-model="filters.judul"
+                        placeholder="<?php echo esc_attr__('Cari judul materi', 'elearning-vd'); ?>">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select elvd-filter-input" x-model="filters.tahun_ajaran_id" :disabled="loadingRelations">
+                        <option value="" x-text="loadingRelations ? 'Memuat tahun...' : 'Semua tahun'"></option>
+                        <template x-for="year in years" :key="year.id">
+                            <option :value="String(year.id)" x-text="year.nama"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select elvd-filter-input" x-model="filters.kelas_id" :disabled="loadingRelations">
+                        <option value="" x-text="loadingRelations ? 'Memuat kelas...' : 'Semua kelas'"></option>
+                        <template x-for="classItem in classes" :key="classItem.id">
+                            <option :value="String(classItem.id)" x-text="classItem.nama"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select elvd-filter-input" x-model="filters.mata_pelajaran_id" :disabled="loadingRelations">
+                        <option value="" x-text="loadingRelations ? 'Memuat mapel...' : 'Semua mapel'"></option>
+                        <template x-for="subject in subjects" :key="subject.id">
+                            <option :value="String(subject.id)" x-text="subject.nama"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
             <button
                 type="button"
                 class="btn btn-primary elvd-action-button"
@@ -287,10 +377,8 @@ defined('ABSPATH') || exit;
                 <thead>
                     <tr>
                         <th scope="col"><?php echo esc_html__('Judul', 'elearning-vd'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Konten', 'elearning-vd'); ?></th>
+                        <th scope="col"><?php echo esc_html__('MaPel', 'elearning-vd'); ?></th>
                         <th scope="col" class="text-end"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
                     </tr>
                 </thead>
@@ -298,22 +386,21 @@ defined('ABSPATH') || exit;
                     <tr x-show="loadingMatters">
                         <td colspan="6"><?php echo esc_html__('Memuat data materi...', 'elearning-vd'); ?></td>
                     </tr>
-                    <template x-for="item in matters" :key="item.id">
+                    <template x-for="item in pageItems()" :key="item.id">
                         <tr>
                             <td>
-                                <strong x-text="titleOf(item)"></strong>
-                                <div class="elvd-subtext" x-show="hasFile(item)">
-                                    <a
-                                        :href="metaValue(item, 'elvd_file_url')"
-                                        target="_blank"
-                                        rel="noopener"
-                                        x-text="metaValue(item, 'elvd_file_url')"></a>
-                                </div>
+                                <button
+                                    type="button"
+                                    class="btn btn-link p-0 fw-normal text-start"
+                                    @click="openPreview(item)"
+                                    x-text="titleOf(item)">
+                                </button>
                             </td>
-                            <td x-text="yearName(metaValue(item, 'elvd_tahun_ajaran_id'))"></td>
-                            <td x-text="className(metaValue(item, 'elvd_kelas_id'))"></td>
+                            <td>
+                                <div x-text="className(metaValue(item, 'elvd_kelas_id'))"></div>
+                                <span class="small" x-text="yearName(metaValue(item, 'elvd_tahun_ajaran_id'))"></span>
+                            </td>
                             <td x-text="subjectName(metaValue(item, 'elvd_mata_pelajaran_id'))"></td>
-                            <td x-text="shortDescription(contentOf(item))"></td>
                             <td class="text-end">
                                 <button
                                     type="button"
@@ -325,12 +412,38 @@ defined('ABSPATH') || exit;
                             </td>
                         </tr>
                     </template>
-                    <tr x-show="!loadingMatters && matters.length === 0">
+                    <tr x-show="!loadingMatters && filteredMatters().length === 0">
                         <td colspan="6"><?php echo esc_html__('Belum ada materi.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
             </table>
         </div>
+
+        <nav
+            class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3"
+            x-show="!loadingMatters && totalPages() > 1"
+            aria-label="<?php echo esc_attr__('Paginasi materi', 'elearning-vd'); ?>">
+            <small class="text-muted">
+                <?php echo esc_html__('Halaman', 'elearning-vd'); ?> <span x-text="page"></span> / <span x-text="totalPages()"></span>
+            </small>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" :class="page === 1 ? 'disabled' : ''">
+                    <a class="page-link" href="#" @click.prevent="goPage(page - 1)">
+                        <?php echo esc_html__('Sebelumnya', 'elearning-vd'); ?>
+                    </a>
+                </li>
+                <template x-for="p in totalPages()" :key="p">
+                    <li class="page-item" :class="page === p ? 'active' : ''">
+                        <a class="page-link" href="#" @click.prevent="goPage(p)" x-text="p"></a>
+                    </li>
+                </template>
+                <li class="page-item" :class="page === totalPages() ? 'disabled' : ''">
+                    <a class="page-link" href="#" @click.prevent="goPage(page + 1)">
+                        <?php echo esc_html__('Berikutnya', 'elearning-vd'); ?>
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
 
     <div class="modal-backdrop fade show" x-show="modalOpen" x-cloak></div>
@@ -439,6 +552,57 @@ defined('ABSPATH') || exit;
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="modal-backdrop fade show" x-show="preview" x-cloak></div>
+    <div
+        class="modal fade show elvd-modal"
+        tabindex="-1"
+        role="dialog"
+        aria-modal="true"
+        x-show="preview"
+        x-cloak>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" x-text="preview ? titleOf(preview) : ''"></h2>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        aria-label="<?php echo esc_attr__('Tutup', 'elearning-vd'); ?>"
+                        @click="closePreview()"></button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row mb-3">
+                        <dt class="col-sm-4"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></dt>
+                        <dd class="col-sm-8" x-text="preview ? yearName(metaValue(preview, 'elvd_tahun_ajaran_id')) : '-'"></dd>
+                        <dt class="col-sm-4"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></dt>
+                        <dd class="col-sm-8" x-text="preview ? className(metaValue(preview, 'elvd_kelas_id')) : '-'"></dd>
+                        <dt class="col-sm-4"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></dt>
+                        <dd class="col-sm-8" x-text="preview ? subjectName(metaValue(preview, 'elvd_mata_pelajaran_id')) : '-'"></dd>
+                    </dl>
+                    <div class="mb-2">
+                        <strong><?php echo esc_html__('Konten', 'elearning-vd'); ?></strong>
+                        <p class="mb-0 mt-1 text-muted" x-text="preview ? (contentOf(preview) || '-') : '-'"></p>
+                    </div>
+                    <div x-show="preview && hasFile(preview)">
+                        <strong><?php echo esc_html__('Berkas', 'elearning-vd'); ?></strong>
+                        <div class="mt-1">
+                            <a
+                                :href="preview ? metaValue(preview, 'elvd_file_url') : '#'"
+                                target="_blank"
+                                rel="noopener"
+                                x-text="preview ? metaValue(preview, 'elvd_file_url') : ''"></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @click="closePreview()">
+                        <?php echo esc_html__('Tutup', 'elearning-vd'); ?>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

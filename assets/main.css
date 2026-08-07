@@ -515,6 +515,18 @@
     margin: 0;
 }
 
+.elvd-title-button {
+    background: none;
+    border: 0;
+    color: var(--elvd-primary, #0d6efd);
+    padding: 0;
+    text-align: left;
+}
+
+.elvd-title-button:hover {
+    text-decoration: underline;
+}
+
 .elvd-filter-input {
     min-width: 180px;
 }
