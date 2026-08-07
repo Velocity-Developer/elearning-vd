@@ -18,6 +18,12 @@ $config = [
     'restUrl' => esc_url_raw(rest_url(ELVD_REST_NAMESPACE)),
     'nonce' => wp_create_nonce('wp_rest'),
     'isManager' => elvd_can_manage_rest(),
+    'currentRole' => (string) current(
+        array_intersect(
+            ['administrator', 'guru', 'siswa'],
+            (array) wp_get_current_user()->roles
+        )
+    ),
 ];
 
 $school_name = trim((string) get_option(ELVD::OPTION_SCHOOL_NAME, get_bloginfo('name')));
