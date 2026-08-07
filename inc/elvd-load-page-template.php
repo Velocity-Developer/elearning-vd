@@ -38,6 +38,12 @@ function elvd_register_app_rewrite_rules(): void
     );
 
     add_rewrite_rule(
+        '^' . preg_quote($app_route_path, '#') . '/tugas-answer/([0-9]+)/?$',
+        'index.php?' . $query_target . '&' . ELVD::APP_PAGE_QUERY_VAR . '=tugas-answer&elvd_tugas_id=$matches[1]',
+        'top'
+    );
+
+    add_rewrite_rule(
         '^' . preg_quote($app_route_path, '#') . '/([^/]+)/?$',
         'index.php?' . $query_target . '&' . ELVD::APP_PAGE_QUERY_VAR . '=$matches[1]',
         'top'
@@ -54,6 +60,7 @@ function elvd_register_app_query_vars(array $query_vars): array
     $query_vars[] = 'elvd_siswa_id';
     $query_vars[] = 'elvd_siswa_tab';
     $query_vars[] = 'elvd_quiz_id';
+    $query_vars[] = 'elvd_tugas_id';
 
     return $query_vars;
 }

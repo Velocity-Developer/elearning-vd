@@ -18,7 +18,7 @@ function elvd_rest_list_items(WP_REST_Request $request): WP_REST_Response
 
     $where = '';
 
-    foreach (['quiz_id', 'siswa_id'] as $field) {
+    foreach (['quiz_id', 'siswa_id', 'tugas_id', 'user_id'] as $field) {
         $value = $request->get_param($field);
 
         if (null === $value || '' === $value || ! isset($resource['fields'][$field])) {
@@ -39,6 +39,14 @@ function elvd_rest_list_items(WP_REST_Request $request): WP_REST_Response
         foreach ($items as &$row) {
             $user = get_userdata((int) ($row['siswa_id'] ?? 0));
             $row['siswa_name'] = $user ? (string) $user->display_name : '';
+        }
+        unset($row);
+    }
+
+    if ('elvd_pengerjaan_tugas' === $resource['table']) {
+        foreach ($items as &$row) {
+            $user = get_userdata((int) ($row['user_id'] ?? 0));
+            $row['user_name'] = $user ? (string) $user->display_name : '';
         }
         unset($row);
     }

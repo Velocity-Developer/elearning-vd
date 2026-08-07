@@ -60,5 +60,18 @@ function elvd_rest_resources(): array
                 'selesai_pada' => 'datetime',
             ],
         ],
+        'pengerjaan-tugas' => [
+            'table' => 'elvd_pengerjaan_tugas',
+            'fields' => [
+                'tugas_id' => 'int',
+                'nama' => 'text',
+                'user_id' => 'int',
+                'file' => 'text',
+                'catatan' => 'textarea',
+                'tanggal' => 'datetime',
+                'nilai' => 'decimal',
+                'tanggal_nilai' => 'datetime',
+            ],
+        ],
     ];
 }

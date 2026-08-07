@@ -173,7 +173,8 @@ if (! is_user_logged_in()) {
             "quiz": "Quiz",
             "quiz-form": "Form Quiz",
             "quiz-workspace": "Kerjakan Quiz",
-            "quiz-answer": "Hasil Quiz"
+            "quiz-answer": "Hasil Quiz",
+            "tugas-answer": "Hasil Tugas"
         },
         defaultLabel: <?php echo esc_attr(wp_json_encode(__('Elearning VD', 'elearning-vd'))); ?>,
         active: <?php echo esc_attr(wp_json_encode('' !== $route_page ? $active_page : 'dashboard')); ?>,
@@ -183,7 +184,7 @@ if (! is_user_logged_in()) {
         config: <?php echo esc_attr(wp_json_encode($config)); ?>,
         init() { this.load(); },
         load() {
-            if (["dashboard", "tugas", "materi", "guru", "siswa", "siswa-profil", "quiz-form", "quiz-workspace", "quiz-answer"].includes(this.active)) {
+            if (["dashboard", "tugas", "materi", "guru", "siswa", "siswa-profil", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
                 this.items = [];
                 this.loading = false;
                 return;
@@ -376,7 +377,7 @@ if (! is_user_logged_in()) {
                 }
                 ?>
 
-                <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'siswa-profil', 'tugas', 'materi', 'quiz', 'quiz-form', 'quiz-workspace', 'quiz-answer'].includes(active)">
+                <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'siswa-profil', 'tugas', 'materi', 'quiz', 'quiz-form', 'quiz-workspace', 'quiz-answer', 'tugas-answer'].includes(active)">
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 elvd-table">
                             <thead>
