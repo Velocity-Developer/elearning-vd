@@ -6,7 +6,7 @@ global $wpdb;
 
 $elvd_siswa_id = absint((int) get_query_var('elvd_siswa_id', 0));
 $elvd_profile_tab = sanitize_key((string) get_query_var('elvd_siswa_tab', ''));
-$elvd_profile_tab = in_array($elvd_profile_tab, ['profil', 'edit', 'foto'], true) ? $elvd_profile_tab : 'profil';
+$elvd_profile_tab = in_array($elvd_profile_tab, ['profil', 'edit', 'foto', 'akun'], true) ? $elvd_profile_tab : 'profil';
 $elvd_siswa_base_url = untrailingslashit(ELVD::app_route()) . '/siswa-profil';
 $elvd_siswa_back_url = untrailingslashit(ELVD::app_route()) . '/siswa/';
 $elvd_siswa_notice = '';
@@ -88,6 +88,64 @@ if ('POST' === strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? '')) && isset(
                 $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html($saved->get_error_message()) . '</div>';
             } else {
                 $elvd_siswa_notice = '<div class="alert alert-success">' . esc_html__('Profil berhasil disimpan.', 'elearning-vd') . '</div>';
+            }
+        }
+    } elseif ('akun' === $elvd_siswa_action) {
+        $nonce = sanitize_text_field(wp_unslash((string) ($_POST['elvd_akun_nonce'] ?? '')));
+
+        if (! wp_verify_nonce($nonce, 'elvd_update_akun')) {
+            $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Sesi form tidak valid. Silakan coba lagi.', 'elearning-vd') . '</div>';
+        } elseif (! $elvd_can_edit) {
+            $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Anda tidak memiliki izin untuk mengubah akun.', 'elearning-vd') . '</div>';
+        } else {
+            $elvd_akun_email    = sanitize_email((string) wp_unslash($_POST['elvd_akun_email'] ?? ''));
+            $elvd_akun_username = sanitize_user((string) wp_unslash($_POST['elvd_akun_username'] ?? ''), false);
+            $elvd_akun_pass     = (string) wp_unslash($_POST['elvd_akun_password'] ?? '');
+            $elvd_akun_pass2    = (string) wp_unslash($_POST['elvd_akun_password2'] ?? '');
+            $elvd_akun_data     = ['ID' => $elvd_siswa_id];
+            $elvd_akun_errors   = [];
+
+            if ('' !== $elvd_akun_pass) {
+                if ($elvd_akun_pass !== $elvd_akun_pass2) {
+                    $elvd_akun_errors[] = __('Konfirmasi password tidak cocok.', 'elearning-vd');
+                } elseif (strlen($elvd_akun_pass) < 8) {
+                    $elvd_akun_errors[] = __('Password minimal 8 karakter.', 'elearning-vd');
+                } else {
+                    $elvd_akun_data['user_pass'] = $elvd_akun_pass;
+                }
+            }
+
+            if ('' !== $elvd_akun_email && $elvd_akun_email !== (string) $elvd_siswa->user_email) {
+                $elvd_akun_data['user_email'] = $elvd_akun_email;
+            }
+
+            if ('' !== $elvd_akun_username && $elvd_akun_username !== $elvd_siswa->user_login) {
+                $existing = get_user_by('login', $elvd_akun_username);
+                if ($existing && $existing->ID !== $elvd_siswa_id) {
+                    $elvd_akun_errors[] = __('Username sudah digunakan.', 'elearning-vd');
+                } else {
+                    // wp_update_user() tidak mengubah user_login saat update (WP core). Update langsung via SQL.
+                    $login_updated = $wpdb->update($wpdb->users, ['user_login' => $elvd_akun_username], ['ID' => $elvd_siswa_id]);
+
+                    if (false === $login_updated) {
+                        $elvd_akun_errors[] = __('Gagal mengubah username.', 'elearning-vd');
+                    } else {
+                        clean_user_cache($elvd_siswa_id);
+                        $elvd_siswa->user_login = $elvd_akun_username;
+                    }
+                }
+            }
+
+            if ([] !== $elvd_akun_errors) {
+                $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html(implode(' ', $elvd_akun_errors)) . '</div>';
+            } else {
+                $elvd_akun_saved = wp_update_user($elvd_akun_data);
+
+                if ($elvd_akun_saved instanceof WP_Error) {
+                    $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html($elvd_akun_saved->get_error_message()) . '</div>';
+                } else {
+                    $elvd_siswa_notice = '<div class="alert alert-success">' . esc_html__('Akun berhasil diperbarui.', 'elearning-vd') . '</div>';
+                }
             }
         }
     } elseif ('foto' === $elvd_siswa_action) {
@@ -280,6 +338,11 @@ if ($elvd_siswa_valid && $elvd_siswa instanceof WP_User) {
                             <?php echo esc_html__('Ubah Foto', 'elearning-vd'); ?>
                         </button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button type="button" class="nav-link" :class="{ active: activeTab === 'akun' }" @click="setTab('akun')" x-show="canEdit">
+                            <?php echo esc_html__('Akun', 'elearning-vd'); ?>
+                        </button>
+                    </li>
                 </ul>
 
                 <div x-show="activeTab === 'profil'">
@@ -347,6 +410,40 @@ if ($elvd_siswa_valid && $elvd_siswa instanceof WP_User) {
                             </button>
                         </form>
                     </div>
+                </div>
+
+                <div x-show="activeTab === 'akun'" x-cloak>
+                    <form method="post" class="row g-3">
+                        <input type="hidden" name="elvd_siswa_action" value="akun">
+                        <input type="hidden" name="elvd_akun_nonce" value="<?php echo esc_attr(wp_create_nonce('elvd_update_akun')); ?>">
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-akun-email"><?php echo esc_html__('Email', 'elearning-vd'); ?></label>
+                            <input type="email" class="form-control" id="elvd-akun-email" name="elvd_akun_email" value="<?php echo esc_attr((string) ($elvd_siswa->user_email ?? '')); ?>" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-akun-username"><?php echo esc_html__('Username', 'elearning-vd'); ?></label>
+                            <input type="text" class="form-control" id="elvd-akun-username" name="elvd_akun_username" value="<?php echo esc_attr((string) ($elvd_siswa->user_login ?? '')); ?>" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-akun-password"><?php echo esc_html__('Password Baru', 'elearning-vd'); ?></label>
+                            <input type="password" class="form-control" id="elvd-akun-password" name="elvd_akun_password" minlength="8" autocomplete="new-password">
+                            <div class="form-text"><?php echo esc_html__('Kosongkan jika tidak ingin mengubah.', 'elearning-vd'); ?></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-akun-password2"><?php echo esc_html__('Konfirmasi Password', 'elearning-vd'); ?></label>
+                            <input type="password" class="form-control" id="elvd-akun-password2" name="elvd_akun_password2" minlength="8" autocomplete="new-password">
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary elvd-action-button">
+                                <?php echo esc_html__('Perbarui Akun', 'elearning-vd'); ?>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
