@@ -43,6 +43,7 @@
             "inc/restapi/elvd-sanitize-payload.php",
             "inc/restapi/elvd-sanitize-time.php",
             "inc/shortcodes/elvd-app-shortcode.php",
+            "inc/shortcodes/elvd-form-login-shortcode.php",
             "seed/Seeder.php"
         ]
     },

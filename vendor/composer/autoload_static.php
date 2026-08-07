@@ -42,6 +42,7 @@ class ComposerStaticInit36e9431b74c5a9fa498458d8d4127fef
         'e9cb60ff0bfdcb0671ef143f4fcf21a7' => __DIR__ . '/../..' . '/inc/restapi/elvd-sanitize-payload.php',
         '0b20f469aeb130f90b5fc08f2357021f' => __DIR__ . '/../..' . '/inc/restapi/elvd-sanitize-time.php',
         '17f12ad83e79d3fa0b51be0246825114' => __DIR__ . '/../..' . '/inc/shortcodes/elvd-app-shortcode.php',
+        '8b47d4bd012bc83d2b71d281cae4e1a1' => __DIR__ . '/../..' . '/inc/shortcodes/elvd-form-login-shortcode.php',
         'b8f81f6715baacba2adc1000fd0ad141' => __DIR__ . '/../..' . '/seed/Seeder.php',
     );
 

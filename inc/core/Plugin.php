@@ -30,6 +30,7 @@ final class Plugin
         add_filter('query_vars', 'elvd_register_app_query_vars');
 
         add_shortcode('elvd_app', 'elvd_app_shortcode');
+        add_shortcode('elvd-form-login', 'elvd_form_login_shortcode');
     }
 
     public static function activate(): void
