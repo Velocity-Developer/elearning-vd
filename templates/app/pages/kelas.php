@@ -35,6 +35,22 @@ $elvd_guru_options = array_map(
         filterTahun: '',
         urlTingkat: '',
         urlTahun: '',
+        page: 1,
+        perPage: 20,
+        totalPages() {
+            return Math.max(1, Math.ceil(this.filteredClasses().length / this.perPage));
+        },
+        pageItems() {
+            const start = (this.page - 1) * this.perPage;
+
+            return this.filteredClasses().slice(start, start + this.perPage);
+        },
+        goPage(p) {
+            this.page = Math.min(Math.max(1, p), this.totalPages());
+        },
+        resetPage() {
+            this.page = 1;
+        },
         filteredClasses() {
             const nama = this.filterNama.trim().toLowerCase();
             const tingkat = this.filterTingkat;
@@ -70,9 +86,9 @@ $elvd_guru_options = array_map(
             this.applyUrlFilters();
             this.fetchClasses();
             this.fetchYears();
-            this.$watch('filterNama', () => this.syncUrl());
-            this.$watch('filterTingkat', () => this.syncUrl());
-            this.$watch('filterTahun', () => this.syncUrl());
+            this.$watch('filterNama', () => { this.resetPage(); this.syncUrl(); });
+            this.$watch('filterTingkat', () => { this.resetPage(); this.syncUrl(); });
+            this.$watch('filterTahun', () => { this.resetPage(); this.syncUrl(); });
         },
         applyUrlFilters() {
             const params = new URLSearchParams(window.location.search);
@@ -328,7 +344,7 @@ $elvd_guru_options = array_map(
                     <tr x-show="loadingClasses">
                         <td colspan="5"><?php echo esc_html__('Memuat data kelas...', 'elearning-vd'); ?></td>
                     </tr>
-                    <template x-for="item in filteredClasses()" :key="item.id">
+                    <template x-for="item in pageItems()" :key="item.id">
                         <tr>
                             <td>
                                 <strong x-text="item.nama || '-'"></strong>
@@ -360,6 +376,32 @@ $elvd_guru_options = array_map(
                 </tbody>
             </table>
         </div>
+
+        <nav
+            class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3"
+            x-show="!loadingClasses && totalPages() > 1"
+            aria-label="<?php echo esc_attr__('Paginasi kelas', 'elearning-vd'); ?>">
+            <small class="text-muted">
+                <?php echo esc_html__('Halaman', 'elearning-vd'); ?> <span x-text="page"></span> / <span x-text="totalPages()"></span>
+            </small>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" :class="page === 1 ? 'disabled' : ''">
+                    <a class="page-link" href="#" @click.prevent="goPage(page - 1)">
+                        <?php echo esc_html__('Sebelumnya', 'elearning-vd'); ?>
+                    </a>
+                </li>
+                <template x-for="p in totalPages()" :key="p">
+                    <li class="page-item" :class="page === p ? 'active' : ''">
+                        <a class="page-link" href="#" @click.prevent="goPage(p)" x-text="p"></a>
+                    </li>
+                </template>
+                <li class="page-item" :class="page === totalPages() ? 'disabled' : ''">
+                    <a class="page-link" href="#" @click.prevent="goPage(page + 1)">
+                        <?php echo esc_html__('Berikutnya', 'elearning-vd'); ?>
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
 
     <div class="modal-backdrop fade show" x-show="modalOpen" x-cloak></div>
