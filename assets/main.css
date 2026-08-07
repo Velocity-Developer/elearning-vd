@@ -515,6 +515,10 @@
     margin: 0;
 }
 
+.elvd-filter-input {
+    min-width: 180px;
+}
+
 .elvd-action-button {
     background: var(--elvd-primary);
     border-color: var(--elvd-primary);

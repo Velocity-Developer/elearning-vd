@@ -123,6 +123,28 @@ defined('ABSPATH') || exit;
                 this.saving = false;
             });
         },
+        removeItem(item) {
+            if (!confirm('Hapus tahun ajaran ini?')) {
+                return;
+            }
+
+            fetch(`${config.restUrl}/tahun-ajaran/${item.id}`, {
+                method: 'DELETE',
+                headers: { 'X-WP-Nonce': config.nonce }
+            })
+            .then((response) => response.json().then((data) => ({ response, data })))
+            .then(({ response }) => {
+                if (!response.ok) {
+                    throw new Error('Gagal menghapus data tahun ajaran.');
+                }
+
+                this.years = this.years.filter((row) => Number(row.id) !== Number(item.id));
+                this.$dispatch('elvd-items-updated', { items: this.years });
+            })
+            .catch((error) => {
+                this.error = error.message || 'Gagal menghapus data tahun ajaran.';
+            });
+        },
         statusLabel(status) {
             return status === 'aktif' ? 'Aktif' : 'Draft';
         },
@@ -189,6 +211,13 @@ defined('ABSPATH') || exit;
                                     x-show="config.isManager"
                                     @click="openEdit(item)">
                                     <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    x-show="config.isManager"
+                                    @click="removeItem(item)">
+                                    <?php echo esc_html__('Hapus', 'elearning-vd'); ?>
                                 </button>
                             </td>
                         </tr>

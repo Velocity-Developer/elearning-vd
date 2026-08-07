@@ -30,6 +30,35 @@ $elvd_guru_options = array_map(
         saving: false,
         modalOpen: false,
         error: '',
+        filterNama: '',
+        filterTingkat: '',
+        filterTahun: '',
+        urlTingkat: '',
+        urlTahun: '',
+        filteredClasses() {
+            const nama = this.filterNama.trim().toLowerCase();
+            const tingkat = this.filterTingkat;
+            const tahun = this.filterTahun;
+
+            return this.classes.filter((item) => {
+                const matchNama = !nama || String(item.nama || '').toLowerCase().includes(nama);
+                const matchTingkat = !tingkat || String(item.tingkat || '') === tingkat;
+                const matchTahun = !tahun || Number(item.tahun_ajaran_id) === Number(tahun);
+
+                return matchNama && matchTingkat && matchTahun;
+            });
+        },
+        tingkatList() {
+            const list = [];
+            this.classes.forEach((item) => {
+                const value = item.tingkat || '';
+                if (value && !list.includes(value)) {
+                    list.push(value);
+                }
+            });
+
+            return list.sort();
+        },
         form: {
             id: null,
             nama: '',
@@ -38,8 +67,58 @@ $elvd_guru_options = array_map(
             tahun_ajaran_id: ''
         },
         init() {
+            this.applyUrlFilters();
             this.fetchClasses();
             this.fetchYears();
+            this.$watch('filterNama', () => this.syncUrl());
+            this.$watch('filterTingkat', () => this.syncUrl());
+            this.$watch('filterTahun', () => this.syncUrl());
+        },
+        applyUrlFilters() {
+            const params = new URLSearchParams(window.location.search);
+
+            this.filterNama = params.get('nama') || '';
+            this.urlTingkat = params.get('tingkat') || '';
+            this.urlTahun = params.get('tahun') || '';
+        },
+        applyDefaultTahun() {
+            let tahun = this.urlTahun;
+
+            if (!tahun) {
+                const aktif = this.years.find((year) => year.status === 'aktif');
+                tahun = aktif ? String(aktif.id) : '';
+            }
+
+            if (tahun) {
+                this.filterTahun = tahun;
+            }
+        },
+        applyDefaultTingkat() {
+            if (this.urlTingkat) {
+                this.filterTingkat = this.urlTingkat;
+            }
+        },
+        syncUrl() {
+            const url = new URL(window.location.href);
+            const params = url.searchParams;
+
+            if (this.filterNama) {
+                params.set('nama', this.filterNama);
+            } else {
+                params.delete('nama');
+            }
+            if (this.filterTingkat) {
+                params.set('tingkat', this.filterTingkat);
+            } else {
+                params.delete('tingkat');
+            }
+            if (this.filterTahun) {
+                params.set('tahun', this.filterTahun);
+            } else {
+                params.delete('tahun');
+            }
+
+            window.history.replaceState({}, '', url);
         },
         fetchClasses() {
             this.loadingClasses = true;
@@ -57,6 +136,7 @@ $elvd_guru_options = array_map(
             })
             .then((data) => {
                 this.classes = Array.isArray(data) ? data : [];
+                this.applyDefaultTingkat();
                 this.$dispatch('elvd-items-updated', { items: this.classes });
             })
             .catch((error) => {
@@ -81,6 +161,7 @@ $elvd_guru_options = array_map(
             })
             .then((data) => {
                 this.years = Array.isArray(data) ? data : [];
+                this.applyDefaultTahun();
             })
             .catch((error) => {
                 this.error = error.message || 'Gagal memuat data tahun ajaran.';
@@ -166,6 +247,28 @@ $elvd_guru_options = array_map(
                 this.saving = false;
             });
         },
+        removeItem(item) {
+            if (!confirm('Hapus kelas ini?')) {
+                return;
+            }
+
+            fetch(`${config.restUrl}/kelas/${item.id}`, {
+                method: 'DELETE',
+                headers: { 'X-WP-Nonce': config.nonce }
+            })
+            .then((response) => response.json().then((data) => ({ response, data })))
+            .then(({ response }) => {
+                if (!response.ok) {
+                    throw new Error('Gagal menghapus data kelas.');
+                }
+
+                this.classes = this.classes.filter((row) => Number(row.id) !== Number(item.id));
+                this.$dispatch('elvd-items-updated', { items: this.classes });
+            })
+            .catch((error) => {
+                this.error = error.message || 'Gagal menghapus data kelas.';
+            });
+        },
         teacherName(id) {
             const teacher = this.teachers.find((item) => Number(item.id) === Number(id));
 
@@ -180,7 +283,25 @@ $elvd_guru_options = array_map(
     @keydown.escape.window="closeModal()">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">
-            <div></div>
+            <div class="d-flex flex-wrap flex-md-nowrap gap-2">
+                <select class="form-select elvd-filter-input" x-model="filterTahun" :disabled="loadingYears">
+                    <option value=""><?php echo esc_html__('Semua Tahun Ajaran', 'elearning-vd'); ?></option>
+                    <template x-for="year in years" :key="year.id">
+                        <option :value="String(year.id)" x-text="year.nama"></option>
+                    </template>
+                </select>
+                <select class="form-select elvd-filter-input" x-model="filterTingkat">
+                    <option value=""><?php echo esc_html__('Semua Tingkat', 'elearning-vd'); ?></option>
+                    <template x-for="tingkat in tingkatList()" :key="tingkat">
+                        <option :value="tingkat" x-text="tingkat"></option>
+                    </template>
+                </select>
+                <input
+                    type="search"
+                    class="form-control elvd-filter-input"
+                    x-model="filterNama"
+                    placeholder="<?php echo esc_attr__('Cari nama kelas', 'elearning-vd'); ?>">
+            </div>
             <button
                 type="button"
                 class="btn btn-primary elvd-action-button"
@@ -207,7 +328,7 @@ $elvd_guru_options = array_map(
                     <tr x-show="loadingClasses">
                         <td colspan="5"><?php echo esc_html__('Memuat data kelas...', 'elearning-vd'); ?></td>
                     </tr>
-                    <template x-for="item in classes" :key="item.id">
+                    <template x-for="item in filteredClasses()" :key="item.id">
                         <tr>
                             <td>
                                 <strong x-text="item.nama || '-'"></strong>
@@ -223,10 +344,17 @@ $elvd_guru_options = array_map(
                                     @click="openEdit(item)">
                                     <?php echo esc_html__('Edit', 'elearning-vd'); ?>
                                 </button>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    x-show="config.isManager"
+                                    @click="removeItem(item)">
+                                    <?php echo esc_html__('Hapus', 'elearning-vd'); ?>
+                                </button>
                             </td>
                         </tr>
                     </template>
-                    <tr x-show="!loadingClasses && classes.length === 0">
+                    <tr x-show="!loadingClasses && filteredClasses().length === 0">
                         <td colspan="5"><?php echo esc_html__('Belum ada kelas.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
