@@ -212,8 +212,30 @@ $elvd_guru_options = array_map(
         },
         openCreate() {
             this.resetForm();
+            this.applyDefaultCreate();
             this.error = "";
             this.modalOpen = true;
+        },
+        applyDefaultCreate() {
+            if (this.years.length === 0 || this.classes.length === 0) {
+                return;
+            }
+
+            if (!this.form.tahun_ajaran_id) {
+                const aktif = this.years.find((year) => year.status === "aktif");
+
+                if (aktif) {
+                    this.form.tahun_ajaran_id = String(aktif.id);
+                }
+            }
+
+            if (this.form.tahun_ajaran_id) {
+                const optionClasses = this.classes.filter((item) => Number(item.tahun_ajaran_id) === Number(this.form.tahun_ajaran_id));
+
+                if (optionClasses.length > 0) {
+                    this.form.kelas_id = String(optionClasses[0].id);
+                }
+            }
         },
         openEdit(item) {
             this.form = {
