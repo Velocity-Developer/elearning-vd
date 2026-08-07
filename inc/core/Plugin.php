@@ -11,6 +11,8 @@ final class Plugin
         class_exists(Siswa::class);
         class_exists(Guru::class);
 
+        require_once ELVD_PLUGIN_DIR . 'inc/admin/elvd-admin-access.php';
+
         add_action('init', 'elvd_register_roles');
         add_action('init', 'elvd_register_post_types');
         add_action('init', 'elvd_register_post_meta');
@@ -23,6 +25,10 @@ final class Plugin
         add_action('admin_enqueue_scripts', 'elvd_register_admin_assets');
         add_action('admin_post_elvd_create_app_page', 'elvd_handle_create_app_page');
         add_action('admin_post_elvd_seed_data', 'elvd_handle_seed_data');
+
+        // Admin bar & wp-admin access restriction for non-admins
+        add_filter('show_admin_bar', 'elvd_show_admin_bar');
+        add_action('admin_init', 'elvd_restrict_admin_access', 1);
         add_action('update_option_' . \ELVD::OPTION_ELEARNING_PAGE_ID, 'elvd_flush_app_rewrite_rules', 10, 3);
 
         add_filter('theme_page_templates', 'elvd_register_page_template', 10, 4);
