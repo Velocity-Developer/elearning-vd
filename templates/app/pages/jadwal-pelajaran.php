@@ -25,6 +25,7 @@ $elvd_guru_options = array_map(
         schedules: [],
         classes: [],
         subjects: [],
+        years: [],
         teachers: <?php echo esc_attr(wp_json_encode($elvd_guru_options)); ?>,
         loadingSchedules: false,
         loadingRelations: false,
@@ -33,13 +34,15 @@ $elvd_guru_options = array_map(
         error: '',
         filters: {
             guru_id: '',
-            mata_pelajaran_id: ''
+            mata_pelajaran_id: '',
+            tahun_ajaran_id: ''
         },
         form: {
             id: null,
             kelas_id: '',
             mata_pelajaran_id: '',
             guru_id: '',
+            tahun_ajaran_id: '',
             hari: '',
             jam_mulai: '',
             jam_selesai: ''
@@ -83,6 +86,9 @@ $elvd_guru_options = array_map(
                 }),
                 fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, {
                     headers: { 'X-WP-Nonce': config.nonce }
+                }),
+                fetch(`${config.restUrl}/tahun-ajaran?per_page=100`, {
+                    headers: { 'X-WP-Nonce': config.nonce }
                 })
             ])
             .then((responses) => {
@@ -94,9 +100,10 @@ $elvd_guru_options = array_map(
 
                 return Promise.all(responses.map((response) => response.json()));
             })
-            .then(([classes, subjects]) => {
+            .then(([classes, subjects, years]) => {
                 this.classes = Array.isArray(classes) ? classes : [];
                 this.subjects = Array.isArray(subjects) ? subjects : [];
+                this.years = Array.isArray(years) ? years : [];
             })
             .catch((error) => {
                 this.error = error.message || 'Gagal memuat data pilihan jadwal.';
@@ -109,8 +116,9 @@ $elvd_guru_options = array_map(
             return this.schedules.filter((item) => {
                 const matchTeacher = !this.filters.guru_id || Number(item.guru_id) === Number(this.filters.guru_id);
                 const matchSubject = !this.filters.mata_pelajaran_id || Number(item.mata_pelajaran_id) === Number(this.filters.mata_pelajaran_id);
+                const matchYear = !this.filters.tahun_ajaran_id || Number(item.tahun_ajaran_id) === Number(this.filters.tahun_ajaran_id);
 
-                return matchTeacher && matchSubject;
+                return matchTeacher && matchSubject && matchYear;
             });
         },
         syncItems() {
@@ -119,7 +127,8 @@ $elvd_guru_options = array_map(
         resetFilters() {
             this.filters = {
                 guru_id: '',
-                mata_pelajaran_id: ''
+                mata_pelajaran_id: '',
+                tahun_ajaran_id: ''
             };
             this.syncItems();
         },
@@ -129,6 +138,7 @@ $elvd_guru_options = array_map(
                 kelas_id: '',
                 mata_pelajaran_id: '',
                 guru_id: '',
+                tahun_ajaran_id: '',
                 hari: '',
                 jam_mulai: '',
                 jam_selesai: ''
@@ -145,6 +155,7 @@ $elvd_guru_options = array_map(
                 kelas_id: item.kelas_id ? String(item.kelas_id) : '',
                 mata_pelajaran_id: item.mata_pelajaran_id ? String(item.mata_pelajaran_id) : '',
                 guru_id: item.guru_id ? String(item.guru_id) : '',
+                tahun_ajaran_id: item.tahun_ajaran_id ? String(item.tahun_ajaran_id) : '',
                 hari: item.hari || '',
                 jam_mulai: this.timeValue(item.jam_mulai),
                 jam_selesai: this.timeValue(item.jam_selesai)
@@ -178,6 +189,7 @@ $elvd_guru_options = array_map(
                     kelas_id: Number(this.form.kelas_id),
                     mata_pelajaran_id: Number(this.form.mata_pelajaran_id),
                     guru_id: Number(this.form.guru_id),
+                    tahun_ajaran_id: this.form.tahun_ajaran_id ? Number(this.form.tahun_ajaran_id) : 0,
                     hari: this.form.hari,
                     jam_mulai: this.form.jam_mulai,
                     jam_selesai: this.form.jam_selesai
@@ -221,6 +233,11 @@ $elvd_guru_options = array_map(
 
             return teacher ? teacher.nama : '-';
         },
+        yearName(id) {
+            const year = this.years.find((item) => Number(item.id) === Number(id));
+
+            return year ? year.nama : '-';
+        },
         timeValue(value) {
             if (!value) {
                 return '';
@@ -239,7 +256,16 @@ $elvd_guru_options = array_map(
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar align-items-end">
             <div class="row g-2 flex-grow-1">
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label class="form-label" for="elvd-filter-jadwal-tahun"><?php echo esc_html__('Filter Tahun Ajaran', 'elearning-vd'); ?></label>
+                    <select class="form-select" id="elvd-filter-jadwal-tahun" x-model="filters.tahun_ajaran_id" @change="syncItems()" :disabled="loadingRelations">
+                        <option value="" x-text="loadingRelations ? 'Memuat tahun...' : 'Semua tahun'"></option>
+                        <template x-for="year in years" :key="year.id">
+                            <option :value="String(year.id)" x-text="year.nama"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label" for="elvd-filter-jadwal-guru"><?php echo esc_html__('Filter Guru', 'elearning-vd'); ?></label>
                     <select class="form-select" id="elvd-filter-jadwal-guru" x-model="filters.guru_id" @change="syncItems()">
                         <option value=""><?php echo esc_html__('Semua guru', 'elearning-vd'); ?></option>
@@ -248,7 +274,7 @@ $elvd_guru_options = array_map(
                         </template>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label" for="elvd-filter-jadwal-mapel"><?php echo esc_html__('Filter Mapel', 'elearning-vd'); ?></label>
                     <select class="form-select" id="elvd-filter-jadwal-mapel" x-model="filters.mata_pelajaran_id" @change="syncItems()" :disabled="loadingRelations">
                         <option value="" x-text="loadingRelations ? 'Memuat mapel...' : 'Semua mapel'"></option>
@@ -257,7 +283,7 @@ $elvd_guru_options = array_map(
                         </template>
                     </select>
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
+                <div class="col-md-3 d-flex align-items-end">
                     <button type="button" class="btn btn-outline-secondary" @click="resetFilters()">
                         <?php echo esc_html__('Reset Filter', 'elearning-vd'); ?>
                     </button>
@@ -281,6 +307,7 @@ $elvd_guru_options = array_map(
                         <th scope="col"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Guru', 'elearning-vd'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Hari', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Jam', 'elearning-vd'); ?></th>
                         <th scope="col" class="text-end"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
@@ -288,7 +315,7 @@ $elvd_guru_options = array_map(
                 </thead>
                 <tbody>
                     <tr x-show="loadingSchedules">
-                        <td colspan="6"><?php echo esc_html__('Memuat data jadwal pelajaran...', 'elearning-vd'); ?></td>
+                        <td colspan="7"><?php echo esc_html__('Memuat data jadwal pelajaran...', 'elearning-vd'); ?></td>
                     </tr>
                     <template x-for="item in filteredSchedules()" :key="item.id">
                         <tr>
@@ -297,6 +324,7 @@ $elvd_guru_options = array_map(
                             </td>
                             <td x-text="subjectName(item.mata_pelajaran_id)"></td>
                             <td x-text="teacherName(item.guru_id)"></td>
+                            <td x-text="yearName(item.tahun_ajaran_id)"></td>
                             <td x-text="item.hari || '-'"></td>
                             <td x-text="timeRange(item)"></td>
                             <td class="text-end">
@@ -311,7 +339,7 @@ $elvd_guru_options = array_map(
                         </tr>
                     </template>
                     <tr x-show="!loadingSchedules && filteredSchedules().length === 0">
-                        <td colspan="6"><?php echo esc_html__('Belum ada jadwal pelajaran sesuai filter.', 'elearning-vd'); ?></td>
+                        <td colspan="7"><?php echo esc_html__('Belum ada jadwal pelajaran sesuai filter.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
             </table>
@@ -362,6 +390,15 @@ $elvd_guru_options = array_map(
                                 <option value=""><?php echo esc_html__('Pilih guru', 'elearning-vd'); ?></option>
                                 <template x-for="teacher in teachers" :key="teacher.id">
                                     <option :value="String(teacher.id)" x-text="teacher.nama"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-jadwal-tahun"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></label>
+                            <select class="form-select" id="elvd-jadwal-tahun" x-model="form.tahun_ajaran_id" :disabled="loadingRelations">
+                                <option value="" x-text="loadingRelations ? 'Memuat tahun...' : 'Pilih tahun ajaran'"></option>
+                                <template x-for="year in years" :key="year.id">
+                                    <option :value="String(year.id)" x-text="year.nama"></option>
                                 </template>
                             </select>
                         </div>

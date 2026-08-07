@@ -55,6 +55,7 @@ function elvd_create_tables(): void
         kelas_id BIGINT UNSIGNED NOT NULL,
         mata_pelajaran_id BIGINT UNSIGNED NOT NULL,
         guru_id BIGINT UNSIGNED NOT NULL,
+        tahun_ajaran_id BIGINT UNSIGNED NULL,
         hari VARCHAR(20) NOT NULL,
         jam_mulai TIME NOT NULL,
         jam_selesai TIME NOT NULL,
@@ -63,7 +64,8 @@ function elvd_create_tables(): void
         PRIMARY KEY  (id),
         KEY kelas_id (kelas_id),
         KEY mata_pelajaran_id (mata_pelajaran_id),
-        KEY guru_id (guru_id)
+        KEY guru_id (guru_id),
+        KEY tahun_ajaran_id (tahun_ajaran_id)
     ) {$charset_collate};";
 
     $tables[] = "CREATE TABLE {$wpdb->prefix}elvd_pengerjaan_quiz (
@@ -85,5 +87,26 @@ function elvd_create_tables(): void
 
     foreach ($tables as $table) {
         dbDelta($table);
+    }
+
+    elvd_maybe_add_jadwal_tahun_ajaran_column($wpdb);
+}
+
+/**
+ * Add tahun_ajaran_id to jadwal_pelajaran on existing installs (dbDelta does not add columns).
+ */
+function elvd_maybe_add_jadwal_tahun_ajaran_column($wpdb): void
+{
+    $table = elvd_table_name('elvd_jadwal_pelajaran');
+
+    $found = $wpdb->get_results(
+        "SHOW COLUMNS FROM `{$table}` LIKE 'tahun_ajaran_id'",
+        ARRAY_A
+    );
+
+    if (! $found) {
+        $wpdb->query(
+            "ALTER TABLE `{$table}` ADD COLUMN tahun_ajaran_id BIGINT UNSIGNED NULL AFTER guru_id, ADD KEY tahun_ajaran_id (tahun_ajaran_id)"
+        );
     }
 }

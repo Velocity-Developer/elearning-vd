@@ -42,6 +42,7 @@ function elvd_rest_resources(): array
                 'kelas_id' => 'int',
                 'mata_pelajaran_id' => 'int',
                 'guru_id' => 'int',
+                'tahun_ajaran_id' => 'int',
                 'hari' => 'text',
                 'jam_mulai' => 'time',
                 'jam_selesai' => 'time',
