@@ -14,16 +14,44 @@ if (! is_user_logged_in()) {
 wp_enqueue_style('elvd-main');
 wp_enqueue_script('elvd-main');
 
+$elvd_current_user = wp_get_current_user();
+$elvd_current_role = (string) current(
+    array_intersect(
+        ['administrator', 'guru', 'siswa'],
+        (array) $elvd_current_user->roles
+    )
+);
+
+$elvd_siswa_kelas_id = 0;
+
+if ('siswa' === $elvd_current_role) {
+    $elvd_kelas_meta = (string) get_user_meta($elvd_current_user->ID, 'elvd_kelas', true);
+
+    if ('' !== $elvd_kelas_meta) {
+        global $wpdb;
+
+        $elvd_kelas_row = $wpdb->get_row(
+            $wpdb->prepare(
+                'SELECT id FROM `%1$s` WHERE id = %2$d OR nama = %3$s LIMIT 1',
+                elvd_table_name('elvd_kelas'),
+                absint($elvd_kelas_meta),
+                $elvd_kelas_meta
+            )
+        );
+
+        if ($elvd_kelas_row) {
+            $elvd_siswa_kelas_id = (int) $elvd_kelas_row->id;
+        }
+    }
+}
+
 $config = [
     'restUrl' => esc_url_raw(rest_url(ELVD_REST_NAMESPACE)),
     'nonce' => wp_create_nonce('wp_rest'),
     'isManager' => elvd_can_manage_rest(),
-    'currentRole' => (string) current(
-        array_intersect(
-            ['administrator', 'guru', 'siswa'],
-            (array) wp_get_current_user()->roles
-        )
-    ),
+    'currentRole' => $elvd_current_role,
+    'userId' => (int) $elvd_current_user->ID,
+    'siswaKelasId' => $elvd_siswa_kelas_id,
 ];
 
 $school_name = trim((string) get_option(ELVD::OPTION_SCHOOL_NAME, get_bloginfo('name')));

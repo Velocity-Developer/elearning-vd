@@ -61,6 +61,13 @@ $elvd_guru_options = array_map(
             const judul = this.filters.judul.trim().toLowerCase();
 
             return this.tasks.filter((item) => {
+                if (config.currentRole === "guru" && Number(item.author) !== Number(config.userId)) {
+                    return false;
+                }
+                if (config.currentRole === "siswa" && Number(this.metaValue(item, "elvd_kelas_id")) !== Number(config.siswaKelasId)) {
+                    return false;
+                }
+
                 const matchJudul = !judul || this.titleOf(item).toLowerCase().includes(judul);
                 const matchMapel = !this.filters.mata_pelajaran_id || Number(this.metaValue(item, "elvd_mata_pelajaran_id")) === Number(this.filters.mata_pelajaran_id);
                 const matchKelas = !this.filters.kelas_id || Number(this.metaValue(item, "elvd_kelas_id")) === Number(this.filters.kelas_id);
@@ -92,7 +99,13 @@ $elvd_guru_options = array_map(
             this.loadingTasks = true;
             this.error = "";
 
-            fetch(`${this.restUrl}?per_page=100&_embed`, {
+            const params = new URLSearchParams({ per_page: "100", _embed: "true" });
+
+            if (config.currentRole === "guru" && config.userId) {
+                params.set("author", String(config.userId));
+            }
+
+            fetch(`${this.restUrl}?${params.toString()}`, {
                 headers: { "X-WP-Nonce": config.nonce }
             })
             .then((response) => {
