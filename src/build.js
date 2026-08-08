@@ -7,7 +7,7 @@ const pluginSlug = path.basename(rootDir);
 const distDir = path.join(rootDir, 'dist');
 const outputFile = path.join(distDir, `${pluginSlug}.zip`);
 
-const excludedDirs = new Set(['.git', 'node_modules', 'src', 'dist']);
+const excludedDirs = new Set(['.git', 'node_modules', 'src', 'dist','.github']);
 const excludedFiles = new Set([
   'AGENTS.md',
   'DESIGN.md',
