@@ -424,7 +424,7 @@ if (! is_user_logged_in()) {
                     </div>
                 </div>
 
-                <?php if ('siswa' === $elvd_current_role) { ?>
+                <?php if ('' === $route_page && 'siswa' === $elvd_current_role) { ?>
                     <div x-show="active === 'dashboard'">
                         <div class="elvd-hero">
                             <div class="elvd-hero-copy">
@@ -536,7 +536,7 @@ if (! is_user_logged_in()) {
                             </div>
                         </div>
                     </div>
-                <?php } elseif ('guru' === $elvd_current_role) { ?>
+                <?php } elseif ('' === $route_page && 'guru' === $elvd_current_role) { ?>
                     <div x-show="active === 'dashboard'">
                         <div class="elvd-hero">
                             <div class="elvd-hero-copy">
@@ -683,7 +683,7 @@ if (! is_user_logged_in()) {
                             </div>
                         </div>
                     </div>
-                <?php } else { ?>
+                <?php } elseif ('' === $route_page) { ?>
                     <div x-show="active === 'dashboard'">
                         <div class="elvd-hero">
                             <div class="elvd-chevron elvd-chevron-left" aria-hidden="true"></div>
