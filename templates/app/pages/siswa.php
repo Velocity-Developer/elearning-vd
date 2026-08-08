@@ -64,6 +64,34 @@ $elvd_siswa_items = array_map(
         ]
     )
 );
+$elvd_siswa_notice = '';
+
+if (
+    'POST' === strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''))
+    && isset($_POST['elvd_siswa_action'], $_POST['elvd_siswa_nonce'])
+    && 'delete' === sanitize_key((string) wp_unslash($_POST['elvd_siswa_action']))
+) {
+    $nonce = sanitize_text_field(wp_unslash((string) $_POST['elvd_siswa_nonce']));
+
+    if (! wp_verify_nonce($nonce, 'elvd_delete_siswa')) {
+        $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Sesi form tidak valid. Silakan coba lagi.', 'elearning-vd') . '</div>';
+    } elseif (! current_user_can('delete_users')) {
+        $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Anda tidak memiliki izin menghapus siswa.', 'elearning-vd') . '</div>';
+    } else {
+        $delete_siswa_id = absint($_POST['elvd_siswa_id'] ?? 0);
+        $delete_target = 0 < $delete_siswa_id ? get_userdata($delete_siswa_id) : null;
+
+        if ($delete_siswa_id === get_current_user_id()) {
+            $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Anda tidak dapat menghapus akun sendiri.', 'elearning-vd') . '</div>';
+        } elseif (! $delete_target instanceof WP_User || ! in_array('siswa', (array) $delete_target->roles, true)) {
+            $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Data siswa tidak ditemukan.', 'elearning-vd') . '</div>';
+        } elseif (wp_delete_user($delete_siswa_id)) {
+            $elvd_siswa_notice = '<div class="alert alert-success">' . esc_html__('Data siswa berhasil dihapus.', 'elearning-vd') . '</div>';
+        } else {
+            $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Gagal menghapus data siswa.', 'elearning-vd') . '</div>';
+        }
+    }
+}
 ?>
 
 <div
@@ -151,9 +179,20 @@ $elvd_siswa_items = array_map(
         },
         syncItems() {
             this.$dispatch('elvd-items-updated', { items: this.filteredStudents() });
+        },
+        canDeleteSiswa: <?php echo current_user_can('delete_users') ? 'true' : 'false'; ?>,
+        deleteSiswa(item) {
+            if (!this.canDeleteSiswa || !confirm('Hapus siswa ini?')) {
+                return;
+            }
+
+            this.$refs.siswaDeleteId.value = item.id;
+            this.$refs.siswaDeleteForm.submit();
         }
     }">
     <div class="elvd-table-panel">
+        <?php echo $elvd_siswa_notice; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
+        ?>
         <div class="elvd-resource-toolbar">
             <div class="row g-3 flex-grow-1">
                 <div class="col-md-6 col-xl-4">
@@ -185,9 +224,7 @@ $elvd_siswa_items = array_map(
                         <th scope="col"><?php echo esc_html__('Email', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('NIS', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Tanggal Lahir', 'elearning-vd'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Telepon', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
                     </tr>
                 </thead>
@@ -200,14 +237,26 @@ $elvd_siswa_items = array_map(
                             </td>
                             <td x-text="item.email || '-'"></td>
                             <td x-text="item.nis || '-'"></td>
-                            <td x-text="item.kelas || '-'"></td>
-                            <td x-text="yearName(item.tahun_ajaran_id)"></td>
-                            <td x-text="formatDate(item.tanggal_lahir)"></td>
-                            <td x-text="item.telepon || '-'"></td>
                             <td>
-                                <a class="btn btn-primary btn-sm elvd-row-action" :href="`${siswaProfilUrl}${item.id}/${siswaProfilTab}`">
-                                    <?php echo esc_html__('Profil', 'elearning-vd'); ?>
+                                <span x-text="item.kelas || '-'"></span>
+                                <span class="text-muted small" x-text="item.tahun_ajaran || ''"></span>
+                            </td>
+                            <td x-text="formatDate(item.tanggal_lahir)"></td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-primary elvd-row-action" :href="`${siswaProfilUrl}${item.id}/${siswaProfilTab}`" :aria-label="'Profil Siswa: ' + item.nama">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
                                 </a>
+                                <a class="btn btn-sm btn-info elvd-row-action" :href="`${siswaProfilUrl}${item.id}/edit`" :aria-label="'Edit Siswa: ' + item.nama">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                </a>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-danger elvd-row-action"
+                                    x-show="canDeleteSiswa"
+                                    @click="deleteSiswa(item)"
+                                    :aria-label="'Hapus Siswa: ' + item.nama">
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                </button>
                             </td>
                         </tr>
                     </template>
@@ -246,4 +295,10 @@ $elvd_siswa_items = array_map(
             </nav>
         </div>
     </div>
+
+    <form method="post" x-ref="siswaDeleteForm" class="d-none" aria-hidden="true">
+        <input type="hidden" name="elvd_siswa_action" value="delete">
+        <input type="hidden" name="elvd_siswa_nonce" value="<?php echo esc_attr(wp_create_nonce('elvd_delete_siswa')); ?>">
+        <input type="hidden" name="elvd_siswa_id" value="" x-ref="siswaDeleteId">
+    </form>
 </div>
