@@ -495,21 +495,21 @@ $elvd_guru_options = array_map(
                                 <a
                                     type="button"
                                     title="<?php echo esc_attr__('Cek Pengerjaan', 'elearning-vd'); ?>"
-                                    class="btn btn-sm btn-outline-secondary elvd-row-action"
+                                    class="btn btn-sm btn-secondary elvd-row-action"
                                     x-show="config.isManager"
                                     :href="`${answerUrl}/${item.id}/`">
                                     <i class="bi bi-clipboard2-check"></i>
                                 </a>
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-info elvd-row-action"
+                                    class="btn btn-sm btn-info elvd-row-action"
                                     x-show="config.isManager"
                                     @click="openEdit(item)">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    class="btn btn-sm btn-danger elvd-row-action"
                                     x-show="config.currentRole === 'administrator' || Number(item.author) === Number(config.userId)"
                                     @click="deleteTask(item)">
                                     <i class="bi bi-trash"></i>
@@ -638,7 +638,7 @@ $elvd_guru_options = array_map(
                                 placeholder="<?php echo esc_attr__('Tempel URL file di sini...', 'elearning-vd'); ?>">
                             <button
                                 type="button"
-                                class="btn btn-outline-secondary elvd-text-button"
+                                class="btn btn-secondary elvd-text-button"
                                 @click="$refs.tugasFileInput.click()"
                                 :disabled="uploadingFile">
                                 <span x-show="!uploadingFile"><?php echo esc_html__('Pilih File', 'elearning-vd'); ?></span>
@@ -665,7 +665,7 @@ $elvd_guru_options = array_map(
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" @click="closeModal()">
+                    <button type="button" class="btn btn-secondary" @click="closeModal()">
                         <i class="bi bi-x-lg me-1"></i><?php echo esc_html__('Batal', 'elearning-vd'); ?>
                     </button>
                     <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">
@@ -726,7 +726,7 @@ $elvd_guru_options = array_map(
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" @click="closePreview()">
+                    <button type="button" class="btn btn-secondary" @click="closePreview()">
                         <i class="bi bi-x-lg me-1"></i><?php echo esc_html__('Tutup', 'elearning-vd'); ?>
                     </button>
                 </div>

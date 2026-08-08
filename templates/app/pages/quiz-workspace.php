@@ -272,7 +272,7 @@ $elvd_ws_result_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
 }">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">
-            <a class="btn btn-outline-secondary elvd-text-button" :href="backUrl">
+            <a class="btn btn-secondary elvd-text-button" :href="backUrl">
                 &larr; <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
             </a>
         </div>
@@ -372,7 +372,7 @@ $elvd_ws_result_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
                             <button
                                 type="button"
-                                class="btn btn-outline-secondary"
+                                class="btn btn-secondary"
                                 :disabled="currentIndex === 0"
                                 @click="prev()">
                                 &larr; <?php echo esc_html__('Sebelumnya', 'elearning-vd'); ?>
@@ -400,7 +400,7 @@ $elvd_ws_result_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
                         </div>
 
                         <div class="d-flex justify-content-end mt-3">
-                            <a class="btn btn-outline-secondary" :href="backUrl">
+                            <a class="btn btn-secondary" :href="backUrl">
                                 <?php echo esc_html__('Batal', 'elearning-vd'); ?>
                             </a>
                         </div>
@@ -445,7 +445,7 @@ $elvd_ws_result_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
                                 <span x-show="!isPreview" x-text="<?php echo esc_attr(wp_json_encode(__('Jawaban quiz berhasil dikumpulkan.', 'elearning-vd'))); ?>"></span>
                             </div>
                             <div class="text-muted mb-3"><?php echo esc_html__('Hasil jawaban essay akan dinilai oleh guru.', 'elearning-vd'); ?></div>
-                            <a class="btn btn-outline-secondary" :href="backUrl">
+                            <a class="btn btn-secondary" :href="backUrl">
                                 <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
                             </a>
                         </div>

@@ -227,7 +227,7 @@ $elvd_quiz_pengerjaan_url = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/p
                             <td class="text-end">
                                 <a
                                     title="<?php echo esc_html__('Lihat', 'elearning-vd'); ?>"
-                                    class="btn btn-sm btn-outline-primary elvd-row-action"
+                                    class="btn btn-sm btn-primary elvd-row-action"
                                     :href="`${workspaceUrl}/${item.id}/`"
                                     x-show="!myAttempt(item.id)">
                                     <i class="bi bi-play-fill"></i>
@@ -235,7 +235,7 @@ $elvd_quiz_pengerjaan_url = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/p
                                 <template x-if="myAttempt(item.id)">
                                     <a
                                         title="<?php echo esc_html__('Lihat Hasil', 'elearning-vd'); ?>"
-                                        class="btn btn-sm btn-outline-secondary elvd-row-action"
+                                        class="btn btn-sm btn-secondary elvd-row-action"
                                         :href="`${answerUrl}/${item.id}/`">
                                         <i class="bi bi-clipboard2-check"></i>
                                     </a>
@@ -243,14 +243,14 @@ $elvd_quiz_pengerjaan_url = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/p
                                 </template>
                                 <a
                                     title="<?php echo esc_html__('Jawab', 'elearning-vd'); ?>"
-                                    class="btn btn-sm btn-outline-secondary elvd-row-action"
+                                    class="btn btn-sm btn-secondary elvd-row-action"
                                     x-show="config.isManager"
                                     :href="`${answerUrl}/${item.id}/`">
                                     <i class="bi bi-clipboard2-check"></i>
                                 </a>
                                 <a
                                     title="<?php echo esc_html__('Edit', 'elearning-vd'); ?>"
-                                    class="btn btn-sm btn-outline-secondary elvd-row-action"
+                                    class="btn btn-sm btn-secondary elvd-row-action"
                                     x-show="config.isManager"
                                     :href="`${formUrl}/${item.id}/`">
                                     <i class="bi bi-pencil"></i>
@@ -258,7 +258,7 @@ $elvd_quiz_pengerjaan_url = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/p
                                 <button
                                     title="<?php echo esc_html__('Hapus', 'elearning-vd'); ?>"
                                     type="button"
-                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    class="btn btn-sm btn-danger elvd-row-action"
                                     x-show="config.currentRole === 'administrator' || Number(item.author) === Number(config.userId)"
                                     @click="deleteQuiz(item)">
                                     <i class="bi bi-trash"></i>

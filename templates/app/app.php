@@ -305,7 +305,7 @@ if (! is_user_logged_in()) {
         init() { this.load(); },
         load() {
             const hiddenTabs = this.config.currentRole !== "guru"
-                ? []
+                ? ["guru", "siswa"]
                 : ["tahun-ajaran", "guru"];
 
             if ([...hiddenTabs, "dashboard", "tugas", "materi", "siswa", "siswa-profil", "guru-profil", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {

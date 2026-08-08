@@ -367,7 +367,7 @@ $elvd_guru_options = array_map(
                     </select>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-outline-secondary" @click="resetFilters()">
+                    <button type="button" class="btn btn-secondary" @click="resetFilters()">
                         <?php echo esc_html__('Reset Filter', 'elearning-vd'); ?>
                     </button>
                 </div>
@@ -413,14 +413,14 @@ $elvd_guru_options = array_map(
                             <td class="text-end" x-show="config.currentRole === 'administrator'">
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-primary elvd-row-action"
+                                    class="btn btn-sm btn-primary elvd-row-action"
                                     x-show="config.currentRole === 'administrator'"
                                     @click="openEdit(item)">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    class="btn btn-sm btn-danger elvd-row-action"
                                     x-show="config.currentRole === 'administrator'"
                                     @click="deleteSchedule(item)">
                                     <i class="bi bi-trash"></i>
@@ -548,7 +548,7 @@ $elvd_guru_options = array_map(
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" @click="closeModal()">
+                    <button type="button" class="btn btn-secondary" @click="closeModal()">
                         <i class="bi bi-x-lg me-1"></i><?php echo esc_html__('Batal', 'elearning-vd'); ?>
                     </button>
                     <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">

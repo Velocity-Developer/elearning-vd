@@ -442,14 +442,14 @@ defined('ABSPATH') || exit;
                             <td class="text-end">
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-primary elvd-row-action"
+                                    class="btn btn-sm btn-primary elvd-row-action"
                                     x-show="config.isManager"
                                     @click="openEdit(item)">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    class="btn btn-sm btn-danger elvd-row-action"
                                     x-show="config.currentRole === 'administrator' || Number(item.author) === Number(config.userId)"
                                     @click="deleteMatter(item)">
                                     <i class="bi bi-trash"></i>
@@ -561,7 +561,7 @@ defined('ABSPATH') || exit;
                                 placeholder="<?php echo esc_attr__('Tempel URL berkas di sini...', 'elearning-vd'); ?>">
                             <button
                                 type="button"
-                                class="btn btn-outline-secondary elvd-text-button"
+                                class="btn btn-secondary elvd-text-button"
                                 @click="$refs.materiFileInput.click()"
                                 :disabled="uploadingFile">
                                 <span x-show="!uploadingFile"><?php echo esc_html__('Pilih Berkas', 'elearning-vd'); ?></span>
@@ -588,7 +588,7 @@ defined('ABSPATH') || exit;
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" @click="closeModal()">
+                    <button type="button" class="btn btn-secondary" @click="closeModal()">
                         <i class="bi bi-x-lg me-1"></i><?php echo esc_html__('Batal', 'elearning-vd'); ?>
                     </button>
                     <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">
@@ -643,7 +643,7 @@ defined('ABSPATH') || exit;
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" @click="closePreview()">
+                    <button type="button" class="btn btn-secondary" @click="closePreview()">
                         <i class="bi bi-x-lg me-1"></i><?php echo esc_html__('Tutup', 'elearning-vd'); ?>
                     </button>
                 </div>

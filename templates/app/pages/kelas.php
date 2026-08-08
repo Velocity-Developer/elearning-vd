@@ -354,18 +354,20 @@ $elvd_guru_options = array_map(
                             <td x-text="yearName(item.tahun_ajaran_id)"></td>
                             <td class="text-end" x-show="config.currentRole === 'administrator'">
                                 <button
+                                    title="<?php echo esc_attr__('Edit', 'elearning-vd'); ?>"
                                     type="button"
-                                    class="btn btn-sm btn-outline-primary elvd-row-action"
+                                    class="btn btn-sm btn-primary elvd-row-action"
                                     x-show="config.currentRole === 'administrator'"
                                     @click="openEdit(item)">
-                                    <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                                    <i class="bi bi-pencil-fill"></i>
                                 </button>
                                 <button
+                                    title="<?php echo esc_attr__('Hapus', 'elearning-vd'); ?>"
                                     type="button"
-                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    class="btn btn-sm btn-danger elvd-row-action"
                                     x-show="config.currentRole === 'administrator'"
                                     @click="removeItem(item)">
-                                    <?php echo esc_html__('Hapus', 'elearning-vd'); ?>
+                                    <i class="bi bi-trash-fill"></i>
                                 </button>
                             </td>
                         </tr>
@@ -467,7 +469,7 @@ $elvd_guru_options = array_map(
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" @click="closeModal()">
+                    <button type="button" class="btn btn-secondary" @click="closeModal()">
                         <?php echo esc_html__('Batal', 'elearning-vd'); ?>
                     </button>
                     <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">

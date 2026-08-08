@@ -264,7 +264,7 @@ if ($elvd_guru_valid && $elvd_guru instanceof WP_User) {
     <template x-if="guru.id">
         <div class="elvd-table-panel">
             <div class="elvd-resource-toolbar">
-                <a class="btn btn-outline-secondary btn-sm" href="<?php echo esc_url($elvd_guru_back_url); ?>">
+                <a class="btn btn-secondary btn-sm" href="<?php echo esc_url($elvd_guru_back_url); ?>">
                     &larr; <?php echo esc_html__('Kembali ke Daftar Guru', 'elearning-vd'); ?>
                 </a>
             </div>
@@ -410,7 +410,7 @@ if ($elvd_guru_valid && $elvd_guru instanceof WP_User) {
 
     <div x-show="!guru.id" x-cloak>
         <div class="alert alert-danger"><?php echo esc_html__('Data guru tidak ditemukan.', 'elearning-vd'); ?></div>
-        <a class="btn btn-outline-secondary btn-sm" href="<?php echo esc_url($elvd_guru_back_url); ?>">
+        <a class="btn btn-secondary btn-sm" href="<?php echo esc_url($elvd_guru_back_url); ?>">
             &larr; <?php echo esc_html__('Kembali ke Daftar Guru', 'elearning-vd'); ?>
         </a>
     </div>

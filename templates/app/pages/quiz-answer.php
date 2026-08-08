@@ -164,7 +164,7 @@ $elvd_qa_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pe
 }">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">
-            <a class="btn btn-outline-secondary elvd-text-button" :href="backUrl">
+            <a class="btn btn-secondary elvd-text-button" :href="backUrl">
                 &larr; <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
             </a>
         </div>
@@ -254,7 +254,7 @@ $elvd_qa_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pe
                                         <td class="text-end">
                                             <button
                                                 type="button"
-                                                class="btn btn-sm btn-outline-primary elvd-row-action"
+                                                class="btn btn-sm btn-primary elvd-row-action"
                                                 x-show="quizTipe() === 'essay'"
                                                 @click="openKoreksi(item)"><?php echo esc_html__('Koreksi', 'elearning-vd'); ?></button>
                                         </td>
@@ -322,7 +322,7 @@ $elvd_qa_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pe
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" @click="closeKoreksi()"><?php echo esc_html__('Batal', 'elearning-vd'); ?></button>
+                            <button type="button" class="btn btn-secondary" @click="closeKoreksi()"><?php echo esc_html__('Batal', 'elearning-vd'); ?></button>
                             <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">
                                 <span x-show="!saving"><?php echo esc_html__('Simpan Nilai', 'elearning-vd'); ?></span>
                                 <span x-show="saving"><?php echo esc_html__('Menyimpan...', 'elearning-vd'); ?></span>

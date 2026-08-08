@@ -362,7 +362,7 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
 }">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">
-            <a class="btn btn-outline-secondary elvd-text-button" :href="backUrl">
+            <a class="btn btn-secondary elvd-text-button" :href="backUrl">
                 &larr; <?php echo esc_html__('Kembali ke Daftar Quiz', 'elearning-vd'); ?>
             </a>
         </div>
@@ -455,7 +455,7 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mt-4">
-                    <a class="btn btn-outline-secondary" :href="backUrl">
+                    <a class="btn btn-secondary" :href="backUrl">
                         <?php echo esc_html__('Batal', 'elearning-vd'); ?>
                     </a>
                     <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">
@@ -506,14 +506,14 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
                             <div class="ms-3 d-flex gap-2">
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-primary elvd-row-action"
+                                    class="btn btn-sm btn-primary elvd-row-action"
                                     x-show="config.isManager"
                                     @click="openEditQuestion(item)">
                                     <?php echo esc_html__('Edit', 'elearning-vd'); ?>
                                 </button>
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-outline-danger elvd-row-action"
+                                    class="btn btn-sm btn-danger elvd-row-action"
                                     x-show="config.isManager"
                                     @click="deleteQuestion(item)">
                                     <?php echo esc_html__('Hapus', 'elearning-vd'); ?>
@@ -579,7 +579,7 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
                                             :placeholder="'Opsi ' + (['A','B','C','D','E','F'][index] || (index + 1))">
                                         <button
                                             type="button"
-                                            class="btn btn-outline-success"
+                                            class="btn btn-success"
                                             :class="{ 'active': openJawabanIndex === index }"
                                             @click="selectJawaban(index)"
                                             x-show="(opsi.text || '').trim() !== ''"
@@ -588,7 +588,7 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
                                         </button>
                                         <button
                                             type="button"
-                                            class="btn btn-outline-danger"
+                                            class="btn btn-danger"
                                             @click="removeOpsi(index)"
                                             x-show="editingQuestion.opsi.length > 2"
                                             aria-label="<?php echo esc_attr__('Hapus opsi', 'elearning-vd'); ?>">
@@ -596,7 +596,7 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
                                         </button>
                                     </div>
                                 </template>
-                                <button type="button" class="btn btn-sm btn-outline-secondary elvd-text-button" @click="addOpsi()">
+                                <button type="button" class="btn btn-sm btn-secondary elvd-text-button" @click="addOpsi()">
                                     + <?php echo esc_html__('Tambah Opsi', 'elearning-vd'); ?>
                                 </button>
                                 <div class="form-text">
@@ -611,7 +611,7 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" @click="closeQuestion()">
+                            <button type="button" class="btn btn-secondary" @click="closeQuestion()">
                                 <?php echo esc_html__('Batal', 'elearning-vd'); ?>
                             </button>
                             <button type="submit" class="btn btn-primary elvd-action-button" :disabled="savingQuestion">

@@ -82,6 +82,33 @@ if (
     }
 }
 
+if (
+    'POST' === strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''))
+    && isset($_POST['elvd_guru_action'], $_POST['elvd_guru_nonce'])
+    && 'delete' === sanitize_key((string) wp_unslash($_POST['elvd_guru_action']))
+) {
+    $nonce = sanitize_text_field(wp_unslash((string) $_POST['elvd_guru_nonce']));
+
+    if (! wp_verify_nonce($nonce, 'elvd_delete_guru')) {
+        $elvd_guru_notice = '<div class="alert alert-danger">' . esc_html__('Sesi form tidak valid. Silakan coba lagi.', 'elearning-vd') . '</div>';
+    } elseif (! current_user_can('delete_users')) {
+        $elvd_guru_notice = '<div class="alert alert-danger">' . esc_html__('Anda tidak memiliki izin menghapus guru.', 'elearning-vd') . '</div>';
+    } else {
+        $delete_guru_id = absint($_POST['elvd_guru_id'] ?? 0);
+        $delete_target = 0 < $delete_guru_id ? get_userdata($delete_guru_id) : null;
+
+        if ($delete_guru_id === get_current_user_id()) {
+            $elvd_guru_notice = '<div class="alert alert-danger">' . esc_html__('Anda tidak dapat menghapus akun sendiri.', 'elearning-vd') . '</div>';
+        } elseif (! $delete_target instanceof WP_User || ! in_array('guru', (array) $delete_target->roles, true)) {
+            $elvd_guru_notice = '<div class="alert alert-danger">' . esc_html__('Data guru tidak ditemukan.', 'elearning-vd') . '</div>';
+        } elseif (wp_delete_user($delete_guru_id)) {
+            $elvd_guru_notice = '<div class="alert alert-success">' . esc_html__('Data guru berhasil dihapus.', 'elearning-vd') . '</div>';
+        } else {
+            $elvd_guru_notice = '<div class="alert alert-danger">' . esc_html__('Gagal menghapus data guru.', 'elearning-vd') . '</div>';
+        }
+    }
+}
+
 $elvd_guru_items = array_map(
     static function (WP_User $user) use ($elvd_guru_meta_keys): array {
         return [
@@ -115,6 +142,7 @@ $elvd_guru_items = array_map(
         modalOpen: false,
         saving: false,
         canManageGuru: <?php echo $elvd_can_manage_guru ? 'true' : 'false'; ?>,
+        canDeleteGuru: <?php echo current_user_can('delete_users') ? 'true' : 'false'; ?>,
         form: {
             id: null,
             username: '',
@@ -181,6 +209,14 @@ $elvd_guru_items = array_map(
 
             this.modalOpen = false;
         },
+        deleteGuru(item) {
+            if (!this.canDeleteGuru || !confirm('Hapus guru ini?')) {
+                return;
+            }
+
+            this.$refs.guruDeleteId.value = item.id;
+            this.$refs.guruDeleteForm.submit();
+        },
         submitForm() {
             this.saving = true;
             this.$nextTick(() => this.$refs.guruForm.submit());
@@ -225,12 +261,20 @@ $elvd_guru_items = array_map(
                             <td x-text="item.mata_pelajaran || '-'"></td>
                             <td x-text="item.telepon || '-'"></td>
                             <td class="text-end">
-                                <a class="btn btn-sm btn-outline-primary elvd-row-action" :href="`${guruProfilUrl}${item.id}/profil`">
-                                    <?php echo esc_html__('Profil', 'elearning-vd'); ?>
+                                <a class="btn btn-sm btn-primary elvd-row-action" :href="`${guruProfilUrl}${item.id}/profil`">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
                                 </a>
-                                <a class="btn btn-sm btn-outline-primary elvd-row-action" :href="`${guruProfilUrl}${item.id}/edit`">
-                                    <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                                <a class="btn btn-sm btn-info elvd-row-action" :href="`${guruProfilUrl}${item.id}/edit`" :aria-label="'Edit Guru: ' + item.nama">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>
                                 </a>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-danger elvd-row-action"
+                                    x-show="canDeleteGuru"
+                                    @click="deleteGuru(item)"
+                                    :aria-label="'Hapus Guru: ' + item.nama">
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                </button>
                             </td>
                         </tr>
                     </template>
@@ -380,7 +424,7 @@ $elvd_guru_items = array_map(
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" @click="closeModal()">
+                    <button type="button" class="btn btn-secondary" @click="closeModal()">
                         <?php echo esc_html__('Batal', 'elearning-vd'); ?>
                     </button>
                     <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">
@@ -391,5 +435,11 @@ $elvd_guru_items = array_map(
             </form>
         </div>
     </div>
+
+    <form method="post" x-ref="guruDeleteForm" class="d-none" aria-hidden="true">
+        <input type="hidden" name="elvd_guru_action" value="delete">
+        <input type="hidden" name="elvd_guru_nonce" value="<?php echo esc_attr(wp_create_nonce('elvd_delete_guru')); ?>">
+        <input type="hidden" name="elvd_guru_id" value="" x-ref="guruDeleteId">
+    </form>
 
 </div>

@@ -205,7 +205,7 @@ $elvd_siswa_items = array_map(
                             <td x-text="formatDate(item.tanggal_lahir)"></td>
                             <td x-text="item.telepon || '-'"></td>
                             <td>
-                                <a class="btn btn-outline-primary btn-sm elvd-row-action" :href="`${siswaProfilUrl}${item.id}/${siswaProfilTab}`">
+                                <a class="btn btn-primary btn-sm elvd-row-action" :href="`${siswaProfilUrl}${item.id}/${siswaProfilTab}`">
                                     <?php echo esc_html__('Profil', 'elearning-vd'); ?>
                                 </a>
                             </td>
