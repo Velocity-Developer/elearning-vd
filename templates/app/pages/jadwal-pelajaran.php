@@ -71,6 +71,9 @@ $elvd_guru_options = array_map(
         applyFiltersFromUrl() {
             if (this.urlGuru) {
                 this.filters.guru_id = this.urlGuru;
+            } else if (config.currentRole === 'guru') {
+                // Guru: default filter ke dirinya sendiri.
+                this.filters.guru_id = String(config.userId);
             }
             if (this.urlMapel) {
                 this.filters.mata_pelajaran_id = this.urlMapel;
