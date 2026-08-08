@@ -12,6 +12,11 @@ final class Plugin
         class_exists(Guru::class);
 
         require_once ELVD_PLUGIN_DIR . 'inc/admin/elvd-admin-access.php';
+        require_once ELVD_PLUGIN_DIR . 'inc/core/class-elvd-updater.php';
+
+        if (is_admin()) {
+            \ELVD_Updater::register();
+        }
 
         add_action('init', 'elvd_register_roles');
         add_action('init', 'elvd_register_post_types');
