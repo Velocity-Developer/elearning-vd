@@ -4,7 +4,7 @@
  * Plugin Name: Elearning VD
  * Plugin URI: https://velocitydeveloper.com/
  * Description: Plugin elearning untuk sekolah SD, SMP, dan SMA.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Velocity Developer
  * Author URI: https://velocitydeveloper.com/
  * Text Domain: elearning-vd
@@ -14,7 +14,7 @@
 
 define('ELVD_PLUGIN_FILE', __FILE__);
 define('ELVD_PLUGIN_URL', plugins_url('', __FILE__));
-define('ELVD_PLUGIN_VERSION', '1.0.0');
+define('ELVD_PLUGIN_VERSION', '1.0.1');
 
 defined('ABSPATH') || exit;
 
