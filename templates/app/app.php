@@ -429,7 +429,7 @@ if (! is_user_logged_in()) {
                         <div class="elvd-hero">
                             <div class="elvd-hero-copy">
                                 <p class="elvd-eyebrow mb-2"><?php echo esc_html__('Dashboard Siswa', 'elearning-vd'); ?></p>
-                                <h2><?php echo esc_html__('Halo, selamat datang di ruang belajarmu.', 'elearning-vd'); ?></h2>
+                                <h3><?php echo esc_html__('Halo, selamat datang di ruang belajarmu.', 'elearning-vd'); ?></h3>
                                 <p><?php echo esc_html__('Pantau jadwal pelajaran, tugas, materi, dan quiz terbaru untuk kelasmu.', 'elearning-vd'); ?></p>
                             </div>
                         </div>
@@ -541,7 +541,7 @@ if (! is_user_logged_in()) {
                         <div class="elvd-hero">
                             <div class="elvd-hero-copy">
                                 <p class="elvd-eyebrow mb-2"><?php echo esc_html__('Dashboard Guru', 'elearning-vd'); ?></p>
-                                <h2><?php echo esc_html__('Halo, selamat datang di ruang mengajarmu.', 'elearning-vd'); ?></h2>
+                                <h3><?php echo esc_html__('Halo, selamat datang di ruang mengajarmu.', 'elearning-vd'); ?></h3>
                                 <p><?php echo esc_html__('Pantau jadwal mengajar serta konten tugas, materi, dan quiz yang kamu buat.', 'elearning-vd'); ?></p>
                             </div>
                         </div>
@@ -710,30 +710,71 @@ if (! is_user_logged_in()) {
                         </div>
 
                         <div class="elvd-dashboard-grid">
+
                             <div class="elvd-panel">
                                 <div class="elvd-panel-heading">
                                     <div>
-                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Statistik', 'elearning-vd'); ?></p>
-                                        <h2><?php echo esc_html__('Ringkasan Data', 'elearning-vd'); ?></h2>
+                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Jadwal Pelajaran', 'elearning-vd'); ?></p>
+                                        <h2><?php echo esc_html__('Ringkasan Jadwal Pelajaran', 'elearning-vd'); ?></h2>
                                     </div>
                                 </div>
-                                <div class="elvd-chart-wrap">
-                                    <canvas id="elvdDashboardChart" aria-label="<?php echo esc_attr__('Chart ringkasan data elearning', 'elearning-vd'); ?>" role="img"></canvas>
-                                </div>
-                                <div class="elvd-bars">
-                                    <?php foreach ($dashboard_metrics as $metric) {
-                                        $bar_width = 0 < $max_dashboard_value ? max(6, (int) round(($metric['value'] / $max_dashboard_value) * 100)) : 0;
-                                    ?>
-                                        <div class="elvd-bar-row">
-                                            <div class="elvd-bar-label">
-                                                <span><?php echo esc_html($metric['label']); ?></span>
-                                                <strong><?php echo esc_html(number_format_i18n($metric['value'])); ?></strong>
-                                            </div>
-                                            <div class="elvd-progress" role="progressbar" aria-label="<?php echo esc_attr($metric['label']); ?>" aria-valuenow="<?php echo esc_attr((string) $metric['value']); ?>" aria-valuemin="0" aria-valuemax="<?php echo esc_attr((string) max(1, $max_dashboard_value)); ?>">
-                                                <span style="width: <?php echo esc_attr((string) $bar_width); ?>%;"></span>
-                                            </div>
-                                        </div>
-                                    <?php } ?>
+                                <div class="table-responsive">
+                                    <table class="table align-middle mb-0 elvd-table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col"><?php echo esc_html__('Hari', 'elearning-vd'); ?></th>
+                                                <th scope="col"><?php echo esc_html__('Jam', 'elearning-vd'); ?></th>
+                                                <th scope="col"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></th>
+                                                <th scope="col"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            $elvd_hari_ini = [
+                                                '0' => 'Minggu',
+                                                '1' => 'Senin',
+                                                '2' => 'Selasa',
+                                                '3' => 'Rabu',
+                                                '4' => 'Kamis',
+                                                '5' => 'Jumat',
+                                                '6' => 'Sabtu',
+                                            ][(string) current_time('w')] ?? '';
+
+                                            $elvd_jadwal_all = $wpdb->get_results(
+                                                $wpdb->prepare(
+                                                    "SELECT j.id, j.hari, j.jam_mulai, j.jam_selesai, k.nama AS kelas, mp.nama AS mata_pelajaran
+                                                     FROM %1\$s j
+                                                     LEFT JOIN %2\$s k ON k.id = j.kelas_id
+                                                     LEFT JOIN %3\$s mp ON mp.id = j.mata_pelajaran_id
+                                                     WHERE j.hari = '%4\$s'
+                                                     ORDER BY j.jam_mulai",
+                                                    elvd_table_name('elvd_jadwal_pelajaran'),
+                                                    elvd_table_name('elvd_kelas'),
+                                                    elvd_table_name('elvd_mata_pelajaran'),
+                                                    $elvd_hari_ini
+                                                )
+                                            );
+                                            if ([] === $elvd_jadwal_all) {
+                                            ?>
+                                                <tr>
+                                                    <td colspan="4"><?php echo esc_html__('Belum ada jadwal pelajaran hari ini.', 'elearning-vd'); ?></td>
+                                                </tr>
+                                            <?php
+                                            } else {
+                                            ?>
+                                                <?php foreach ($elvd_jadwal_all as $elvd_jadwal) { ?>
+                                                    <tr>
+                                                        <td><?php echo esc_html($elvd_jadwal->hari); ?></td>
+                                                        <td><?php echo esc_html($elvd_jadwal->jam_mulai . ' - ' . $elvd_jadwal->jam_selesai); ?></td>
+                                                        <td><?php echo esc_html($elvd_jadwal->mata_pelajaran ?? '-'); ?></td>
+                                                        <td><?php echo esc_html($elvd_jadwal->kelas ?? '-'); ?></td>
+                                                    </tr>
+                                                <?php } ?>
+                                            <?php
+                                            }
+                                            ?>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
 

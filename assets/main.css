@@ -382,6 +382,7 @@
     display: grid;
     gap: 24px;
     grid-template-columns: minmax(0, 1.6fr) minmax(300px, 0.8fr);
+    margin-bottom: 1rem;
 }
 
 .elvd-panel,
