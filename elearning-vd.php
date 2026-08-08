@@ -5,7 +5,7 @@
  * Plugin URI: https://velocitydeveloper.com/
  * Description: Plugin elearning untuk sekolah SD, SMP, dan SMA.
  * Version: 1.1.0
- * Author: Velocity Developer
+ * Author: Velocity Developer Team
  * Author URI: https://velocitydeveloper.com/
  * Text Domain: elearning-vd
  * Requires at least: 6.0
