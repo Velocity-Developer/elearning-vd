@@ -65,6 +65,82 @@ $elvd_siswa_items = array_map(
     )
 );
 $elvd_siswa_notice = '';
+$elvd_can_manage_siswa = current_user_can('create_users') || current_user_can('edit_users');
+
+if (
+    'POST' === strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''))
+    && isset($_POST['elvd_siswa_action'], $_POST['elvd_siswa_nonce'])
+    && 'save' === sanitize_key((string) wp_unslash($_POST['elvd_siswa_action']))
+) {
+    $nonce = sanitize_text_field(wp_unslash((string) $_POST['elvd_siswa_nonce']));
+
+    if (! wp_verify_nonce($nonce, 'elvd_save_siswa')) {
+        $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Sesi form tidak valid. Silakan coba lagi.', 'elearning-vd') . '</div>';
+    } elseif (! $elvd_can_manage_siswa) {
+        $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Anda tidak memiliki izin untuk menyimpan data siswa.', 'elearning-vd') . '</div>';
+    } else {
+        $posted = isset($_POST['elvd_siswa']) && is_array($_POST['elvd_siswa'])
+            ? wp_unslash($_POST['elvd_siswa'])
+            : [];
+        $siswa_id = absint($posted['id'] ?? 0);
+        $is_edit = 0 < $siswa_id;
+        $target_user = $is_edit ? get_userdata($siswa_id) : null;
+
+        if ($is_edit && (! $target_user instanceof WP_User || ! in_array('siswa', (array) $target_user->roles, true))) {
+            $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Data siswa tidak ditemukan.', 'elearning-vd') . '</div>';
+        } elseif ($is_edit && ! current_user_can('edit_user', $siswa_id)) {
+            $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Anda tidak memiliki izin mengubah siswa ini.', 'elearning-vd') . '</div>';
+        } elseif (! $is_edit && ! current_user_can('create_users')) {
+            $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html__('Anda tidak memiliki izin menambah siswa.', 'elearning-vd') . '</div>';
+        } else {
+            $nama = sanitize_text_field((string) ($posted['nama'] ?? ''));
+            $email = sanitize_email((string) ($posted['email'] ?? ''));
+            $password = (string) ($posted['password'] ?? '');
+            $user_data = [
+                'display_name' => $nama,
+                'user_email' => $email,
+            ];
+
+            if ($is_edit) {
+                $user_data['ID'] = $siswa_id;
+
+                if ('' !== $password) {
+                    $user_data['user_pass'] = $password;
+                }
+
+                $saved = wp_update_user($user_data);
+            } else {
+                $username = sanitize_user((string) ($posted['username'] ?? ''), true);
+                $email_parts = explode('@', $email);
+                $fallback_username = sanitize_user((string) ($email_parts[0] ?? ''), true);
+                $user_data['user_login'] = '' !== $username ? $username : $fallback_username;
+                $user_data['user_pass'] = '' !== $password ? $password : wp_generate_password(12, true);
+                $user_data['role'] = 'siswa';
+
+                $saved = wp_insert_user($user_data);
+            }
+
+            if ($saved instanceof WP_Error) {
+                $elvd_siswa_notice = '<div class="alert alert-danger">' . esc_html($saved->get_error_message()) . '</div>';
+            } else {
+                $saved_id = absint($saved);
+
+                $elvd_siswa_meta = [
+                    'elvd_nis' => sanitize_text_field((string) ($posted['nis'] ?? '')),
+                    'elvd_kelas' => sanitize_text_field((string) ($posted['kelas'] ?? '')),
+                    'elvd_tanggal_lahir' => sanitize_text_field((string) ($posted['tanggal_lahir'] ?? '')),
+                    'elvd_telepon' => sanitize_text_field((string) ($posted['telepon'] ?? '')),
+                ];
+
+                foreach ($elvd_siswa_meta as $meta_key => $meta_value) {
+                    update_user_meta($saved_id, $meta_key, $meta_value);
+                }
+
+                $elvd_siswa_notice = '<div class="alert alert-success">' . esc_html__('Data siswa berhasil disimpan.', 'elearning-vd') . '</div>';
+            }
+        }
+    }
+}
 
 if (
     'POST' === strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''))
@@ -104,9 +180,23 @@ if (
         classes: <?php echo esc_attr(wp_json_encode($elvd_classes)); ?>,
         currentPage: 1,
         perPage: 15,
+        modalOpen: false,
+        saving: false,
+        canManageSiswa: <?php echo $elvd_can_manage_siswa ? 'true' : 'false'; ?>,
         filters: {
             tahun_ajaran_id: '',
             kelas_id: ''
+        },
+        form: {
+            id: null,
+            username: '',
+            nama: '',
+            email: '',
+            password: '',
+            nis: '',
+            kelas: '',
+            tanggal_lahir: '',
+            telepon: ''
         },
         init() {
             this.syncItems();
@@ -181,6 +271,34 @@ if (
             this.$dispatch('elvd-items-updated', { items: this.filteredStudents() });
         },
         canDeleteSiswa: <?php echo current_user_can('delete_users') ? 'true' : 'false'; ?>,
+        resetForm() {
+            this.form = {
+                id: null,
+                username: '',
+                nama: '',
+                email: '',
+                password: '',
+                nis: '',
+                kelas: '',
+                tanggal_lahir: '',
+                telepon: ''
+            };
+        },
+        openCreate() {
+            this.resetForm();
+            this.modalOpen = true;
+        },
+        closeModal() {
+            if (this.saving) {
+                return;
+            }
+
+            this.modalOpen = false;
+        },
+        submitForm() {
+            this.saving = true;
+            this.$nextTick(() => this.$refs.siswaForm.submit());
+        },
         deleteSiswa(item) {
             if (!this.canDeleteSiswa || !confirm('Hapus siswa ini?')) {
                 return;
@@ -189,7 +307,8 @@ if (
             this.$refs.siswaDeleteId.value = item.id;
             this.$refs.siswaDeleteForm.submit();
         }
-    }">
+    }"
+    @keydown.escape.window="closeModal()">
     <div class="elvd-table-panel">
         <?php echo $elvd_siswa_notice; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
         ?>
@@ -212,6 +331,15 @@ if (
                             <option :value="String(kelas.id)" x-text="kelas.nama"></option>
                         </template>
                     </select>
+                </div>
+                <div class="col-md-6 col-xl-4">
+                    <button
+                        type="button"
+                        class="btn btn-primary elvd-action-button"
+                        x-show="canManageSiswa"
+                        @click="openCreate()">
+                        <?php echo esc_html__('Tambah Siswa', 'elearning-vd'); ?>
+                    </button>
                 </div>
             </div>
         </div>
@@ -293,6 +421,129 @@ if (
                     </li>
                 </ul>
             </nav>
+        </div>
+    </div>
+
+    <div class="modal-backdrop fade show" x-show="modalOpen" x-cloak></div>
+    <div
+        class="modal fade show elvd-modal"
+        tabindex="-1"
+        role="dialog"
+        aria-modal="true"
+        x-show="modalOpen"
+        x-cloak>
+        <div class="modal-dialog modal-dialog-centered">
+
+            <form class="modal-content" method="post" x-ref="siswaForm" @submit.prevent="submitForm()">
+                <input type="hidden" name="elvd_siswa_action" value="save">
+                <input type="hidden" name="elvd_siswa_nonce" value="<?php echo esc_attr(wp_create_nonce('elvd_save_siswa')); ?>">
+                <input type="hidden" name="elvd_siswa[id]" :value="form.id || ''">
+
+                <div class="modal-header">
+                    <h2 class="modal-title" x-text="form.id ? 'Edit Siswa' : 'Tambah Siswa'"></h2>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        aria-label="<?php echo esc_attr__('Tutup', 'elearning-vd'); ?>"
+                        @click="closeModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-siswa-username"><?php echo esc_html__('Username', 'elearning-vd'); ?></label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="elvd-siswa-username"
+                                name="elvd_siswa[username]"
+                                x-model="form.username"
+                                :required="!form.id"
+                                :readonly="Boolean(form.id)"
+                                maxlength="60"
+                                placeholder="<?php echo esc_attr__('Contoh: siswa.1234', 'elearning-vd'); ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-siswa-nama"><?php echo esc_html__('Nama Lengkap', 'elearning-vd'); ?></label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="elvd-siswa-nama"
+                                name="elvd_siswa[nama]"
+                                x-model="form.nama"
+                                required
+                                maxlength="120">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-siswa-email"><?php echo esc_html__('Email', 'elearning-vd'); ?></label>
+                            <input
+                                type="email"
+                                class="form-control"
+                                id="elvd-siswa-email"
+                                name="elvd_siswa[email]"
+                                x-model="form.email"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-siswa-password"><?php echo esc_html__('Password', 'elearning-vd'); ?></label>
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="elvd-siswa-password"
+                                name="elvd_siswa[password]"
+                                x-model="form.password"
+                                :required="!form.id"
+                                autocomplete="new-password"
+                                placeholder="<?php echo esc_attr__('Kosongkan jika tidak diubah', 'elearning-vd'); ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-siswa-nis"><?php echo esc_html__('NIS', 'elearning-vd'); ?></label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="elvd-siswa-nis"
+                                name="elvd_siswa[nis]"
+                                x-model="form.nis"
+                                maxlength="30">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-siswa-kelas"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></label>
+                            <select class="form-select" id="elvd-siswa-kelas" name="elvd_siswa[kelas]" x-model="form.kelas">
+                                <option value=""><?php echo esc_html__('Pilih kelas', 'elearning-vd'); ?></option>
+                                <template x-for="kelas in filteredClasses()" :key="kelas.id">
+                                    <option :value="String(kelas.id)" x-text="kelas.nama"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-siswa-tanggal-lahir"><?php echo esc_html__('Tanggal Lahir', 'elearning-vd'); ?></label>
+                            <input
+                                type="date"
+                                class="form-control"
+                                id="elvd-siswa-tanggal-lahir"
+                                name="elvd_siswa[tanggal_lahir]"
+                                x-model="form.tanggal_lahir">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="elvd-siswa-telepon"><?php echo esc_html__('No. Telepon', 'elearning-vd'); ?></label>
+                            <input
+                                type="tel"
+                                class="form-control"
+                                id="elvd-siswa-telepon"
+                                name="elvd_siswa[telepon]"
+                                x-model="form.telepon">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="closeModal()">
+                        <?php echo esc_html__('Batal', 'elearning-vd'); ?>
+                    </button>
+                    <button type="submit" class="btn btn-primary elvd-action-button" :disabled="saving">
+                        <span x-show="!saving"><?php echo esc_html__('Simpan', 'elearning-vd'); ?></span>
+                        <span x-show="saving"><?php echo esc_html__('Menyimpan...', 'elearning-vd'); ?></span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
