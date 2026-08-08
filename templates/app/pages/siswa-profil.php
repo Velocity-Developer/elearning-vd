@@ -205,10 +205,29 @@ if ('POST' === strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? '')) && isset(
     }
 }
 
+$elvd_years = [];
+$elvd_classes = [];
+
+$elvd_tahun_ajaran_table = elvd_table_name('elvd_tahun_ajaran');
+$elvd_kelas_table = elvd_table_name('elvd_kelas');
+
+if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $elvd_tahun_ajaran_table)) === $elvd_tahun_ajaran_table) {
+    $elvd_years = $wpdb->get_results(
+        'SELECT id, nama FROM ' . $elvd_tahun_ajaran_table . ' ORDER BY mulai DESC, id DESC',
+        ARRAY_A
+    );
+}
+
+if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $elvd_kelas_table)) === $elvd_kelas_table) {
+    $elvd_classes = $wpdb->get_results(
+        'SELECT id, nama, tahun_ajaran_id FROM ' . $elvd_kelas_table . ' ORDER BY nama ASC',
+        ARRAY_A
+    );
+}
+
 $elvd_siswa_data = [];
 
 if ($elvd_siswa_valid && $elvd_siswa instanceof WP_User) {
-    $elvd_kelas_table = elvd_table_name('elvd_kelas');
     $elvd_kelas_meta = (string) get_user_meta($elvd_siswa->ID, 'elvd_kelas', true);
     $elvd_kelas_info = null;
 
@@ -250,8 +269,10 @@ if ($elvd_siswa_valid && $elvd_siswa instanceof WP_User) {
 
         if ('kelas' === $elvd_field_key) {
             $elvd_siswa_data[$elvd_field_key] = $elvd_kelas_info ? (string) ($elvd_kelas_info['nama'] ?? '') : $elvd_field_value;
+            $elvd_siswa_data['kelas_id'] = $elvd_kelas_info ? (string) ($elvd_kelas_info['id'] ?? '') : '';
             $elvd_siswa_data['tingkat'] = $elvd_kelas_info ? (string) ($elvd_kelas_info['tingkat'] ?? '') : '';
             $elvd_siswa_data['tahun_ajaran'] = $elvd_kelas_info ? (string) ($elvd_kelas_info['tahun_ajaran'] ?? '') : '';
+            $elvd_siswa_data['tahun_ajaran_id'] = $elvd_kelas_info ? (string) ($elvd_kelas_info['tahun_ajaran_id'] ?? '') : '';
             continue;
         }
 
@@ -265,6 +286,22 @@ if ($elvd_siswa_valid && $elvd_siswa instanceof WP_User) {
     canEdit: <?php echo $elvd_can_edit ? 'true' : 'false'; ?>,
     profileBaseUrl: <?php echo esc_attr(wp_json_encode($elvd_siswa_base_url)); ?>,
     activeTab: <?php echo esc_attr(wp_json_encode($elvd_profile_tab)); ?>,
+    years: <?php echo esc_attr(wp_json_encode($elvd_years)); ?>,
+    classes: <?php echo esc_attr(wp_json_encode($elvd_classes)); ?>,
+    filterTahunAjaran: <?php echo esc_attr(wp_json_encode($elvd_siswa_data['tahun_ajaran_id'] ?? '')); ?>,
+    formKelas: <?php echo esc_attr(wp_json_encode($elvd_siswa_data['kelas_id'] ?? '')); ?>,
+    filteredClasses() {
+        if (!this.filterTahunAjaran) {
+            return [];
+        }
+
+        return this.classes.filter((item) => Number(item.tahun_ajaran_id) === Number(this.filterTahunAjaran));
+    },
+    filterTahunAjaranChanged() {
+        if (!this.filteredClasses().some((item) => Number(item.id) === Number(this.formKelas))) {
+            this.formKelas = '';
+        }
+    },
     setTab(tab) {
         if (history.pushState) {
             history.pushState({}, '', this.profileBaseUrl + '/' + this.siswa.id + '/' + tab);
@@ -372,18 +409,42 @@ if ($elvd_siswa_valid && $elvd_siswa instanceof WP_User) {
                             $elvd_input_type = (string) ($elvd_field['type'] ?? 'text');
                             $elvd_input_required = ! empty($elvd_field['required']) ? ' required' : '';
                             ?>
-                            <div class="<?php echo esc_attr((string) ($elvd_field['wrapper_class'] ?? 'col-md-6')); ?>">
-                                <label class="form-label" for="elvd-siswa-<?php echo esc_attr($elvd_field_key); ?>">
-                                    <?php echo esc_html((string) ($elvd_field['label'] ?? $elvd_field_key)); ?>
-                                </label>
-                                <?php if ('textarea' === $elvd_input_type) : ?>
-                                    <textarea class="form-control" id="elvd-siswa-<?php echo esc_attr($elvd_field_key); ?>" name="elvd_siswa[<?php echo esc_attr($elvd_field_key); ?>]" rows="3" <?php echo $elvd_input_required; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
-                                                                                                                                                                                                    ?>><?php echo esc_textarea((string) ($elvd_siswa_data[$elvd_field_key] ?? '')); ?></textarea>
-                                <?php else : ?>
-                                    <input type="<?php echo esc_attr($elvd_input_type); ?>" class="form-control" id="elvd-siswa-<?php echo esc_attr($elvd_field_key); ?>" name="elvd_siswa[<?php echo esc_attr($elvd_field_key); ?>]" value="<?php echo esc_attr((string) ($elvd_siswa_data[$elvd_field_key] ?? '')); ?>" <?php echo $elvd_input_required; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
-                                                                                                                                                                                                                                                                                                                            ?>>
-                                <?php endif; ?>
-                            </div>
+                            <?php if ('kelas' === $elvd_field_key) : ?>
+                                <div class="<?php echo esc_attr((string) ($elvd_field['wrapper_class'] ?? 'col-md-6')); ?>">
+                                    <label class="form-label" for="elvd-siswa-kelas"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></label>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <select class="form-select" id="elvd-siswa-tahun-ajaran" x-model="filterTahunAjaran" @change="filterTahunAjaranChanged()">
+                                                <option value=""><?php echo esc_html__('Pilih Tahun Ajaran', 'elearning-vd'); ?></option>
+                                                <template x-for="year in years" :key="year.id">
+                                                    <option :value="String(year.id)" x-text="year.nama"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <select class="form-select" id="elvd-siswa-kelas" name="elvd_siswa[kelas]" x-model="formKelas" :disabled="!filterTahunAjaran">
+                                                <option value=""><?php echo esc_html__('Pilih Kelas', 'elearning-vd'); ?></option>
+                                                <template x-for="kelas in filteredClasses" :key="kelas.id">
+                                                    <option :value="String(kelas.id)" x-text="kelas.nama"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php else : ?>
+                                <div class="<?php echo esc_attr((string) ($elvd_field['wrapper_class'] ?? 'col-md-6')); ?>">
+                                    <label class="form-label" for="elvd-siswa-<?php echo esc_attr($elvd_field_key); ?>">
+                                        <?php echo esc_html((string) ($elvd_field['label'] ?? $elvd_field_key)); ?>
+                                    </label>
+                                    <?php if ('textarea' === $elvd_input_type) : ?>
+                                        <textarea class="form-control" id="elvd-siswa-<?php echo esc_attr($elvd_field_key); ?>" name="elvd_siswa[<?php echo esc_attr($elvd_field_key); ?>]" rows="3" <?php echo $elvd_input_required; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
+                                                                                                                                                                                                        ?>><?php echo esc_textarea((string) ($elvd_siswa_data[$elvd_field_key] ?? '')); ?></textarea>
+                                    <?php else : ?>
+                                        <input type="<?php echo esc_attr($elvd_input_type); ?>" class="form-control" id="elvd-siswa-<?php echo esc_attr($elvd_field_key); ?>" name="elvd_siswa[<?php echo esc_attr($elvd_field_key); ?>]" value="<?php echo esc_attr((string) ($elvd_siswa_data[$elvd_field_key] ?? '')); ?>" <?php echo $elvd_input_required; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
+                                                                                                                                                                                                                                                                                                                                ?>>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                         <?php endforeach; ?>
 
                         <div class="col-12 d-flex justify-content-end">
