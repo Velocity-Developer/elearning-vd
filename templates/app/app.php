@@ -311,6 +311,14 @@ if (! is_user_logged_in()) {
                         <span><?php echo esc_html__('Status', 'elearning-vd'); ?></span>
                         <strong><?php echo esc_html__('Aktif', 'elearning-vd'); ?></strong>
                     </div>
+                    <nav class="elvd-nav mt-4" aria-label="<?php echo esc_attr__('Menu Akun', 'elearning-vd'); ?>">
+                        <a class="elvd-nav-link" href="<?php echo esc_url(wp_logout_url(untrailingslashit(ELVD::app_route()))); ?>">
+                            <svg class="elvd-icon" aria-hidden="true">
+                                <use xlink:href="#elvd-icon-logout"></use>
+                            </svg>
+                            <?php echo esc_html__('Keluar', 'elearning-vd'); ?>
+                        </a>
+                    </nav>
                 </div>
             </aside>
 
