@@ -301,16 +301,12 @@ if (! is_user_logged_in()) {
                             <span x-text="labels[tab]"></span>
                         </button>
                     </template>
-                </nav>
-                <hr class="elvd-mobile-divider">
-                <nav class="elvd-nav" aria-label="<?php echo esc_attr__('Menu Akun Mobile', 'elearning-vd'); ?>">
                     <a class="elvd-nav-link" href="<?php echo esc_url(wp_logout_url(untrailingslashit(ELVD::app_route()))); ?>">
-                        <svg class="elvd-icon" aria-hidden="true">
-                            <use xlink:href="#elvd-icon-logout"></use>
-                        </svg>
+                        <i class="bi bi-door-open"></i>
                         <?php echo esc_html__('Keluar', 'elearning-vd'); ?>
                     </a>
                 </nav>
+                <hr class="elvd-mobile-divider">
             </div>
         </div>
 
@@ -338,19 +334,15 @@ if (! is_user_logged_in()) {
                                 <span x-text="labels[tab]"></span>
                             </button>
                         </template>
+                        <a class="elvd-nav-link" href="<?php echo esc_url(wp_logout_url(untrailingslashit(ELVD::app_route()))); ?>">
+                            <i class="bi bi-door-open"></i>
+                            <?php echo esc_html__('Keluar', 'elearning-vd'); ?>
+                        </a>
                     </nav>
                     <div class="elvd-sidebar-note">
                         <span><?php echo esc_html__('Status', 'elearning-vd'); ?></span>
                         <strong><?php echo esc_html__('Aktif', 'elearning-vd'); ?></strong>
                     </div>
-                    <nav class="elvd-nav mt-4" aria-label="<?php echo esc_attr__('Menu Akun', 'elearning-vd'); ?>">
-                        <a class="elvd-nav-link" href="<?php echo esc_url(wp_logout_url(untrailingslashit(ELVD::app_route()))); ?>">
-                            <svg class="elvd-icon" aria-hidden="true">
-                                <use xlink:href="#elvd-icon-logout"></use>
-                            </svg>
-                            <?php echo esc_html__('Keluar', 'elearning-vd'); ?>
-                        </a>
-                    </nav>
                 </div>
             </aside>
 
