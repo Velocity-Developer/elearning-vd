@@ -8,18 +8,21 @@ $elvd_ws_rest_quiz = untrailingslashit(rest_url('wp/v2/elvd_quiz'));
 $elvd_ws_rest_question = untrailingslashit(rest_url('wp/v2/elvd_quiz_question'));
 $elvd_ws_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pengerjaan-quiz'));
 $elvd_ws_is_preview = elvd_can_manage_rest();
+$elvd_ws_result_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
 ?>
 
 <div x-show="active === 'quiz-workspace'" x-data="{
     restUrl: <?php echo esc_attr(wp_json_encode($elvd_ws_rest_quiz)); ?>,
     questionRestUrl: <?php echo esc_attr(wp_json_encode($elvd_ws_rest_question)); ?>,
     pengerjaanUrl: <?php echo esc_attr(wp_json_encode($elvd_ws_rest_pengerjaan)); ?>,
+    resultUrl: <?php echo esc_attr(wp_json_encode($elvd_ws_result_url)); ?>,
     backUrl: <?php echo esc_attr(wp_json_encode($elvd_ws_back_url)); ?>,
     isPreview: <?php echo esc_attr($elvd_ws_is_preview ? 'true' : 'false'); ?>,
     quizId: <?php echo esc_attr((string) $elvd_ws_quiz_id); ?>,
     view: 'intro',
     loading: true,
     error: '',
+    alreadyDone: false,
     quiz: null,
     questions: [],
     answers: {},
@@ -67,11 +70,18 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
     loadQuiz() {
         this.loading = true;
         this.error = '';
+        this.alreadyDone = false;
 
-        Promise.all([
+        const tasks = [
             fetch(`${this.restUrl}/${this.quizId}`, { headers: { 'X-WP-Nonce': config.nonce } }),
             fetch(`${this.questionRestUrl}?per_page=100`, { headers: { 'X-WP-Nonce': config.nonce } })
-        ])
+        ];
+
+        if (!this.isPreview) {
+            tasks.push(fetch(`${this.pengerjaanUrl}?per_page=1&quiz_id=${this.quizId}&siswa_id=${config.userId}`, { headers: { 'X-WP-Nonce': config.nonce } }));
+        }
+
+        Promise.all(tasks)
         .then((responses) => {
             responses.forEach((response) => {
                 if (!response.ok) {
@@ -81,12 +91,16 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
 
             return Promise.all(responses.map((response) => response.json()));
         })
-        .then(([quiz, allQuestions]) => {
+        .then(([quiz, allQuestions, attempts]) => {
             this.quiz = quiz;
             this.durasiMenit = Number(this.metaValue(quiz, 'elvd_durasi_menit')) || 0;
             this.questions = (Array.isArray(allQuestions) ? allQuestions : [])
                 .filter((item) => Number(this.metaValue(item, 'elvd_quiz_id')) === Number(this.quizId))
                 .sort((a, b) => Number(a.id) - Number(b.id));
+
+            if (!this.isPreview && Array.isArray(attempts) && attempts.length > 0) {
+                this.alreadyDone = true;
+            }
         })
         .catch((error) => {
             this.error = error.message || 'Gagal memuat data quiz.';
@@ -170,6 +184,10 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
         return 'Perlu lebih banyak latihan';
     },
     start() {
+        if (this.alreadyDone) {
+            return;
+        }
+
         if (!this.questions.length) {
             this.error = 'Quiz belum memiliki pertanyaan.';
             return;
@@ -287,8 +305,16 @@ $elvd_ws_is_preview = elvd_can_manage_rest();
                     <button
                         type="button"
                         class="btn btn-primary elvd-action-button"
+                        x-show="!alreadyDone"
                         @click="start()"
                         x-text="isPreview ? 'Lihat Soal' : 'Mulai Kerjakan'"></button>
+
+                    <div class="alert alert-info" x-show="alreadyDone">
+                        <div class="mb-2"><?php echo esc_html__('Anda sudah pernah mengerjakan quiz ini. Silakan lihat hasil pengerjaan Anda.', 'elearning-vd'); ?></div>
+                        <a class="btn btn-sm btn-primary elvd-action-button" :href="`${resultUrl}/${quizId}/`">
+                            <i class="bi bi-clipboard2-check me-1"></i><?php echo esc_html__('Lihat Hasil', 'elearning-vd'); ?>
+                        </a>
+                    </div>
                 </div>
             </div>
         </template>

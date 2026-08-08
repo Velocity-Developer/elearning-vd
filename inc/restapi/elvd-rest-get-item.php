@@ -21,5 +21,13 @@ function elvd_rest_get_item(WP_REST_Request $request): WP_REST_Response
         return new WP_REST_Response(new WP_Error('elvd_not_found', __('Data tidak ditemukan.', 'elearning-vd')), 404);
     }
 
+    if ('elvd_pengerjaan_quiz' === $resource['table'] && ! elvd_can_manage_rest()) {
+        $siswa_id = get_current_user_id();
+
+        if (absint($item['siswa_id'] ?? 0) !== $siswa_id) {
+            return new WP_REST_Response(new WP_Error('elvd_forbidden', __('Anda tidak memiliki akses ke data ini.', 'elearning-vd')), 403);
+        }
+    }
+
     return new WP_REST_Response($item);
 }

@@ -5,6 +5,7 @@ defined('ABSPATH') || exit;
 $elvd_quiz_form_url = untrailingslashit(ELVD::app_route()) . '/quiz-form';
 $elvd_quiz_workspace_url = untrailingslashit(ELVD::app_route()) . '/quiz-workspace';
 $elvd_quiz_answer_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
+$elvd_quiz_pengerjaan_url = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pengerjaan-quiz'));
 ?>
 
 <div x-show="active === 'quiz'" x-data="{
@@ -15,14 +16,20 @@ $elvd_quiz_answer_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
     formUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_form_url)); ?>,
     workspaceUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_workspace_url)); ?>,
     answerUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_answer_url)); ?>,
+    pengerjaanUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_pengerjaan_url)); ?>,
     loading: false,
     loadingRelations: false,
+    loadingAttempts: false,
     error: '',
     filterTipe: '',
     filterKelas: '',
+    myAttempts: {},
     init() {
         this.fetchQuizzes();
         this.fetchRelations();
+        if (!config.isManager) {
+            this.fetchMyAttempts();
+        }
     },
     metaValue(item, key) {
         return item.meta && item.meta[key] ? item.meta[key] : '';
@@ -102,6 +109,41 @@ $elvd_quiz_answer_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
     },
     tipeLabel(value) {
         return value === 'essay' ? 'Essay' : 'Pilihan Ganda';
+    },
+    formatNilai(nilai) {
+        return nilai === null || nilai === '' ? '–' : `${Math.round(Number(nilai))}`;
+    },
+    fetchMyAttempts() {
+        this.loadingAttempts = true;
+
+        fetch(`${this.pengerjaanUrl}?per_page=100&siswa_id=${config.userId}`, {
+            headers: { 'X-WP-Nonce': config.nonce }
+        })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Gagal memuat pengerjaan Anda.');
+            }
+            return response.json();
+        })
+        .then((data) => {
+            const attempts = Array.isArray(data) ? data : [];
+            const map = {};
+            attempts.forEach((attempt) => {
+                if (!map[attempt.quiz_id] || (attempt.nilai !== null && (map[attempt.quiz_id].nilai === null || attempt.nilai > map[attempt.quiz_id].nilai))) {
+                    map[attempt.quiz_id] = attempt;
+                }
+            });
+            this.myAttempts = map;
+        })
+        .catch((error) => {
+            console.warn('Gagal memuat pengerjaan:', error.message);
+        })
+        .finally(() => {
+            this.loadingAttempts = false;
+        });
+    },
+    myAttempt(quizId) {
+        return this.myAttempts[Number(quizId)] || null;
     },
     deleteQuiz(item) {
         if (!window.confirm('Yakin hapus quiz ini?')) {
@@ -186,9 +228,19 @@ $elvd_quiz_answer_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
                                 <a
                                     title="<?php echo esc_html__('Lihat', 'elearning-vd'); ?>"
                                     class="btn btn-sm btn-outline-primary elvd-row-action"
-                                    :href="`${workspaceUrl}/${item.id}/`">
+                                    :href="`${workspaceUrl}/${item.id}/`"
+                                    x-show="!myAttempt(item.id)">
                                     <i class="bi bi-play-fill"></i>
                                 </a>
+                                <template x-if="myAttempt(item.id)">
+                                    <a
+                                        title="<?php echo esc_html__('Lihat Hasil', 'elearning-vd'); ?>"
+                                        class="btn btn-sm btn-outline-secondary elvd-row-action"
+                                        :href="`${answerUrl}/${item.id}/`">
+                                        <i class="bi bi-clipboard2-check"></i>
+                                    </a>
+                                    <span class="badge rounded-pill text-bg-success mx-2" x-text="formatNilai(myAttempt(item.id).nilai)"></span>
+                                </template>
                                 <a
                                     title="<?php echo esc_html__('Jawab', 'elearning-vd'); ?>"
                                     class="btn btn-sm btn-outline-secondary elvd-row-action"

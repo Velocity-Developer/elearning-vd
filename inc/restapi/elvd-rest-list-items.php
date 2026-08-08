@@ -29,6 +29,12 @@ function elvd_rest_list_items(WP_REST_Request $request): WP_REST_Response
         $where .= $wpdb->prepare(esc_sql($field) . ' = %d', absint($value));
     }
 
+    if ('elvd_pengerjaan_quiz' === $resource['table'] && ! elvd_can_manage_rest()) {
+        $siswa_id = get_current_user_id();
+        $where .= $where ? ' AND ' : 'WHERE ';
+        $where .= $wpdb->prepare(esc_sql('siswa_id') . ' = %d', $siswa_id);
+    }
+
     $items = $wpdb->get_results(
         $wpdb->prepare("SELECT * FROM {$table} {$where} ORDER BY id DESC LIMIT %d OFFSET %d", $per_page, $offset),
         ARRAY_A

@@ -134,9 +134,23 @@ function elvd_rest_submit_pengerjaan(WP_REST_Request $request): WP_REST_Response
 
     $nilai = $request->get_param('nilai');
 
+    $siswa_id = get_current_user_id();
+
+    $existing = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT id FROM " . elvd_table_name('elvd_pengerjaan_quiz') . " WHERE quiz_id = %d AND siswa_id = %d AND status = 'selesai' LIMIT 1",
+            $quiz_id,
+            $siswa_id
+        )
+    );
+
+    if ($existing) {
+        return new WP_REST_Response(new WP_Error('elvd_already_submitted', __('Anda sudah pernah mengerjakan quiz ini.', 'elearning-vd')), 409);
+    }
+
     $data = [
         'quiz_id' => $quiz_id,
-        'siswa_id' => get_current_user_id(),
+        'siswa_id' => $siswa_id,
         'jawaban' => wp_json_encode($jawaban),
         'nilai' => is_numeric($nilai) ? (float) $nilai : null,
         'status' => 'selesai',

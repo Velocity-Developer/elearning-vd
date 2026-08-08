@@ -55,10 +55,16 @@ $elvd_qa_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pe
         this.loading = true;
         this.error = '';
 
+        const pengerjaanParams = new URLSearchParams({ per_page: '100', quiz_id: String(this.quizId) });
+
+        if (!this.isManager) {
+            pengerjaanParams.set('siswa_id', String(config.userId));
+        }
+
         Promise.all([
             fetch(`${this.restQuizUrl}/${this.quizId}`, { headers: { 'X-WP-Nonce': config.nonce } }),
             fetch(`${this.restQuestionUrl}?per_page=100`, { headers: { 'X-WP-Nonce': config.nonce } }),
-            fetch(`${this.pengerjaanUrl}?per_page=100&quiz_id=${this.quizId}`, { headers: { 'X-WP-Nonce': config.nonce } })
+            fetch(`${this.pengerjaanUrl}?${pengerjaanParams.toString()}`, { headers: { 'X-WP-Nonce': config.nonce } })
         ])
         .then((responses) => {
             responses.forEach((response) => {
@@ -165,9 +171,48 @@ $elvd_qa_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pe
 
         <div class="alert alert-danger" x-show="error" x-text="error"></div>
 
-        <div class="alert alert-warning" x-show="!isManager && !loading && !error">
-            <?php echo esc_html__('Halaman ini khusus Guru/Admin untuk melihat hasil pengerjaan quiz.', 'elearning-vd'); ?>
-        </div>
+        <template x-if="!loading && !isManager && quiz">
+            <div class="p-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                    <div>
+                        <h2 class="h4 mb-1" x-text="titleOf(quiz)"></h2>
+                        <div class="d-flex gap-2">
+                            <span class="badge rounded-pill text-bg-primary" x-text="quizTipe() === 'essay' ? 'Essay' : 'Pilihan Ganda'"></span>
+                            <span class="badge rounded-pill text-bg-secondary" x-text="attempts.length + ' pengerjaan'"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <template x-if="attempts.length">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 elvd-table">
+                            <thead>
+                                <tr>
+                                    <th><?php echo esc_html__('Mulai', 'elearning-vd'); ?></th>
+                                    <th><?php echo esc_html__('Selesai', 'elearning-vd'); ?></th>
+                                    <th><?php echo esc_html__('Nilai', 'elearning-vd'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="item in attempts" :key="item.id">
+                                    <tr>
+                                        <td class="elvd-subtext" x-text="formatTanggal(item.mulai_pada)"></td>
+                                        <td class="elvd-subtext" x-text="formatTanggal(item.selesai_pada)"></td>
+                                        <td>
+                                            <span class="badge" :class="item.nilai !== null && item.nilai !== '' ? 'text-bg-success' : 'text-bg-light'" x-text="formatNilai(item)"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+                <div class="text-muted p-4" x-show="!attempts.length">
+                    <?php echo esc_html__('Anda belum mengerjakan quiz ini.', 'elearning-vd'); ?>
+                </div>
+            </div>
+        </template>
 
         <template x-if="loading">
             <div class="p-4 text-muted"><?php echo esc_html__('Memuat data...', 'elearning-vd'); ?></div>
