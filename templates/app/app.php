@@ -202,7 +202,7 @@ if (! is_user_logged_in()) {
                     'siswa' === $elvd_current_role
                         ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz']
                         : ('guru' === $elvd_current_role
-                            ? ['dashboard', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'tugas', 'materi', 'siswa', 'quiz']
+                            ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz', 'siswa', 'kelas', 'mata-pelajaran']
                             : ['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'tugas', 'materi', 'guru', 'siswa', 'quiz']
                         )
                 )); ?>,
