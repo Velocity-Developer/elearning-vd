@@ -45,7 +45,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: Release v${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
           body: |
             ## Elearning VD v${{ steps.version.outputs.version }}
 
