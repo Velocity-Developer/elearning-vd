@@ -321,7 +321,7 @@ $elvd_guru_options = array_map(
             <button
                 type="button"
                 class="btn btn-primary elvd-action-button"
-                x-show="config.isManager"
+                x-show="config.currentRole === 'administrator'"
                 @click="openCreate()">
                 <?php echo esc_html__('Tambah Kelas', 'elearning-vd'); ?>
             </button>
@@ -337,7 +337,7 @@ $elvd_guru_options = array_map(
                         <th scope="col"><?php echo esc_html__('Tingkat', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Wali Guru', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></th>
-                        <th scope="col" class="text-end"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
+                        <th scope="col" class="text-end" x-show="config.currentRole === 'administrator'"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -352,18 +352,18 @@ $elvd_guru_options = array_map(
                             <td x-text="item.tingkat || '-'"></td>
                             <td x-text="teacherName(item.wali_guru_id)"></td>
                             <td x-text="yearName(item.tahun_ajaran_id)"></td>
-                            <td class="text-end">
+                            <td class="text-end" x-show="config.currentRole === 'administrator'">
                                 <button
                                     type="button"
                                     class="btn btn-sm btn-outline-primary elvd-row-action"
-                                    x-show="config.isManager"
+                                    x-show="config.currentRole === 'administrator'"
                                     @click="openEdit(item)">
                                     <?php echo esc_html__('Edit', 'elearning-vd'); ?>
                                 </button>
                                 <button
                                     type="button"
                                     class="btn btn-sm btn-outline-danger elvd-row-action"
-                                    x-show="config.isManager"
+                                    x-show="config.currentRole === 'administrator'"
                                     @click="removeItem(item)">
                                     <?php echo esc_html__('Hapus', 'elearning-vd'); ?>
                                 </button>

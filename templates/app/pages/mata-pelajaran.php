@@ -184,7 +184,7 @@ defined('ABSPATH') || exit;
             <button
                 type="button"
                 class="btn btn-primary elvd-action-button"
-                x-show="config.isManager"
+                x-show="config.currentRole === 'administrator'"
                 @click="openCreate()">
                 <i class="bi bi-plus-lg me-1"></i><?php echo esc_html__('Tambah Mata Pelajaran', 'elearning-vd'); ?>
             </button>
@@ -199,7 +199,7 @@ defined('ABSPATH') || exit;
                         <th scope="col"><?php echo esc_html__('Nama', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Kode', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Deskripsi', 'elearning-vd'); ?></th>
-                        <th scope="col" class="text-end"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
+                        <th scope="col" class="text-end" x-show="config.currentRole === 'administrator'"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -213,11 +213,11 @@ defined('ABSPATH') || exit;
                             </td>
                             <td x-text="item.kode || '-'"></td>
                             <td x-text="shortDescription(item.deskripsi)"></td>
-                            <td class="text-end">
+                            <td class="text-end" x-show="config.currentRole === 'administrator'">
                                 <button
                                     type="button"
                                     class="btn btn-sm btn-outline-primary elvd-row-action"
-                                    x-show="config.isManager"
+                                    x-show="config.currentRole === 'administrator'"
                                     @click="openEdit(item)">
                                     <i class="bi bi-pencil"></i>
                                 </button>
