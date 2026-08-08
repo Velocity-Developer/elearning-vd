@@ -134,6 +134,12 @@
     font-weight: 500;
 }
 
+.elvd-nav-link i {
+    flex: 0 0 auto;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
 .elvd-sidebar-note {
     align-items: center;
     background: var(--elvd-cloud);
@@ -735,6 +741,18 @@
 }
 .elvd-mobile-sheet {
     color: var(--elvd-ink);
+}
+
+.elvd-mobile-divider {
+    border: 0;
+    border-top: 1px solid var(--elvd-hairline);
+    margin: 0;
+}
+
+.elvd-nav-link .elvd-icon {
+    height: 16px;
+    margin-right: 8px;
+    width: 16px;
 }
 
 .elvd-login-form-container {

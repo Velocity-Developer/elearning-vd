@@ -224,6 +224,18 @@ if (! is_user_logged_in()) {
             "quiz-answer": "Hasil Quiz",
             "tugas-answer": "Hasil Tugas"
         },
+        icons: {
+            "dashboard": "bi bi-grid-1x2",
+            "tahun-ajaran": "bi bi-calendar3",
+            "kelas": "bi bi-door-open",
+            "mata-pelajaran": "bi bi-book",
+            "jadwal-pelajaran": "bi bi-clock-history",
+            "tugas": "bi bi-clipboard-check",
+            "materi": "bi bi-journal-text",
+            "guru": "bi bi-person-badge",
+            "siswa": "bi bi-people",
+            "quiz": "bi bi-patch-question"
+        },
         defaultLabel: <?php echo esc_attr(wp_json_encode(__('Elearning VD', 'elearning-vd'))); ?>,
         active: <?php echo esc_attr(wp_json_encode('' !== $route_page ? $active_page : 'dashboard')); ?>,
         appRoute: <?php echo esc_attr(wp_json_encode(untrailingslashit(ELVD::app_route()))); ?>,
@@ -284,9 +296,20 @@ if (! is_user_logged_in()) {
                             type="button"
                             class="elvd-nav-link"
                             :class="active === tab ? 'is-active' : ''"
-                            @click="select(tab)"
-                            x-text="labels[tab]"></button>
+                            @click="select(tab)">
+                            <i :class="icons[tab]" aria-hidden="true"></i>
+                            <span x-text="labels[tab]"></span>
+                        </button>
                     </template>
+                </nav>
+                <hr class="elvd-mobile-divider">
+                <nav class="elvd-nav" aria-label="<?php echo esc_attr__('Menu Akun Mobile', 'elearning-vd'); ?>">
+                    <a class="elvd-nav-link" href="<?php echo esc_url(wp_logout_url(untrailingslashit(ELVD::app_route()))); ?>">
+                        <svg class="elvd-icon" aria-hidden="true">
+                            <use xlink:href="#elvd-icon-logout"></use>
+                        </svg>
+                        <?php echo esc_html__('Keluar', 'elearning-vd'); ?>
+                    </a>
                 </nav>
             </div>
         </div>
@@ -310,8 +333,10 @@ if (! is_user_logged_in()) {
                                 type="button"
                                 class="elvd-nav-link"
                                 :class="active === tab ? 'is-active' : ''"
-                                @click="select(tab)"
-                                x-text="labels[tab]"></button>
+                                @click="select(tab)">
+                                <i :class="icons[tab]" aria-hidden="true"></i>
+                                <span x-text="labels[tab]"></span>
+                            </button>
                         </template>
                     </nav>
                     <div class="elvd-sidebar-note">
