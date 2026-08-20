@@ -50,6 +50,17 @@ function elvd_create_tables(): void
         UNIQUE KEY kode (kode)
     ) {$charset_collate};";
 
+    $tables[] = "CREATE TABLE {$wpdb->prefix}elvd_mata_pelajaran_guru (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        mapel_id BIGINT UNSIGNED NOT NULL,
+        user_id BIGINT UNSIGNED NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY  (id),
+        UNIQUE KEY mapel_user (mapel_id, user_id),
+        KEY user_id (user_id)
+    ) {$charset_collate};";
+
     $tables[] = "CREATE TABLE {$wpdb->prefix}elvd_jadwal_pelajaran (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         kelas_id BIGINT UNSIGNED NOT NULL,
