@@ -254,84 +254,94 @@ if (! is_user_logged_in()) {
     );
 ?>
 
+    <script>
+        window.elvdAppConfig = {
+            tabs: <?php echo wp_json_encode(
+                        'siswa' === $elvd_current_role
+                            ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz']
+                            : ('guru' === $elvd_current_role
+                                ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz', 'siswa', 'kelas', 'mata-pelajaran']
+                                : ['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'tugas', 'materi', 'guru', 'siswa', 'quiz']
+                            )
+                    ); ?>,
+            labels: {
+                "dashboard": "Dashboard",
+                "tahun-ajaran": "Tahun Ajaran",
+                "kelas": "Kelas",
+                "mata-pelajaran": "Mata Pelajaran",
+                "jadwal-pelajaran": "Jadwal Pelajaran",
+                "tugas": "Tugas",
+                "materi": "Materi",
+                "guru": "Guru",
+                "siswa": "Siswa",
+                "siswa-profil": "Profil Siswa",
+                "guru-profil": "Profil Guru",
+                "quiz": "Quiz",
+                "quiz-form": "Form Quiz",
+                "quiz-workspace": "Kerjakan Quiz",
+                "quiz-answer": "Hasil Quiz",
+                "tugas-answer": "Hasil Tugas"
+            },
+            icons: {
+                "dashboard": "bi bi-grid-1x2",
+                "tahun-ajaran": "bi bi-calendar3",
+                "kelas": "bi bi-door-open",
+                "mata-pelajaran": "bi bi-book",
+                "jadwal-pelajaran": "bi bi-clock-history",
+                "tugas": "bi bi-clipboard-check",
+                "materi": "bi bi-journal-text",
+                "guru": "bi bi-person-badge",
+                "siswa": "bi bi-people",
+                "quiz": "bi bi-patch-question"
+            },
+            defaultLabel: <?php echo wp_json_encode(__('Elearning VD', 'elearning-vd')); ?>,
+            active: <?php echo wp_json_encode('' !== $route_page ? $active_page : 'dashboard'); ?>,
+            appRoute: <?php echo wp_json_encode(untrailingslashit(ELVD::app_route())); ?>,
+            items: [],
+            loading: false,
+            config: <?php echo wp_json_encode($config); ?>,
+            init() {
+                this.load();
+            },
+            load() {
+                const hiddenTabs = this.config.currentRole !== "guru" ? ["guru", "siswa"] : ["tahun-ajaran", "guru"];
+
+                if ([...hiddenTabs, "dashboard", "tugas", "materi", "siswa", "siswa-profil", "guru-profil", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
+                    this.items = [];
+                    this.loading = false;
+                    return;
+                }
+
+                this.loading = true;
+                fetch(`${this.config.restUrl}/${this.active}`, {
+                        headers: {
+                            "X-WP-Nonce": this.config.nonce
+                        }
+                    })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        this.items = Array.isArray(data) ? data : [];
+                    })
+                    .finally(() => {
+                        this.loading = false;
+                    });
+            },
+            select(tab) {
+                this.active = tab;
+                if (tab === "dashboard") {
+                    window.location.href = `${this.appRoute}/`;
+                    return;
+                }
+
+                window.location.href = `${this.appRoute}/${tab}/`;
+            }
+        };
+    </script>
+
     <div
         class="elvd-app"
         @elvd-items-updated.window="items = Array.isArray($event.detail.items) ? $event.detail.items : []"
-        x-data='{
-        tabs: <?php echo esc_attr(wp_json_encode(
-                    'siswa' === $elvd_current_role
-                        ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz']
-                        : ('guru' === $elvd_current_role
-                            ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz', 'siswa', 'kelas', 'mata-pelajaran']
-                            : ['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'tugas', 'materi', 'guru', 'siswa', 'quiz']
-                        )
-                )); ?>,
-        labels: {
-            "dashboard": "Dashboard",
-            "tahun-ajaran": "Tahun Ajaran",
-            "kelas": "Kelas",
-            "mata-pelajaran": "Mata Pelajaran",
-            "jadwal-pelajaran": "Jadwal Pelajaran",
-            "tugas": "Tugas",
-            "materi": "Materi",
-            "guru": "Guru",
-            "siswa": "Siswa",
-            "siswa-profil": "Profil Siswa",
-            "guru-profil": "Profil Guru",
-            "quiz": "Quiz",
-            "quiz-form": "Form Quiz",
-            "quiz-workspace": "Kerjakan Quiz",
-            "quiz-answer": "Hasil Quiz",
-            "tugas-answer": "Hasil Tugas"
-        },
-        icons: {
-            "dashboard": "bi bi-grid-1x2",
-            "tahun-ajaran": "bi bi-calendar3",
-            "kelas": "bi bi-door-open",
-            "mata-pelajaran": "bi bi-book",
-            "jadwal-pelajaran": "bi bi-clock-history",
-            "tugas": "bi bi-clipboard-check",
-            "materi": "bi bi-journal-text",
-            "guru": "bi bi-person-badge",
-            "siswa": "bi bi-people",
-            "quiz": "bi bi-patch-question"
-        },
-        defaultLabel: <?php echo esc_attr(wp_json_encode(__('Elearning VD', 'elearning-vd'))); ?>,
-        active: <?php echo esc_attr(wp_json_encode('' !== $route_page ? $active_page : 'dashboard')); ?>,
-        appRoute: <?php echo esc_attr(wp_json_encode(untrailingslashit(ELVD::app_route()))); ?>,
-        items: [],
-        loading: false,
-        config: <?php echo esc_attr(wp_json_encode($config)); ?>,
-        init() { this.load(); },
-        load() {
-            const hiddenTabs = this.config.currentRole !== "guru"
-                ? ["guru", "siswa"]
-                : ["tahun-ajaran", "guru"];
-
-            if ([...hiddenTabs, "dashboard", "tugas", "materi", "siswa", "siswa-profil", "guru-profil", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
-                this.items = [];
-                this.loading = false;
-                return;
-            }
-
-            this.loading = true;
-            fetch(`${this.config.restUrl}/${this.active}`, {
-                headers: { "X-WP-Nonce": this.config.nonce }
-            })
-            .then((response) => response.json())
-            .then((data) => { this.items = Array.isArray(data) ? data : []; })
-            .finally(() => { this.loading = false; });
-        },
-        select(tab) {
-            this.active = tab;
-            if (tab === "dashboard") {
-                window.location.href = `${this.appRoute}/`;
-                return;
-            }
-
-            window.location.href = `${this.appRoute}/${tab}/`;
-        }
-    }'>
+        x-data="window.elvdAppConfig">
 
         <div class="offcanvas offcanvas-start d-lg-none elvd-mobile-sheet" tabindex="-1" id="elvdMobileMenu" aria-labelledby="elvdMobileMenuLabel">
             <div class="offcanvas-header">
