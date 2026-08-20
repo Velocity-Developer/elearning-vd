@@ -1,13 +1,21 @@
 <?php
 
 defined('ABSPATH') || exit;
+
+$elvd_current_user = wp_get_current_user();
+$elvd_current_role = in_array('administrator', (array) $elvd_current_user->roles, true)
+    ? 'administrator'
+    : (in_array('guru', (array) $elvd_current_user->roles, true) ? 'guru' : 'siswa');
+$elvd_subject_options = 'guru' === $elvd_current_role
+    ? \ElearningVD\Mapel::dapatkan_oleh_guru((int) $elvd_current_user->ID)
+    : \ElearningVD\Mapel::dapatkan_semua();
 ?>
 
 <script>
     window.elvdMateriConfig = {
         matters: [],
         classes: [],
-        subjects: [],
+        subjects: <?php echo wp_json_encode($elvd_subject_options); ?>,
         years: [],
         restUrl: <?php echo wp_json_encode(untrailingslashit(rest_url("wp/v2/elvd_materi"))); ?>,
         mediaUrl: <?php echo wp_json_encode(untrailingslashit(rest_url("wp/v2/media"))); ?>,
@@ -154,7 +162,10 @@ defined('ABSPATH') || exit;
                 })
                 .then(([classes, subjects, years]) => {
                     this.classes = Array.isArray(classes) ? classes : [];
-                    this.subjects = Array.isArray(subjects) ? subjects : [];
+                    const fetchedSubjects = Array.isArray(subjects) ? subjects : [];
+                    this.subjects = config.currentRole === "guru" ?
+                        fetchedSubjects.filter((item) => this.subjects.some((subject) => Number(subject.id) === Number(item.id))) :
+                        fetchedSubjects;
                     this.years = Array.isArray(years) ? years : [];
                 })
                 .catch((error) => {
