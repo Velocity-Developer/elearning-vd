@@ -338,6 +338,10 @@ if (! is_user_logged_in()) {
         };
     </script>
 
+    <script>
+        window.config = window.elvdAppConfig.config;
+    </script>
+
     <div
         class="elvd-app"
         @elvd-items-updated.window="items = Array.isArray($event.detail.items) ? $event.detail.items : []"

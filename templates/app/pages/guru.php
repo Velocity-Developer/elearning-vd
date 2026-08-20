@@ -132,11 +132,10 @@ $elvd_guru_items = array_map(
 );
 ?>
 
-<div
-    x-show="active === 'guru'"
-    x-data="{
-        guruProfilUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(ELVD::app_route()) . '/guru-profil/')); ?>,
-        teachers: <?php echo esc_attr(wp_json_encode($elvd_guru_items)); ?>,
+<script>
+    window.elvdGuruConfig = {
+        guruProfilUrl: <?php echo wp_json_encode(untrailingslashit(ELVD::app_route()) . '/guru-profil/'); ?>,
+        teachers: <?php echo wp_json_encode($elvd_guru_items); ?>,
         currentPage: 1,
         perPage: 15,
         modalOpen: false,
@@ -155,7 +154,9 @@ $elvd_guru_items = array_map(
             password: ''
         },
         init() {
-            this.$dispatch('elvd-items-updated', { items: this.teachers });
+            this.$dispatch('elvd-items-updated', {
+                items: this.teachers
+            });
         },
         totalPages() {
             return Math.max(1, Math.ceil(this.teachers.length / this.perPage));
@@ -166,7 +167,9 @@ $elvd_guru_items = array_map(
             return this.teachers.slice(start, start + this.perPage);
         },
         paginationPages() {
-            return Array.from({ length: this.totalPages() }, (_, index) => index + 1);
+            return Array.from({
+                length: this.totalPages()
+            }, (_, index) => index + 1);
         },
         goToPage(page) {
             this.currentPage = Math.min(Math.max(Number(page), 1), this.totalPages());
@@ -221,7 +224,12 @@ $elvd_guru_items = array_map(
             this.saving = true;
             this.$nextTick(() => this.$refs.guruForm.submit());
         }
-    }"
+    };
+</script>
+
+<div
+    x-show="active === 'guru'"
+    x-data="window.elvdGuruConfig"
     @keydown.escape.window="closeModal()">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">

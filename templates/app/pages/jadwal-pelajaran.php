@@ -19,14 +19,13 @@ $elvd_guru_options = array_map(
 );
 ?>
 
-<div
-    x-show="active === 'jadwal-pelajaran'"
-    x-data="{
+<script>
+    window.elvdJadwalPelajaranConfig = {
         schedules: [],
         classes: [],
         subjects: [],
         years: [],
-        teachers: <?php echo esc_attr(wp_json_encode($elvd_guru_options)); ?>,
+        teachers: <?php echo wp_json_encode($elvd_guru_options); ?>,
         loadingSchedules: false,
         loadingRelations: false,
         saving: false,
@@ -85,7 +84,11 @@ $elvd_guru_options = array_map(
         syncUrl() {
             const url = new URL(window.location.href);
             const params = url.searchParams;
-            const map = { guru: this.filters.guru_id, mapel: this.filters.mata_pelajaran_id, tahun: this.filters.tahun_ajaran_id };
+            const map = {
+                guru: this.filters.guru_id,
+                mapel: this.filters.mata_pelajaran_id,
+                tahun: this.filters.tahun_ajaran_id
+            };
 
             Object.entries(map).forEach(([key, value]) => {
                 if (value) {
@@ -102,61 +105,69 @@ $elvd_guru_options = array_map(
             this.error = '';
 
             fetch(`${config.restUrl}/jadwal-pelajaran?per_page=100`, {
-                headers: { 'X-WP-Nonce': config.nonce }
-            })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Gagal memuat data jadwal pelajaran.');
-                }
+                    headers: {
+                        'X-WP-Nonce': config.nonce
+                    }
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Gagal memuat data jadwal pelajaran.');
+                    }
 
-                return response.json();
-            })
-            .then((data) => {
-                this.schedules = Array.isArray(data) ? data : [];
-                this.syncItems();
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal memuat data jadwal pelajaran.';
-            })
-            .finally(() => {
-                this.loadingSchedules = false;
-            });
+                    return response.json();
+                })
+                .then((data) => {
+                    this.schedules = Array.isArray(data) ? data : [];
+                    this.syncItems();
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal memuat data jadwal pelajaran.';
+                })
+                .finally(() => {
+                    this.loadingSchedules = false;
+                });
         },
         fetchRelations() {
             this.loadingRelations = true;
 
             Promise.all([
-                fetch(`${config.restUrl}/kelas?per_page=100`, {
-                    headers: { 'X-WP-Nonce': config.nonce }
-                }),
-                fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, {
-                    headers: { 'X-WP-Nonce': config.nonce }
-                }),
-                fetch(`${config.restUrl}/tahun-ajaran?per_page=100`, {
-                    headers: { 'X-WP-Nonce': config.nonce }
-                })
-            ])
-            .then((responses) => {
-                responses.forEach((response) => {
-                    if (!response.ok) {
-                        throw new Error('Gagal memuat data pilihan jadwal.');
-                    }
-                });
+                    fetch(`${config.restUrl}/kelas?per_page=100`, {
+                        headers: {
+                            'X-WP-Nonce': config.nonce
+                        }
+                    }),
+                    fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, {
+                        headers: {
+                            'X-WP-Nonce': config.nonce
+                        }
+                    }),
+                    fetch(`${config.restUrl}/tahun-ajaran?per_page=100`, {
+                        headers: {
+                            'X-WP-Nonce': config.nonce
+                        }
+                    })
+                ])
+                .then((responses) => {
+                    responses.forEach((response) => {
+                        if (!response.ok) {
+                            throw new Error('Gagal memuat data pilihan jadwal.');
+                        }
+                    });
 
-                return Promise.all(responses.map((response) => response.json()));
-            })
-            .then(([classes, subjects, years]) => {
-                this.classes = Array.isArray(classes) ? classes : [];
-                this.subjects = Array.isArray(subjects) ? subjects : [];
-                this.years = Array.isArray(years) ? years : [];
-                this.applyFiltersFromUrl();
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal memuat data pilihan jadwal.';
-            })
-            .finally(() => {
-                this.loadingRelations = false;
-            });
+                    return Promise.all(responses.map((response) => response.json()));
+                })
+                .then(([classes, subjects, years]) => {
+                    this.classes = Array.isArray(classes) ? classes : [];
+                    this.subjects = Array.isArray(subjects) ? subjects : [];
+                    this.years = Array.isArray(years) ? years : [];
+                    this.applyFiltersFromUrl();
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal memuat data pilihan jadwal.';
+                })
+                .finally(() => {
+                    this.loadingRelations = false;
+                });
         },
         filteredSchedules() {
             return this.schedules.filter((item) => {
@@ -182,7 +193,9 @@ $elvd_guru_options = array_map(
             this.page = 1;
         },
         syncItems() {
-            this.$dispatch('elvd-items-updated', { items: this.filteredSchedules() });
+            this.$dispatch('elvd-items-updated', {
+                items: this.filteredSchedules()
+            });
         },
         resetFilters() {
             this.filters = {
@@ -236,48 +249,54 @@ $elvd_guru_options = array_map(
             this.error = '';
 
             const isEdit = Boolean(this.form.id);
-            const url = isEdit
-                ? `${config.restUrl}/jadwal-pelajaran/${this.form.id}`
-                : `${config.restUrl}/jadwal-pelajaran`;
+            const url = isEdit ?
+                `${config.restUrl}/jadwal-pelajaran/${this.form.id}` :
+                `${config.restUrl}/jadwal-pelajaran`;
 
             fetch(url, {
-                method: isEdit ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': config.nonce
-                },
-                body: JSON.stringify({
-                    kelas_id: Number(this.form.kelas_id),
-                    mata_pelajaran_id: Number(this.form.mata_pelajaran_id),
-                    guru_id: Number(this.form.guru_id),
-                    tahun_ajaran_id: this.form.tahun_ajaran_id ? Number(this.form.tahun_ajaran_id) : 0,
-                    hari: this.form.hari,
-                    jam_mulai: this.form.jam_mulai,
-                    jam_selesai: this.form.jam_selesai
+                    method: isEdit ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': config.nonce
+                    },
+                    body: JSON.stringify({
+                        kelas_id: Number(this.form.kelas_id),
+                        mata_pelajaran_id: Number(this.form.mata_pelajaran_id),
+                        guru_id: Number(this.form.guru_id),
+                        tahun_ajaran_id: this.form.tahun_ajaran_id ? Number(this.form.tahun_ajaran_id) : 0,
+                        hari: this.form.hari,
+                        jam_mulai: this.form.jam_mulai,
+                        jam_selesai: this.form.jam_selesai
+                    })
                 })
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response, data }) => {
-                if (!response.ok) {
-                    throw new Error(data?.message || 'Gagal menyimpan data jadwal pelajaran.');
-                }
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response,
+                    data
+                }) => {
+                    if (!response.ok) {
+                        throw new Error(data?.message || 'Gagal menyimpan data jadwal pelajaran.');
+                    }
 
-                if (isEdit) {
-                    this.schedules = this.schedules.map((item) => Number(item.id) === Number(data.id) ? data : item);
-                } else {
-                    this.schedules = [data, ...this.schedules];
-                }
+                    if (isEdit) {
+                        this.schedules = this.schedules.map((item) => Number(item.id) === Number(data.id) ? data : item);
+                    } else {
+                        this.schedules = [data, ...this.schedules];
+                    }
 
-                this.syncItems();
-                this.modalOpen = false;
-                this.resetForm();
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal menyimpan data jadwal pelajaran.';
-            })
-            .finally(() => {
-                this.saving = false;
-            });
+                    this.syncItems();
+                    this.modalOpen = false;
+                    this.resetForm();
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal menyimpan data jadwal pelajaran.';
+                })
+                .finally(() => {
+                    this.saving = false;
+                });
         },
         className(id) {
             const classItem = this.classes.find((item) => Number(item.id) === Number(id));
@@ -318,23 +337,35 @@ $elvd_guru_options = array_map(
             }
 
             fetch(`${config.restUrl}/jadwal-pelajaran/${item.id}`, {
-                method: 'DELETE',
-                headers: { 'X-WP-Nonce': config.nonce }
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response }) => {
-                if (!response.ok) {
-                    throw new Error('Gagal menghapus jadwal pelajaran.');
-                }
+                    method: 'DELETE',
+                    headers: {
+                        'X-WP-Nonce': config.nonce
+                    }
+                })
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response
+                }) => {
+                    if (!response.ok) {
+                        throw new Error('Gagal menghapus jadwal pelajaran.');
+                    }
 
-                this.schedules = this.schedules.filter((schedule) => Number(schedule.id) !== Number(item.id));
-                this.syncItems();
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal menghapus jadwal pelajaran.';
-            });
+                    this.schedules = this.schedules.filter((schedule) => Number(schedule.id) !== Number(item.id));
+                    this.syncItems();
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal menghapus jadwal pelajaran.';
+                });
         }
-    }"
+    };
+</script>
+
+<div
+    x-show="active === 'jadwal-pelajaran'"
+    x-data="window.elvdJadwalPelajaranConfig"
     @keydown.escape.window="closeModal()">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar align-items-end">

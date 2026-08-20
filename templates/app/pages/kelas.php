@@ -19,12 +19,11 @@ $elvd_guru_options = array_map(
 );
 ?>
 
-<div
-    x-show="active === 'kelas'"
-    x-data="{
+<script>
+    window.elvdKelasConfig = {
         classes: [],
         years: [],
-        teachers: <?php echo esc_attr(wp_json_encode($elvd_guru_options)); ?>,
+        teachers: <?php echo wp_json_encode($elvd_guru_options); ?>,
         loadingClasses: false,
         loadingYears: false,
         saving: false,
@@ -86,9 +85,18 @@ $elvd_guru_options = array_map(
             this.applyUrlFilters();
             this.fetchClasses();
             this.fetchYears();
-            this.$watch('filterNama', () => { this.resetPage(); this.syncUrl(); });
-            this.$watch('filterTingkat', () => { this.resetPage(); this.syncUrl(); });
-            this.$watch('filterTahun', () => { this.resetPage(); this.syncUrl(); });
+            this.$watch('filterNama', () => {
+                this.resetPage();
+                this.syncUrl();
+            });
+            this.$watch('filterTingkat', () => {
+                this.resetPage();
+                this.syncUrl();
+            });
+            this.$watch('filterTahun', () => {
+                this.resetPage();
+                this.syncUrl();
+            });
         },
         applyUrlFilters() {
             const params = new URLSearchParams(window.location.search);
@@ -141,50 +149,56 @@ $elvd_guru_options = array_map(
             this.error = '';
 
             fetch(`${config.restUrl}/kelas?per_page=100`, {
-                headers: { 'X-WP-Nonce': config.nonce }
-            })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Gagal memuat data kelas.');
-                }
+                    headers: {
+                        'X-WP-Nonce': config.nonce
+                    }
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Gagal memuat data kelas.');
+                    }
 
-                return response.json();
-            })
-            .then((data) => {
-                this.classes = Array.isArray(data) ? data : [];
-                this.applyDefaultTingkat();
-                this.$dispatch('elvd-items-updated', { items: this.classes });
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal memuat data kelas.';
-            })
-            .finally(() => {
-                this.loadingClasses = false;
-            });
+                    return response.json();
+                })
+                .then((data) => {
+                    this.classes = Array.isArray(data) ? data : [];
+                    this.applyDefaultTingkat();
+                    this.$dispatch('elvd-items-updated', {
+                        items: this.classes
+                    });
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal memuat data kelas.';
+                })
+                .finally(() => {
+                    this.loadingClasses = false;
+                });
         },
         fetchYears() {
             this.loadingYears = true;
 
             fetch(`${config.restUrl}/tahun-ajaran?per_page=100`, {
-                headers: { 'X-WP-Nonce': config.nonce }
-            })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Gagal memuat data tahun ajaran.');
-                }
+                    headers: {
+                        'X-WP-Nonce': config.nonce
+                    }
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Gagal memuat data tahun ajaran.');
+                    }
 
-                return response.json();
-            })
-            .then((data) => {
-                this.years = Array.isArray(data) ? data : [];
-                this.applyDefaultTahun();
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal memuat data tahun ajaran.';
-            })
-            .finally(() => {
-                this.loadingYears = false;
-            });
+                    return response.json();
+                })
+                .then((data) => {
+                    this.years = Array.isArray(data) ? data : [];
+                    this.applyDefaultTahun();
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal memuat data tahun ajaran.';
+                })
+                .finally(() => {
+                    this.loadingYears = false;
+                });
         },
         resetForm() {
             this.form = {
@@ -223,45 +237,53 @@ $elvd_guru_options = array_map(
             this.error = '';
 
             const isEdit = Boolean(this.form.id);
-            const url = isEdit
-                ? `${config.restUrl}/kelas/${this.form.id}`
-                : `${config.restUrl}/kelas`;
+            const url = isEdit ?
+                `${config.restUrl}/kelas/${this.form.id}` :
+                `${config.restUrl}/kelas`;
 
             fetch(url, {
-                method: isEdit ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': config.nonce
-                },
-                body: JSON.stringify({
-                    nama: this.form.nama,
-                    tingkat: this.form.tingkat,
-                    wali_guru_id: this.form.wali_guru_id ? Number(this.form.wali_guru_id) : 0,
-                    tahun_ajaran_id: this.form.tahun_ajaran_id ? Number(this.form.tahun_ajaran_id) : 0
+                    method: isEdit ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': config.nonce
+                    },
+                    body: JSON.stringify({
+                        nama: this.form.nama,
+                        tingkat: this.form.tingkat,
+                        wali_guru_id: this.form.wali_guru_id ? Number(this.form.wali_guru_id) : 0,
+                        tahun_ajaran_id: this.form.tahun_ajaran_id ? Number(this.form.tahun_ajaran_id) : 0
+                    })
                 })
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response, data }) => {
-                if (!response.ok) {
-                    throw new Error(data?.message || 'Gagal menyimpan data kelas.');
-                }
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response,
+                    data
+                }) => {
+                    if (!response.ok) {
+                        throw new Error(data?.message || 'Gagal menyimpan data kelas.');
+                    }
 
-                if (isEdit) {
-                    this.classes = this.classes.map((item) => Number(item.id) === Number(data.id) ? data : item);
-                } else {
-                    this.classes = [data, ...this.classes];
-                }
+                    if (isEdit) {
+                        this.classes = this.classes.map((item) => Number(item.id) === Number(data.id) ? data : item);
+                    } else {
+                        this.classes = [data, ...this.classes];
+                    }
 
-                this.$dispatch('elvd-items-updated', { items: this.classes });
-                this.modalOpen = false;
-                this.resetForm();
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal menyimpan data kelas.';
-            })
-            .finally(() => {
-                this.saving = false;
-            });
+                    this.$dispatch('elvd-items-updated', {
+                        items: this.classes
+                    });
+                    this.modalOpen = false;
+                    this.resetForm();
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal menyimpan data kelas.';
+                })
+                .finally(() => {
+                    this.saving = false;
+                });
         },
         removeItem(item) {
             if (!confirm('Hapus kelas ini?')) {
@@ -269,21 +291,30 @@ $elvd_guru_options = array_map(
             }
 
             fetch(`${config.restUrl}/kelas/${item.id}`, {
-                method: 'DELETE',
-                headers: { 'X-WP-Nonce': config.nonce }
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response }) => {
-                if (!response.ok) {
-                    throw new Error('Gagal menghapus data kelas.');
-                }
+                    method: 'DELETE',
+                    headers: {
+                        'X-WP-Nonce': config.nonce
+                    }
+                })
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response
+                }) => {
+                    if (!response.ok) {
+                        throw new Error('Gagal menghapus data kelas.');
+                    }
 
-                this.classes = this.classes.filter((row) => Number(row.id) !== Number(item.id));
-                this.$dispatch('elvd-items-updated', { items: this.classes });
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal menghapus data kelas.';
-            });
+                    this.classes = this.classes.filter((row) => Number(row.id) !== Number(item.id));
+                    this.$dispatch('elvd-items-updated', {
+                        items: this.classes
+                    });
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal menghapus data kelas.';
+                });
         },
         teacherName(id) {
             const teacher = this.teachers.find((item) => Number(item.id) === Number(id));
@@ -295,7 +326,12 @@ $elvd_guru_options = array_map(
 
             return year ? year.nama : '-';
         }
-    }"
+    };
+</script>
+
+<div
+    x-show="active === 'kelas'"
+    x-data="window.elvdKelasConfig"
     @keydown.escape.window="closeModal()">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">
