@@ -21,17 +21,16 @@ $elvd_guru_options = array_map(
 );
 ?>
 
-<div
-    x-show="active === 'tugas'"
-    x-data='{
+<script>
+    window.elvdTugasConfig = {
         tasks: [],
         classes: [],
         subjects: [],
         years: [],
-        teachers: <?php echo esc_attr(wp_json_encode($elvd_guru_options)); ?>,
-        restUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url("wp/v2/elvd_tugas")))); ?>,
-        mediaUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url("wp/v2/media")))); ?>,
-        answerUrl: <?php echo esc_attr(wp_json_encode($elvd_ta_answer_url)); ?>,
+        teachers: <?php echo wp_json_encode($elvd_guru_options); ?>,
+        restUrl: <?php echo wp_json_encode(untrailingslashit(rest_url("wp/v2/elvd_tugas"))); ?>,
+        mediaUrl: <?php echo wp_json_encode(untrailingslashit(rest_url("wp/v2/media"))); ?>,
+        answerUrl: <?php echo wp_json_encode($elvd_ta_answer_url); ?>,
         loadingTasks: false,
         loadingRelations: false,
         uploadingFile: false,
@@ -109,67 +108,80 @@ $elvd_guru_options = array_map(
             this.loadingTasks = true;
             this.error = "";
 
-            const params = new URLSearchParams({ per_page: "100", _embed: "true" });
+            const params = new URLSearchParams({
+                per_page: "100",
+                _embed: "true"
+            });
 
             if (config.currentRole === "guru" && config.userId) {
                 params.set("author", String(config.userId));
             }
 
             fetch(`${this.restUrl}?${params.toString()}`, {
-                headers: { "X-WP-Nonce": config.nonce }
-            })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Gagal memuat data tugas.");
-                }
+                    headers: {
+                        "X-WP-Nonce": config.nonce
+                    }
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Gagal memuat data tugas.");
+                    }
 
-                return response.json();
-            })
-            .then((data) => {
-                this.tasks = Array.isArray(data) ? data : [];
-                this.$dispatch("elvd-items-updated", { items: this.tasks });
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal memuat data tugas.";
-            })
-            .finally(() => {
-                this.loadingTasks = false;
-            });
+                    return response.json();
+                })
+                .then((data) => {
+                    this.tasks = Array.isArray(data) ? data : [];
+                    this.$dispatch("elvd-items-updated", {
+                        items: this.tasks
+                    });
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal memuat data tugas.";
+                })
+                .finally(() => {
+                    this.loadingTasks = false;
+                });
         },
         fetchRelations() {
             this.loadingRelations = true;
 
             Promise.all([
-                fetch(`${config.restUrl}/tahun-ajaran?per_page=100`, {
-                    headers: { "X-WP-Nonce": config.nonce }
-                }),
-                fetch(`${config.restUrl}/kelas?per_page=100`, {
-                    headers: { "X-WP-Nonce": config.nonce }
-                }),
-                fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, {
-                    headers: { "X-WP-Nonce": config.nonce }
-                })
-            ])
-            .then((responses) => {
-                responses.forEach((response) => {
-                    if (!response.ok) {
-                        throw new Error("Gagal memuat data pilihan tugas.");
-                    }
-                });
+                    fetch(`${config.restUrl}/tahun-ajaran?per_page=100`, {
+                        headers: {
+                            "X-WP-Nonce": config.nonce
+                        }
+                    }),
+                    fetch(`${config.restUrl}/kelas?per_page=100`, {
+                        headers: {
+                            "X-WP-Nonce": config.nonce
+                        }
+                    }),
+                    fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, {
+                        headers: {
+                            "X-WP-Nonce": config.nonce
+                        }
+                    })
+                ])
+                .then((responses) => {
+                    responses.forEach((response) => {
+                        if (!response.ok) {
+                            throw new Error("Gagal memuat data pilihan tugas.");
+                        }
+                    });
 
-                return Promise.all(responses.map((response) => response.json()));
-            })
-            .then(([years, classes, subjects]) => {
-                this.years = Array.isArray(years) ? years : [];
-                this.classes = Array.isArray(classes) ? classes : [];
-                this.subjects = Array.isArray(subjects) ? subjects : [];
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal memuat data pilihan tugas.";
-            })
-            .finally(() => {
-                this.loadingRelations = false;
-            });
+                    return Promise.all(responses.map((response) => response.json()));
+                })
+                .then(([years, classes, subjects]) => {
+                    this.years = Array.isArray(years) ? years : [];
+                    this.classes = Array.isArray(classes) ? classes : [];
+                    this.subjects = Array.isArray(subjects) ? subjects : [];
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal memuat data pilihan tugas.";
+                })
+                .finally(() => {
+                    this.loadingRelations = false;
+                });
         },
         metaValue(item, key) {
             return item.meta && item.meta[key] ? item.meta[key] : "";
@@ -274,9 +286,9 @@ $elvd_guru_options = array_map(
             this.error = "";
 
             const isEdit = Boolean(this.form.id);
-            const url = isEdit
-                ? `${this.restUrl}/${this.form.id}`
-                : this.restUrl;
+            const url = isEdit ?
+                `${this.restUrl}/${this.form.id}` :
+                this.restUrl;
 
             const payload = {
                 title: this.form.judul,
@@ -293,35 +305,43 @@ $elvd_guru_options = array_map(
             };
 
             fetch(url, {
-                method: isEdit ? "PUT" : "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-WP-Nonce": config.nonce
-                },
-                body: JSON.stringify(payload)
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response, data }) => {
-                if (!response.ok) {
-                    throw new Error(data?.message || "Gagal menyimpan data tugas.");
-                }
+                    method: isEdit ? "PUT" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-WP-Nonce": config.nonce
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response,
+                    data
+                }) => {
+                    if (!response.ok) {
+                        throw new Error(data?.message || "Gagal menyimpan data tugas.");
+                    }
 
-                if (isEdit) {
-                    this.tasks = this.tasks.map((item) => Number(item.id) === Number(data.id) ? data : item);
-                } else {
-                    this.tasks = [data, ...this.tasks];
-                }
+                    if (isEdit) {
+                        this.tasks = this.tasks.map((item) => Number(item.id) === Number(data.id) ? data : item);
+                    } else {
+                        this.tasks = [data, ...this.tasks];
+                    }
 
-                this.$dispatch("elvd-items-updated", { items: this.tasks });
-                this.modalOpen = false;
-                this.resetForm();
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal menyimpan data tugas.";
-            })
-            .finally(() => {
-                this.saving = false;
-            });
+                    this.$dispatch("elvd-items-updated", {
+                        items: this.tasks
+                    });
+                    this.modalOpen = false;
+                    this.resetForm();
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal menyimpan data tugas.";
+                })
+                .finally(() => {
+                    this.saving = false;
+                });
         },
         deleteTask(item) {
             if (!window.confirm("Yakin hapus tugas ini?")) {
@@ -329,25 +349,34 @@ $elvd_guru_options = array_map(
             }
 
             fetch(`${this.restUrl}/${item.id}`, {
-                method: "DELETE",
-                headers: { "X-WP-Nonce": config.nonce }
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response }) => {
-                if (!response.ok) {
-                    throw new Error("Gagal menghapus tugas.");
-                }
+                    method: "DELETE",
+                    headers: {
+                        "X-WP-Nonce": config.nonce
+                    }
+                })
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response
+                }) => {
+                    if (!response.ok) {
+                        throw new Error("Gagal menghapus tugas.");
+                    }
 
-                this.tasks = this.tasks.filter((task) => Number(task.id) !== Number(item.id));
-                this.$dispatch("elvd-items-updated", { items: this.tasks });
+                    this.tasks = this.tasks.filter((task) => Number(task.id) !== Number(item.id));
+                    this.$dispatch("elvd-items-updated", {
+                        items: this.tasks
+                    });
 
-                if (this.preview && Number(this.preview.id) === Number(item.id)) {
-                    this.closePreview();
-                }
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal menghapus tugas.";
-            });
+                    if (this.preview && Number(this.preview.id) === Number(item.id)) {
+                        this.closePreview();
+                    }
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal menghapus tugas.";
+                });
         },
         className(id) {
             const classItem = this.classes.find((item) => Number(item.id) === Number(id));
@@ -390,27 +419,40 @@ $elvd_guru_options = array_map(
             formData.append("file", file);
 
             fetch(this.mediaUrl, {
-                method: "POST",
-                headers: { "X-WP-Nonce": config.nonce },
-                body: formData
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response, data }) => {
-                if (!response.ok) {
-                    throw new Error(data?.message || "Gagal mengunggah berkas.");
-                }
+                    method: "POST",
+                    headers: {
+                        "X-WP-Nonce": config.nonce
+                    },
+                    body: formData
+                })
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response,
+                    data
+                }) => {
+                    if (!response.ok) {
+                        throw new Error(data?.message || "Gagal mengunggah berkas.");
+                    }
 
-                this.form.file_url = data.source_url || (data.guid && data.guid.rendered) || "";
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal mengunggah berkas.";
-            })
-            .finally(() => {
-                this.uploadingFile = false;
-                event.target.value = "";
-            });
+                    this.form.file_url = data.source_url || (data.guid && data.guid.rendered) || "";
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal mengunggah berkas.";
+                })
+                .finally(() => {
+                    this.uploadingFile = false;
+                    event.target.value = "";
+                });
         }
-    }'
+    };
+</script>
+
+<div
+    x-show="active === 'tugas'"
+    x-data="window.elvdTugasConfig"
     @keydown.escape.window="closeModal(); closePreview()">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar align-items-start flex-wrap">
@@ -733,4 +775,4 @@ $elvd_guru_options = array_map(
             </div>
         </div>
     </div>
-</div>
+    </script>
