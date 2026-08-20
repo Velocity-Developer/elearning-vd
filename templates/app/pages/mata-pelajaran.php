@@ -3,9 +3,8 @@
 defined('ABSPATH') || exit;
 ?>
 
-<div
-    x-show="active === 'mata-pelajaran'"
-    x-data="{
+<script>
+    window.elvdMataPelajaranConfig = {
         subjects: [],
         loadingSubjects: false,
         saving: false,
@@ -42,32 +41,38 @@ defined('ABSPATH') || exit;
         },
         init() {
             this.fetchSubjects();
-            this.$watch('filterNama', () => { this.page = 1; });
+            this.$watch('filterNama', () => {
+                this.page = 1;
+            });
         },
         fetchSubjects() {
             this.loadingSubjects = true;
             this.error = '';
 
             fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, {
-                headers: { 'X-WP-Nonce': config.nonce }
-            })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Gagal memuat data mata pelajaran.');
-                }
+                    headers: {
+                        'X-WP-Nonce': config.nonce
+                    }
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Gagal memuat data mata pelajaran.');
+                    }
 
-                return response.json();
-            })
-            .then((data) => {
-                this.subjects = Array.isArray(data) ? data : [];
-                this.$dispatch('elvd-items-updated', { items: this.subjects });
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal memuat data mata pelajaran.';
-            })
-            .finally(() => {
-                this.loadingSubjects = false;
-            });
+                    return response.json();
+                })
+                .then((data) => {
+                    this.subjects = Array.isArray(data) ? data : [];
+                    this.$dispatch('elvd-items-updated', {
+                        items: this.subjects
+                    });
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal memuat data mata pelajaran.';
+                })
+                .finally(() => {
+                    this.loadingSubjects = false;
+                });
         },
         resetForm() {
             this.form = {
@@ -104,44 +109,52 @@ defined('ABSPATH') || exit;
             this.error = '';
 
             const isEdit = Boolean(this.form.id);
-            const url = isEdit
-                ? `${config.restUrl}/mata-pelajaran/${this.form.id}`
-                : `${config.restUrl}/mata-pelajaran`;
+            const url = isEdit ?
+                `${config.restUrl}/mata-pelajaran/${this.form.id}` :
+                `${config.restUrl}/mata-pelajaran`;
 
             fetch(url, {
-                method: isEdit ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': config.nonce
-                },
-                body: JSON.stringify({
-                    nama: this.form.nama,
-                    kode: this.form.kode,
-                    deskripsi: this.form.deskripsi
+                    method: isEdit ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': config.nonce
+                    },
+                    body: JSON.stringify({
+                        nama: this.form.nama,
+                        kode: this.form.kode,
+                        deskripsi: this.form.deskripsi
+                    })
                 })
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response, data }) => {
-                if (!response.ok) {
-                    throw new Error(data?.message || 'Gagal menyimpan data mata pelajaran.');
-                }
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response,
+                    data
+                }) => {
+                    if (!response.ok) {
+                        throw new Error(data?.message || 'Gagal menyimpan data mata pelajaran.');
+                    }
 
-                if (isEdit) {
-                    this.subjects = this.subjects.map((item) => Number(item.id) === Number(data.id) ? data : item);
-                } else {
-                    this.subjects = [data, ...this.subjects];
-                }
+                    if (isEdit) {
+                        this.subjects = this.subjects.map((item) => Number(item.id) === Number(data.id) ? data : item);
+                    } else {
+                        this.subjects = [data, ...this.subjects];
+                    }
 
-                this.$dispatch('elvd-items-updated', { items: this.subjects });
-                this.modalOpen = false;
-                this.resetForm();
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal menyimpan data mata pelajaran.';
-            })
-            .finally(() => {
-                this.saving = false;
-            });
+                    this.$dispatch('elvd-items-updated', {
+                        items: this.subjects
+                    });
+                    this.modalOpen = false;
+                    this.resetForm();
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal menyimpan data mata pelajaran.';
+                })
+                .finally(() => {
+                    this.saving = false;
+                });
         },
         shortDescription(value) {
             if (!value) {
@@ -156,23 +169,37 @@ defined('ABSPATH') || exit;
             }
 
             fetch(`${config.restUrl}/mata-pelajaran/${item.id}`, {
-                method: 'DELETE',
-                headers: { 'X-WP-Nonce': config.nonce }
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response }) => {
-                if (!response.ok) {
-                    throw new Error('Gagal menghapus mata pelajaran.');
-                }
+                    method: 'DELETE',
+                    headers: {
+                        'X-WP-Nonce': config.nonce
+                    }
+                })
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response
+                }) => {
+                    if (!response.ok) {
+                        throw new Error('Gagal menghapus mata pelajaran.');
+                    }
 
-                this.subjects = this.subjects.filter((subject) => Number(subject.id) !== Number(item.id));
-                this.$dispatch('elvd-items-updated', { items: this.subjects });
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal menghapus mata pelajaran.';
-            });
+                    this.subjects = this.subjects.filter((subject) => Number(subject.id) !== Number(item.id));
+                    this.$dispatch('elvd-items-updated', {
+                        items: this.subjects
+                    });
+                })
+                .catch((error) => {
+                    this.error = error.message || 'Gagal menghapus mata pelajaran.';
+                });
         }
-    }"
+    };
+</script>
+
+<div
+    x-show="active === 'mata-pelajaran'"
+    x-data="window.elvdMataPelajaranConfig"
     @keydown.escape.window="closeModal()">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">

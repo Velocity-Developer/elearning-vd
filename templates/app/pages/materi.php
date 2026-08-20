@@ -3,15 +3,14 @@
 defined('ABSPATH') || exit;
 ?>
 
-<div
-    x-show="active === 'materi'"
-    x-data='{
+<script>
+    window.elvdMateriConfig = {
         matters: [],
         classes: [],
         subjects: [],
         years: [],
-        restUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url("wp/v2/elvd_materi")))); ?>,
-        mediaUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url("wp/v2/media")))); ?>,
+        restUrl: <?php echo wp_json_encode(untrailingslashit(rest_url("wp/v2/elvd_materi"))); ?>,
+        mediaUrl: <?php echo wp_json_encode(untrailingslashit(rest_url("wp/v2/media"))); ?>,
         loadingMatters: false,
         loadingRelations: false,
         uploadingFile: false,
@@ -79,7 +78,10 @@ defined('ABSPATH') || exit;
             this.fetchMatters();
             this.fetchRelations();
             this.$watch("filters.judul", () => this.resetPage());
-            this.$watch("filters.tahun_ajaran_id", () => { this.resetPage(); this.filters.kelas_id = ""; });
+            this.$watch("filters.tahun_ajaran_id", () => {
+                this.resetPage();
+                this.filters.kelas_id = "";
+            });
             this.$watch("filters.kelas_id", () => this.resetPage());
             this.$watch("filters.mata_pelajaran_id", () => this.resetPage());
         },
@@ -87,67 +89,80 @@ defined('ABSPATH') || exit;
             this.loadingMatters = true;
             this.error = "";
 
-            const params = new URLSearchParams({ per_page: "100", _embed: "true" });
+            const params = new URLSearchParams({
+                per_page: "100",
+                _embed: "true"
+            });
 
             if (config.currentRole === "guru" && config.userId) {
                 params.set("author", String(config.userId));
             }
 
             fetch(`${this.restUrl}?${params.toString()}`, {
-                headers: { "X-WP-Nonce": config.nonce }
-            })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Gagal memuat data materi.");
-                }
+                    headers: {
+                        "X-WP-Nonce": config.nonce
+                    }
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Gagal memuat data materi.");
+                    }
 
-                return response.json();
-            })
-            .then((data) => {
-                this.matters = Array.isArray(data) ? data : [];
-                this.$dispatch("elvd-items-updated", { items: this.matters });
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal memuat data materi.";
-            })
-            .finally(() => {
-                this.loadingMatters = false;
-            });
+                    return response.json();
+                })
+                .then((data) => {
+                    this.matters = Array.isArray(data) ? data : [];
+                    this.$dispatch("elvd-items-updated", {
+                        items: this.matters
+                    });
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal memuat data materi.";
+                })
+                .finally(() => {
+                    this.loadingMatters = false;
+                });
         },
         fetchRelations() {
             this.loadingRelations = true;
 
             Promise.all([
-                fetch(`${config.restUrl}/kelas?per_page=100`, {
-                    headers: { "X-WP-Nonce": config.nonce }
-                }),
-                fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, {
-                    headers: { "X-WP-Nonce": config.nonce }
-                }),
-                fetch(`${config.restUrl}/tahun-ajaran?per_page=100`, {
-                    headers: { "X-WP-Nonce": config.nonce }
-                })
-            ])
-            .then((responses) => {
-                responses.forEach((response) => {
-                    if (!response.ok) {
-                        throw new Error("Gagal memuat data pilihan materi.");
-                    }
-                });
+                    fetch(`${config.restUrl}/kelas?per_page=100`, {
+                        headers: {
+                            "X-WP-Nonce": config.nonce
+                        }
+                    }),
+                    fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, {
+                        headers: {
+                            "X-WP-Nonce": config.nonce
+                        }
+                    }),
+                    fetch(`${config.restUrl}/tahun-ajaran?per_page=100`, {
+                        headers: {
+                            "X-WP-Nonce": config.nonce
+                        }
+                    })
+                ])
+                .then((responses) => {
+                    responses.forEach((response) => {
+                        if (!response.ok) {
+                            throw new Error("Gagal memuat data pilihan materi.");
+                        }
+                    });
 
-                return Promise.all(responses.map((response) => response.json()));
-            })
-            .then(([classes, subjects, years]) => {
-                this.classes = Array.isArray(classes) ? classes : [];
-                this.subjects = Array.isArray(subjects) ? subjects : [];
-                this.years = Array.isArray(years) ? years : [];
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal memuat data pilihan materi.";
-            })
-            .finally(() => {
-                this.loadingRelations = false;
-            });
+                    return Promise.all(responses.map((response) => response.json()));
+                })
+                .then(([classes, subjects, years]) => {
+                    this.classes = Array.isArray(classes) ? classes : [];
+                    this.subjects = Array.isArray(subjects) ? subjects : [];
+                    this.years = Array.isArray(years) ? years : [];
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal memuat data pilihan materi.";
+                })
+                .finally(() => {
+                    this.loadingRelations = false;
+                });
         },
         metaValue(item, key) {
             return item.meta && item.meta[key] ? item.meta[key] : "";
@@ -226,9 +241,9 @@ defined('ABSPATH') || exit;
             this.error = "";
 
             const isEdit = Boolean(this.form.id);
-            const url = isEdit
-                ? `${this.restUrl}/${this.form.id}`
-                : this.restUrl;
+            const url = isEdit ?
+                `${this.restUrl}/${this.form.id}` :
+                this.restUrl;
 
             const payload = {
                 title: this.form.judul,
@@ -243,35 +258,43 @@ defined('ABSPATH') || exit;
             };
 
             fetch(url, {
-                method: isEdit ? "PUT" : "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-WP-Nonce": config.nonce
-                },
-                body: JSON.stringify(payload)
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response, data }) => {
-                if (!response.ok) {
-                    throw new Error(data?.message || "Gagal menyimpan data materi.");
-                }
+                    method: isEdit ? "PUT" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-WP-Nonce": config.nonce
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response,
+                    data
+                }) => {
+                    if (!response.ok) {
+                        throw new Error(data?.message || "Gagal menyimpan data materi.");
+                    }
 
-                if (isEdit) {
-                    this.matters = this.matters.map((item) => Number(item.id) === Number(data.id) ? data : item);
-                } else {
-                    this.matters = [data, ...this.matters];
-                }
+                    if (isEdit) {
+                        this.matters = this.matters.map((item) => Number(item.id) === Number(data.id) ? data : item);
+                    } else {
+                        this.matters = [data, ...this.matters];
+                    }
 
-                this.$dispatch("elvd-items-updated", { items: this.matters });
-                this.modalOpen = false;
-                this.resetForm();
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal menyimpan data materi.";
-            })
-            .finally(() => {
-                this.saving = false;
-            });
+                    this.$dispatch("elvd-items-updated", {
+                        items: this.matters
+                    });
+                    this.modalOpen = false;
+                    this.resetForm();
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal menyimpan data materi.";
+                })
+                .finally(() => {
+                    this.saving = false;
+                });
         },
         className(id) {
             const classItem = this.classes.find((item) => Number(item.id) === Number(id));
@@ -311,25 +334,33 @@ defined('ABSPATH') || exit;
             formData.append("file", file);
 
             fetch(this.mediaUrl, {
-                method: "POST",
-                headers: { "X-WP-Nonce": config.nonce },
-                body: formData
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response, data }) => {
-                if (!response.ok) {
-                    throw new Error(data?.message || "Gagal mengunggah berkas.");
-                }
+                    method: "POST",
+                    headers: {
+                        "X-WP-Nonce": config.nonce
+                    },
+                    body: formData
+                })
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response,
+                    data
+                }) => {
+                    if (!response.ok) {
+                        throw new Error(data?.message || "Gagal mengunggah berkas.");
+                    }
 
-                this.form.file_url = data.source_url || (data.guid && data.guid.rendered) || "";
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal mengunggah berkas.";
-            })
-            .finally(() => {
-                this.uploadingFile = false;
-                event.target.value = "";
-            });
+                    this.form.file_url = data.source_url || (data.guid && data.guid.rendered) || "";
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal mengunggah berkas.";
+                })
+                .finally(() => {
+                    this.uploadingFile = false;
+                    event.target.value = "";
+                });
         },
         deleteMatter(item) {
             if (!window.confirm("Yakin hapus materi ini?")) {
@@ -337,27 +368,41 @@ defined('ABSPATH') || exit;
             }
 
             fetch(`${this.restUrl}/${item.id}`, {
-                method: "DELETE",
-                headers: { "X-WP-Nonce": config.nonce }
-            })
-            .then((response) => response.json().then((data) => ({ response, data })))
-            .then(({ response }) => {
-                if (!response.ok) {
-                    throw new Error("Gagal menghapus materi.");
-                }
+                    method: "DELETE",
+                    headers: {
+                        "X-WP-Nonce": config.nonce
+                    }
+                })
+                .then((response) => response.json().then((data) => ({
+                    response,
+                    data
+                })))
+                .then(({
+                    response
+                }) => {
+                    if (!response.ok) {
+                        throw new Error("Gagal menghapus materi.");
+                    }
 
-                this.matters = this.matters.filter((matter) => Number(matter.id) !== Number(item.id));
-                this.$dispatch("elvd-items-updated", { items: this.matters });
+                    this.matters = this.matters.filter((matter) => Number(matter.id) !== Number(item.id));
+                    this.$dispatch("elvd-items-updated", {
+                        items: this.matters
+                    });
 
-                if (this.preview && Number(this.preview.id) === Number(item.id)) {
-                    this.closePreview();
-                }
-            })
-            .catch((error) => {
-                this.error = error.message || "Gagal menghapus materi.";
-            });
+                    if (this.preview && Number(this.preview.id) === Number(item.id)) {
+                        this.closePreview();
+                    }
+                })
+                .catch((error) => {
+                    this.error = error.message || "Gagal menghapus materi.";
+                });
         }
-    }'
+    };
+</script>
+
+<div
+    x-show="active === 'materi'"
+    x-data="window.elvdMateriConfig"
     @keydown.escape.window="closeModal()">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar align-items-start flex-wrap">
