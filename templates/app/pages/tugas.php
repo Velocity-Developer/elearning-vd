@@ -3,6 +3,13 @@
 defined('ABSPATH') || exit;
 
 $elvd_ta_answer_url = untrailingslashit(ELVD::app_route()) . '/tugas-answer';
+$elvd_current_user = wp_get_current_user();
+$elvd_current_role = in_array('administrator', (array) $elvd_current_user->roles, true)
+    ? 'administrator'
+    : (in_array('guru', (array) $elvd_current_user->roles, true) ? 'guru' : 'siswa');
+$elvd_subject_options = 'guru' === $elvd_current_role
+    ? \ElearningVD\Mapel::dapatkan_oleh_guru((int) $elvd_current_user->ID)
+    : \ElearningVD\Mapel::dapatkan_semua();
 
 $elvd_guru_options = array_map(
     static function (WP_User $user): array {
@@ -25,7 +32,7 @@ $elvd_guru_options = array_map(
     window.elvdTugasConfig = {
         tasks: [],
         classes: [],
-        subjects: [],
+        subjects: <?php echo wp_json_encode($elvd_subject_options); ?>,
         years: [],
         teachers: <?php echo wp_json_encode($elvd_guru_options); ?>,
         restUrl: <?php echo wp_json_encode(untrailingslashit(rest_url("wp/v2/elvd_tugas"))); ?>,
@@ -174,7 +181,10 @@ $elvd_guru_options = array_map(
                 .then(([years, classes, subjects]) => {
                     this.years = Array.isArray(years) ? years : [];
                     this.classes = Array.isArray(classes) ? classes : [];
-                    this.subjects = Array.isArray(subjects) ? subjects : [];
+                    const fetchedSubjects = Array.isArray(subjects) ? subjects : [];
+                    this.subjects = config.currentRole === "guru" ?
+                        fetchedSubjects.filter((item) => this.subjects.some((subject) => Number(subject.id) === Number(item.id))) :
+                        fetchedSubjects;
                 })
                 .catch((error) => {
                     this.error = error.message || "Gagal memuat data pilihan tugas.";
