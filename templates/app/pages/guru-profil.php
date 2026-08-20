@@ -6,7 +6,7 @@ global $wpdb;
 
 $elvd_guru_id = absint((int) get_query_var('elvd_guru_id', 0));
 $elvd_profile_tab = sanitize_key((string) get_query_var('elvd_guru_tab', ''));
-$elvd_profile_tab = in_array($elvd_profile_tab, ['profil', 'edit', 'foto', 'akun'], true) ? $elvd_profile_tab : 'profil';
+$elvd_profile_tab = in_array($elvd_profile_tab, ['profil', 'edit', 'foto', 'akun', 'mapel'], true) ? $elvd_profile_tab : 'profil';
 $elvd_guru_base_url = untrailingslashit(ELVD::app_route()) . '/guru-profil';
 $elvd_guru_back_url = untrailingslashit(ELVD::app_route()) . '/guru/';
 $elvd_guru_notice = '';
@@ -215,6 +215,8 @@ if ($elvd_guru_valid && $elvd_guru instanceof WP_User) {
         'nama' => '' !== trim((string) $elvd_guru->display_name) ? $elvd_guru->display_name : $elvd_guru->user_login,
         'email' => $elvd_guru->user_email,
         'foto' => $elvd_foto_id > 0 ? (string) wp_get_attachment_image_url($elvd_foto_id, 'thumbnail') : '',
+        'restUrl' => esc_url_raw(rest_url(ELVD_REST_NAMESPACE)),
+        'restNonce' => wp_create_nonce('wp_rest'),
     ];
 
     foreach ($elvd_profile_fields as $elvd_field_key => $elvd_field) {
@@ -234,27 +236,127 @@ if ($elvd_guru_valid && $elvd_guru instanceof WP_User) {
         $elvd_guru_data[$elvd_field_key] = (string) get_user_meta($elvd_guru->ID, $elvd_meta_key, true);
     }
 }
+
+$elvd_guru_mapel = [];
+$elvd_semua_mapel = [];
+
+if ($elvd_guru_valid && $elvd_guru instanceof WP_User) {
+    $elvd_guru_mapel = class_exists(\ElearningVD\Mapel::class)
+        ? \ElearningVD\Mapel::dapatkan_oleh_guru($elvd_guru->ID)
+        : [];
+    $elvd_semua_mapel = class_exists(\ElearningVD\Mapel::class)
+        ? \ElearningVD\Mapel::dapatkan_semua()
+        : [];
+}
 ?>
 
-<div x-show="active === 'guru-profil'" x-data="{
-    guru: <?php echo esc_attr(wp_json_encode($elvd_guru_data)); ?>,
-    canEdit: <?php echo $elvd_can_edit ? 'true' : 'false'; ?>,
-    profileBaseUrl: <?php echo esc_attr(wp_json_encode($elvd_guru_base_url)); ?>,
-    activeTab: <?php echo esc_attr(wp_json_encode($elvd_profile_tab)); ?>,
-    setTab(tab) {
-        if (history.pushState) {
-            history.pushState({}, '', this.profileBaseUrl + '/' + this.guru.id + '/' + tab);
-        }
+<script>
+    window.elvdGuruConfig = {
+        guru: <?php echo wp_json_encode($elvd_guru_data); ?>,
+        canEdit: <?php echo $elvd_can_edit ? 'true' : 'false'; ?>,
+        profileBaseUrl: <?php echo wp_json_encode($elvd_guru_base_url); ?>,
+        initialTab: <?php echo wp_json_encode($elvd_profile_tab); ?>,
+        guruMapel: <?php echo wp_json_encode($elvd_guru_mapel); ?>,
+        semuaMapel: <?php echo wp_json_encode($elvd_semua_mapel); ?>,
+        restBaseUrl: <?php echo wp_json_encode(untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/mata-pelajaran-guru'))); ?>,
+        nonce: <?php echo wp_json_encode(wp_create_nonce('wp_rest')); ?>,
+        confirmHapus: <?php echo wp_json_encode(__('Hapus mata pelajaran ini?', 'elearning-vd')); ?>
+    };
 
-        this.activeTab = tab;
-    },
-    fieldValue(key) {
-        return this.guru[key] || '-';
-    },
-    initials() {
-        return this.guru.nama ? this.guru.nama.charAt(0).toUpperCase() : '?';
+    function guruProfil() {
+        return {
+            init() {
+                this.guru = window.elvdGuruConfig.guru;
+                this.canEdit = window.elvdGuruConfig.canEdit;
+                this.profileBaseUrl = window.elvdGuruConfig.profileBaseUrl;
+                this.activeTab = window.elvdGuruConfig.initialTab;
+                this.guruMapel = window.elvdGuruConfig.guruMapel;
+                this.semuaMapel = window.elvdGuruConfig.semuaMapel;
+                this.restBaseUrl = window.elvdGuruConfig.restBaseUrl;
+                this.nonce = window.elvdGuruConfig.nonce;
+            },
+            setTab(tab) {
+                if (history.pushState) {
+                    history.pushState({}, '', this.profileBaseUrl + '/' + this.guru.id + '/' + tab);
+                }
+                this.activeTab = tab;
+            },
+            fieldValue(key) {
+                return this.guru[key] || '-';
+            },
+            initials() {
+                return this.guru.nama ? this.guru.nama.charAt(0).toUpperCase() : '?';
+            },
+            muatMapel() {
+                const params = new URLSearchParams({
+                    per_page: '100',
+                    user_id: String(this.guru.id)
+                });
+                fetch(this.restBaseUrl + '?' + params.toString(), {
+                        headers: {
+                            'X-WP-Nonce': this.nonce
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        this.guruMapel = Array.isArray(data) ? data.map(item => {
+                            const m = this.semuaMapel.find(x => x.id === item.mapel_id) || {};
+                            return {
+                                id: item.mapel_id,
+                                nama: m.nama || '',
+                                kode: m.kode || '',
+                                pivot_id: item.id
+                            };
+                        }) : [];
+                    })
+                    .catch(() => {});
+            },
+            tambahMapelGuru() {
+                const selected = document.querySelector('[name="elvd_tambah_mapel_id"]');
+                const mapelId = selected ? selected.value : '';
+                if (!mapelId) {
+                    return;
+                }
+                fetch(this.restBaseUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-WP-Nonce': this.nonce,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            mapel_id: parseInt(mapelId, 10),
+                            user_id: this.guru.id
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.id) {
+                            this.muatMapel();
+                            if (selected) selected.value = '';
+                        }
+                    })
+                    .catch(() => {});
+            },
+            hapusMapelGuru(pivotId) {
+                if (!confirm(window.elvdGuruConfig.confirmHapus)) {
+                    return;
+                }
+                fetch(this.restBaseUrl + '/' + pivotId, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-WP-Nonce': this.nonce
+                        }
+                    })
+                    .then(() => {
+                        this.guruMapel = this.guruMapel.filter(item => item.pivot_id !== pivotId);
+                    })
+                    .catch(() => {});
+            }
+        };
     }
-}">
+</script>
+
+<div x-show="active === 'guru-profil'" x-data="guruProfil()">
     <?php
     if ('' !== $elvd_guru_notice) {
         echo $elvd_guru_notice; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -290,6 +392,11 @@ if ($elvd_guru_valid && $elvd_guru instanceof WP_User) {
                     <li class="nav-item" role="presentation">
                         <button type="button" class="nav-link" :class="{ active: activeTab === 'edit' }" @click="setTab('edit')" x-show="canEdit">
                             <?php echo esc_html__('Edit', 'elearning-vd'); ?>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button type="button" class="nav-link" :class="{ active: activeTab === 'mapel' }" @click="setTab('mapel')" x-show="canEdit">
+                            <?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
@@ -403,6 +510,80 @@ if ($elvd_guru_valid && $elvd_guru instanceof WP_User) {
                             </button>
                         </div>
                     </form>
+                </div>
+
+                <div x-show="activeTab === 'mapel'" x-cloak>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <h4 class="mb-2"><?php echo esc_html__('Mata Pelajaran Guru', 'elearning-vd'); ?></h4>
+                            <small class="text-muted"><?php echo esc_html__('Daftar mata pelajaran yang diampu guru ini.', 'elearning-vd'); ?></small>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table align-middle mb-0 elvd-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col"><?php echo esc_html__('Nama', 'elearning-vd'); ?></th>
+                                    <th scope="col"><?php echo esc_html__('Kode', 'elearning-vd'); ?></th>
+                                    <th scope="col" class="text-end"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="item in guruMapel" :key="item.id">
+                                    <tr>
+                                        <td><span x-text="item.nama || '-'"></span></td>
+                                        <td><span x-text="item.kode || '-'"></span></td>
+                                        <td class="text-end">
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-danger elvd-row-action"
+                                                @click="hapusMapelGuru(item.pivot_id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                <tr x-show="guruMapel.length === 0">
+                                    <td colspan="3"><?php echo esc_html__('Belum ada mata pelajaran.', 'elearning-vd'); ?></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label"><?php echo esc_html__('Tambah Mata Pelajaran', 'elearning-vd'); ?></label>
+                            <select class="form-select" name="elvd_tambah_mapel_id" required>
+                                <option value="" disabled selected><?php echo esc_html__('Pilih mata pelajaran', 'elearning-vd'); ?></option>
+                                <?php foreach ($elvd_semua_mapel as $mapel) : ?>
+                                    <?php
+                                    $sudah = false;
+                                    foreach ($elvd_guru_mapel as $m) {
+                                        if ((int) ($m['id'] ?? 0) === (int) ($mapel['id'] ?? 0)) {
+                                            $sudah = true;
+                                            break;
+                                        }
+                                    }
+                                    if ($sudah) {
+                                        continue;
+                                    }
+                                    ?>
+                                    <option value="<?php echo esc_attr((string) ($mapel['id'] ?? '')); ?>">
+                                        <?php echo esc_html((string) ($mapel['nama'] ?? '-') . ' (' . (string) ($mapel['kode'] ?? '-') . ')'); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button
+                                type="button"
+                                class="btn btn-primary elvd-action-button"
+                                @click="tambahMapelGuru()">
+                                <?php echo esc_html__('Tambah', 'elearning-vd'); ?>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

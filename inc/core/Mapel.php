@@ -29,11 +29,9 @@ final class Mapel
 
         $table = elvd_table_name('elvd_mata_pelajaran');
 
-        $sql = $wpdb->prepare(
-            "SELECT id, nama, kode, deskripsi, created_at, updated_at
+        $sql = "SELECT id, nama, kode, deskripsi, created_at, updated_at
              FROM {$table}
-             ORDER BY nama ASC",
-        );
+             ORDER BY nama ASC";
 
         $results = $wpdb->get_results($sql, ARRAY_A);
 
@@ -131,12 +129,12 @@ final class Mapel
         $table_mapel = elvd_table_name('elvd_mata_pelajaran');
 
         $sql = $wpdb->prepare(
-            "SELECT m.id, m.nama, m.kode, m.created_at, m.updated_at
+            "SELECT p.id AS pivot_id, m.id, m.nama, m.kode, m.created_at, m.updated_at
              FROM {$table_mapel} m
              INNER JOIN {$table_pivot} p ON p.mapel_id = m.id
              WHERE p.user_id = %d
              ORDER BY m.nama ASC",
-            $user_id,
+            $user_id
         );
 
         $results = $wpdb->get_results($sql, ARRAY_A);
@@ -147,6 +145,7 @@ final class Mapel
 
         return array_values(array_map(static function (array $row): array {
             return [
+                'pivot_id' => isset($row['pivot_id']) ? (int) $row['pivot_id'] : 0,
                 'id' => (int) $row['id'],
                 'nama' => (string) $row['nama'],
                 'kode' => $row['kode'] !== null ? (string) $row['kode'] : null,

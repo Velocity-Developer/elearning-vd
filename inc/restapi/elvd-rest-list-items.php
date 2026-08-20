@@ -11,10 +11,11 @@ function elvd_rest_list_items(WP_REST_Request $request): WP_REST_Response
         return new WP_REST_Response($resource, 404);
     }
 
+    $table = elvd_table_name($resource['table']);
+
     $page = max(1, absint($request->get_param('page') ?: 1));
     $per_page = min(100, max(1, absint($request->get_param('per_page') ?: 20)));
     $offset = ($page - 1) * $per_page;
-    $table = elvd_table_name($resource['table']);
 
     $where = '';
 

@@ -73,5 +73,12 @@ function elvd_rest_resources(): array
                 'tanggal_nilai' => 'datetime',
             ],
         ],
+        'mata-pelajaran-guru' => [
+            'table' => 'elvd_mata_pelajaran_guru',
+            'fields' => [
+                'mapel_id' => 'int',
+                'user_id' => 'int',
+            ],
+        ],
     ];
 }
