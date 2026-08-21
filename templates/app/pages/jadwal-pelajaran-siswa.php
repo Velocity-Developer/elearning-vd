@@ -121,12 +121,12 @@ $elvd_guru_options = array_map(
         }
     }">
     <div class="elvd-table-panel" x-show="config.currentRole === 'siswa'">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-            <div>
-                <h2 class="h5 mb-1"><?php echo esc_html__('Jadwal Pelajaran', 'elearning-vd'); ?></h2>
-                <p class="text-muted mb-0"><?php echo esc_html__('Jadwal pelajaran Anda ditampilkan per hari.', 'elearning-vd'); ?></p>
-            </div>
-            <span class="badge text-bg-primary" x-text="className(kelasId)"></span>
+
+        <div class="text-center mb-3">
+            <h2 class="h5 mb-1"><?php echo esc_html__('Jadwal Pelajaran', 'elearning-vd'); ?></h2>
+            <p class="text-muted mb-0">
+                <span x-text="className(kelasId)"></span>
+            </p>
         </div>
 
         <div class="alert alert-warning" x-show="config.currentRole !== 'siswa'">
@@ -139,34 +139,42 @@ $elvd_guru_options = array_map(
 
         <div class="alert alert-danger" x-show="error" x-text="error"></div>
 
-        <div class="row g-3" x-show="config.currentRole === 'siswa' && kelasId">
-            <template x-for="dayGroup in schedulesByDay()" :key="dayGroup.day">
-                <div class="col-12 col-lg-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-header fw-semibold" x-text="dayGroup.day"></div>
-                        <div class="card-body">
-                            <div x-show="loading" class="text-muted small">
-                                <?php echo esc_html__('Memuat jadwal...', 'elearning-vd'); ?>
-                            </div>
-
-                            <template x-if="!loading && dayGroup.items.length === 0">
-                                <div class="text-muted small"><?php echo esc_html__('Tidak ada jadwal.', 'elearning-vd'); ?></div>
-                            </template>
-
-                            <div class="d-flex flex-column gap-2" x-show="!loading && dayGroup.items.length > 0">
-                                <template x-for="item in dayGroup.items" :key="item.id">
-                                    <div class="border rounded p-3">
-                                        <div class="fw-semibold" x-text="subjectName(item.mata_pelajaran_id)"></div>
-                                        <div class="small text-muted" x-text="teacherName(item.guru_id)"></div>
-                                        <div class="small text-muted" x-text="className(item.kelas_id)"></div>
-                                        <div class="small mt-1" x-text="timeRange(item)"></div>
-                                    </div>
+        <div class="table-responsive" x-show="config.currentRole === 'siswa' && kelasId">
+            <table class="table align-top mb-0 elvd-table">
+                <thead>
+                    <tr>
+                        <template x-for="dayGroup in schedulesByDay()" :key="dayGroup.day">
+                            <th scope="col" class="text-center" x-text="dayGroup.day"></th>
+                        </template>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr x-show="loading">
+                        <td :colspan="days.length"><?php echo esc_html__('Memuat jadwal...', 'elearning-vd'); ?></td>
+                    </tr>
+                    <tr x-show="!loading && schedules.length > 0">
+                        <template x-for="dayGroup in schedulesByDay()" :key="dayGroup.day">
+                            <td>
+                                <template x-if="dayGroup.items.length === 0">
+                                    <div class="text-muted small"><?php echo esc_html__('Tidak ada jadwal.', 'elearning-vd'); ?></div>
                                 </template>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
+
+                                <div class="d-flex flex-column gap-2" x-show="dayGroup.items.length > 0">
+                                    <template x-for="item in dayGroup.items" :key="item.id">
+                                        <div>
+                                            <div class="fw-semibold" x-text="subjectName(item.mata_pelajaran_id)"></div>
+                                            <div class="small" x-text="timeRange(item)"></div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </td>
+                        </template>
+                    </tr>
+                    <tr x-show="!loading && schedules.length === 0">
+                        <td :colspan="days.length"><?php echo esc_html__('Belum ada jadwal pelajaran.', 'elearning-vd'); ?></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
