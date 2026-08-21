@@ -128,13 +128,18 @@ $elvd_guru_options = array_map(
             const teacher = this.teachers.find((item) => Number(item.id) === Number(id));
             return teacher ? teacher.nama : '-';
         },
+        formatTime(value) {
+            if (!value) {
+                return '-';
+            }
+
+            return String(value).slice(0, 5);
+        },
         timeRange(item) {
-            const start = item.jam_mulai || '-';
-            const end = item.jam_selesai || '-';
-            return `${start} - ${end}`;
+            return `${this.formatTime(item.jam_mulai)} - ${this.formatTime(item.jam_selesai)}`;
         },
         timeRangeFromSlot(slot) {
-            return `${slot.jam_mulai || '-'} - ${slot.jam_selesai || '-'}`;
+            return `${this.formatTime(slot.jam_mulai)} - ${this.formatTime(slot.jam_selesai)}`;
         }
     }">
     <div class="elvd-table-panel" x-show="config.currentRole === 'siswa'">
