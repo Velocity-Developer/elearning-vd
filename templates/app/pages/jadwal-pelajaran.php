@@ -31,6 +31,7 @@ $elvd_guru_options = array_map(
         saving: false,
         modalOpen: false,
         error: '',
+        viewMode: 'table',
         page: 1,
         perPage: 20,
         filters: {
@@ -104,7 +105,9 @@ $elvd_guru_options = array_map(
             this.loadingSchedules = true;
             this.error = '';
 
-            fetch(`${config.restUrl}/jadwal-pelajaran?per_page=100`, {
+            const perPage = this.viewMode === 'day' ? 1000 : 100;
+
+            fetch(`${config.restUrl}/jadwal-pelajaran?per_page=${perPage}`, {
                     headers: {
                         'X-WP-Nonce': config.nonce
                     }
@@ -186,11 +189,24 @@ $elvd_guru_options = array_map(
 
             return this.filteredSchedules().slice(start, start + this.perPage);
         },
+        schedulesByDay() {
+            return this.days.map((day) => ({
+                day,
+                items: this.filteredSchedules()
+                    .filter((item) => item.hari === day)
+                    .sort((a, b) => String(a.jam_mulai || '').localeCompare(String(b.jam_mulai || '')))
+            }));
+        },
         goPage(p) {
             this.page = Math.min(Math.max(1, p), this.totalPages());
         },
         resetPage() {
             this.page = 1;
+        },
+        changeViewMode(mode) {
+            this.viewMode = mode;
+            this.resetPage();
+            this.fetchSchedules();
         },
         syncItems() {
             this.$dispatch('elvd-items-updated', {
@@ -397,10 +413,22 @@ $elvd_guru_options = array_map(
                         </template>
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
+                <div class="col-md-3 d-flex align-items-end gap-2">
                     <button type="button" class="btn btn-secondary" @click="resetFilters()">
                         <?php echo esc_html__('Reset Filter', 'elearning-vd'); ?>
                     </button>
+                    <div class="form-check form-switch ms-md-2">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="elvd-jadwal-view-mode"
+                            :checked="viewMode === 'day'"
+                            @change="viewMode = $event.target.checked ? 'day' : 'table'">
+                        <label class="form-check-label small" for="elvd-jadwal-view-mode">
+                            <span x-text="viewMode === 'day' ? 'Per Hari' : 'Tabel'"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
             <button
@@ -414,7 +442,7 @@ $elvd_guru_options = array_map(
 
         <div class="alert alert-danger" x-show="error" x-text="error"></div>
 
-        <div class="table-responsive">
+        <div class="table-responsive" x-show="viewMode === 'table'">
             <table class="table align-middle mb-0 elvd-table">
                 <thead>
                     <tr>
@@ -466,9 +494,46 @@ $elvd_guru_options = array_map(
             </table>
         </div>
 
+        <div class="table-responsive" x-show="viewMode === 'day'">
+            <table class="table align-middle mb-0 elvd-table">
+                <thead>
+                    <tr>
+                        <template x-for="dayGroup in schedulesByDay()" :key="dayGroup.day">
+                            <th scope="col" class="text-center" x-text="dayGroup.day"></th>
+                        </template>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr x-show="loadingSchedules">
+                        <td :colspan="days.length"><?php echo esc_html__('Memuat data jadwal pelajaran...', 'elearning-vd'); ?></td>
+                    </tr>
+                    <tr x-show="!loadingSchedules && filteredSchedules().length > 0">
+                        <template x-for="dayGroup in schedulesByDay()" :key="dayGroup.day">
+                            <td class="align-top">
+                                <template x-if="dayGroup.items.length === 0">
+                                    <div class="text-muted small"><?php echo esc_html__('Tidak ada jadwal', 'elearning-vd'); ?></div>
+                                </template>
+                                <template x-for="item in dayGroup.items" :key="item.id">
+                                    <div class="border rounded p-2 mb-2">
+                                        <div class="fw-semibold" x-text="subjectName(item.mata_pelajaran_id)"></div>
+                                        <div class="small text-muted" x-text="className(item.kelas_id)"></div>
+                                        <div class="small text-muted" x-text="teacherName(item.guru_id)"></div>
+                                        <div class="small" x-text="timeRange(item)"></div>
+                                    </div>
+                                </template>
+                            </td>
+                        </template>
+                    </tr>
+                    <tr x-show="!loadingSchedules && filteredSchedules().length === 0">
+                        <td :colspan="days.length"><?php echo esc_html__('Belum ada jadwal pelajaran sesuai filter.', 'elearning-vd'); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <nav
             class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3"
-            x-show="!loadingSchedules && totalPages() > 1"
+            x-show="viewMode === 'table' && !loadingSchedules && totalPages() > 1"
             aria-label="<?php echo esc_attr__('Paginasi jadwal pelajaran', 'elearning-vd'); ?>">
             <small class="text-muted">
                 <?php echo esc_html__('Halaman', 'elearning-vd'); ?> <span x-text="page"></span> / <span x-text="totalPages()"></span>
