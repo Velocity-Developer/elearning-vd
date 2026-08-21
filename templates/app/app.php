@@ -263,7 +263,7 @@ if (! is_user_logged_in()) {
         window.elvdAppConfig = {
             tabs: <?php echo wp_json_encode(
                         'siswa' === $elvd_current_role
-                            ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz']
+                            ? ['dashboard', 'jadwal-pelajaran-siswa', 'tugas', 'materi', 'quiz']
                             : ('guru' === $elvd_current_role
                                 ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz', 'siswa', 'kelas', 'mata-pelajaran']
                                 : ['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'tugas', 'materi', 'guru', 'siswa', 'quiz']
@@ -275,6 +275,7 @@ if (! is_user_logged_in()) {
                 "kelas": "Kelas",
                 "mata-pelajaran": "Mata Pelajaran",
                 "jadwal-pelajaran": "Jadwal Pelajaran",
+                "jadwal-pelajaran-siswa": "Jadwal Pelajaran",
                 "tugas": "Tugas",
                 "materi": "Materi",
                 "guru": "Guru",
@@ -293,6 +294,7 @@ if (! is_user_logged_in()) {
                 "kelas": "bi bi-door-open",
                 "mata-pelajaran": "bi bi-book",
                 "jadwal-pelajaran": "bi bi-clock-history",
+                "jadwal-pelajaran-siswa": "bi bi-clock-history",
                 "tugas": "bi bi-clipboard-check",
                 "materi": "bi bi-journal-text",
                 "guru": "bi bi-person-badge",
@@ -311,7 +313,7 @@ if (! is_user_logged_in()) {
             load() {
                 const hiddenTabs = this.config.currentRole !== "guru" ? ["guru", "siswa"] : ["tahun-ajaran", "guru"];
 
-                if ([...hiddenTabs, "dashboard", "tugas", "materi", "siswa", "siswa-profil", "guru-profil", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
+                if ([...hiddenTabs, "dashboard", "jadwal-pelajaran-siswa", "tugas", "materi", "siswa", "siswa-profil", "guru-profil", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
                     this.items = [];
                     this.loading = false;
                     return;
@@ -338,7 +340,11 @@ if (! is_user_logged_in()) {
                     return;
                 }
 
-                window.location.href = `${this.appRoute}/${tab}/`;
+                const targetTab = this.config.currentRole === "siswa" && tab === "jadwal-pelajaran" ?
+                    "jadwal-pelajaran-siswa" :
+                    tab;
+
+                window.location.href = `${this.appRoute}/${targetTab}/`;
             }
         };
     </script>
@@ -832,7 +838,7 @@ if (! is_user_logged_in()) {
                 }
                 ?>
 
-                <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'guru', 'siswa', 'siswa-profil', 'guru-profil', 'tugas', 'materi', 'quiz', 'quiz-form', 'quiz-workspace', 'quiz-answer', 'tugas-answer'].includes(active)">
+                <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'jadwal-pelajaran-siswa', 'guru', 'siswa', 'siswa-profil', 'guru-profil', 'tugas', 'materi', 'quiz', 'quiz-form', 'quiz-workspace', 'quiz-answer', 'tugas-answer'].includes(active)">
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 elvd-table">
                             <thead>
