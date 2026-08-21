@@ -36,6 +36,10 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install Composer dependencies
+        if: steps.tag-check.outputs.exists == 'false'
+        run: composer install --no-interaction --no-dev --prefer-dist
+
       - name: Build zip
         if: steps.tag-check.outputs.exists == 'false'
         run: npm run build
