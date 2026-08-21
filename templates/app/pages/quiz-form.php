@@ -5,6 +5,13 @@ defined('ABSPATH') || exit;
 $elvd_quiz_id = absint((int) get_query_var('elvd_quiz_id', 0));
 $elvd_quiz_base_url = untrailingslashit(ELVD::app_route()) . '/quiz-form';
 $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
+$elvd_current_user = wp_get_current_user();
+$elvd_current_role = in_array('administrator', (array) $elvd_current_user->roles, true)
+    ? 'administrator'
+    : (in_array('guru', (array) $elvd_current_user->roles, true) ? 'guru' : 'siswa');
+$elvd_class_options = 'guru' === $elvd_current_role
+    ? \ElearningVD\JadwalPelajaran::dapatkan_kelas_oleh_guru((int) $elvd_current_user->ID)
+    : [];
 ?>
 
 <div x-show="active === 'quiz-form'" x-data="{
@@ -14,7 +21,7 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
     backUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_back_url)); ?>,
     quizId: <?php echo esc_attr((string) $elvd_quiz_id); ?>,
     view: 'form',
-    classes: [],
+    classes: <?php echo esc_attr(wp_json_encode($elvd_class_options)); ?>,
     subjects: [],
     loading: false,
     loadingRelations: false,
@@ -78,7 +85,10 @@ $elvd_quiz_back_url = untrailingslashit(ELVD::app_route()) . '/quiz/';
             return Promise.all(responses.map((response) => response.json()));
         })
         .then(([classes, subjects]) => {
-            this.classes = Array.isArray(classes) ? classes : [];
+            const fetchedClasses = Array.isArray(classes) ? classes : [];
+            this.classes = config.currentRole === 'guru'
+                ? fetchedClasses.filter((item) => this.classes.some((classItem) => Number(classItem.id) === Number(item.id)))
+                : fetchedClasses;
             this.subjects = Array.isArray(subjects) ? subjects : [];
         })
         .catch((error) => {

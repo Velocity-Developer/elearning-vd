@@ -6,11 +6,18 @@ $elvd_quiz_form_url = untrailingslashit(ELVD::app_route()) . '/quiz-form';
 $elvd_quiz_workspace_url = untrailingslashit(ELVD::app_route()) . '/quiz-workspace';
 $elvd_quiz_answer_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
 $elvd_quiz_pengerjaan_url = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pengerjaan-quiz'));
+$elvd_current_user = wp_get_current_user();
+$elvd_current_role = in_array('administrator', (array) $elvd_current_user->roles, true)
+    ? 'administrator'
+    : (in_array('guru', (array) $elvd_current_user->roles, true) ? 'guru' : 'siswa');
+$elvd_class_options = 'guru' === $elvd_current_role
+    ? \ElearningVD\JadwalPelajaran::dapatkan_kelas_oleh_guru((int) $elvd_current_user->ID)
+    : [];
 ?>
 
 <div x-show="active === 'quiz'" x-data="{
     quizzes: [],
-    classes: [],
+    classes: <?php echo esc_attr(wp_json_encode($elvd_class_options)); ?>,
     subjects: [],
     restUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url('wp/v2/elvd_quiz')))); ?>,
     formUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_form_url)); ?>,
@@ -89,7 +96,10 @@ $elvd_quiz_pengerjaan_url = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/p
             return Promise.all(responses.map((response) => response.json()));
         })
         .then(([classes, subjects]) => {
-            this.classes = Array.isArray(classes) ? classes : [];
+            const fetchedClasses = Array.isArray(classes) ? classes : [];
+            this.classes = config.currentRole === 'guru'
+                ? fetchedClasses.filter((item) => this.classes.some((classItem) => Number(classItem.id) === Number(item.id)))
+                : fetchedClasses;
             this.subjects = Array.isArray(subjects) ? subjects : [];
         })
         .catch((error) => {

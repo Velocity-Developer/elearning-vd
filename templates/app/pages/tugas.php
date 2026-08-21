@@ -10,6 +10,9 @@ $elvd_current_role = in_array('administrator', (array) $elvd_current_user->roles
 $elvd_subject_options = 'guru' === $elvd_current_role
     ? \ElearningVD\Mapel::dapatkan_oleh_guru((int) $elvd_current_user->ID)
     : \ElearningVD\Mapel::dapatkan_semua();
+$elvd_class_options = 'guru' === $elvd_current_role
+    ? \ElearningVD\JadwalPelajaran::dapatkan_kelas_oleh_guru((int) $elvd_current_user->ID)
+    : [];
 
 $elvd_guru_options = array_map(
     static function (WP_User $user): array {
@@ -31,7 +34,7 @@ $elvd_guru_options = array_map(
 <script>
     window.elvdTugasConfig = {
         tasks: [],
-        classes: [],
+        classes: <?php echo wp_json_encode($elvd_class_options); ?>,
         subjects: <?php echo wp_json_encode($elvd_subject_options); ?>,
         years: [],
         teachers: <?php echo wp_json_encode($elvd_guru_options); ?>,
@@ -180,7 +183,10 @@ $elvd_guru_options = array_map(
                 })
                 .then(([years, classes, subjects]) => {
                     this.years = Array.isArray(years) ? years : [];
-                    this.classes = Array.isArray(classes) ? classes : [];
+                    const fetchedClasses = Array.isArray(classes) ? classes : [];
+                    this.classes = config.currentRole === "guru" ?
+                        fetchedClasses.filter((item) => this.classes.some((classItem) => Number(classItem.id) === Number(item.id))) :
+                        fetchedClasses;
                     const fetchedSubjects = Array.isArray(subjects) ? subjects : [];
                     this.subjects = config.currentRole === "guru" ?
                         fetchedSubjects.filter((item) => this.subjects.some((subject) => Number(subject.id) === Number(item.id))) :
