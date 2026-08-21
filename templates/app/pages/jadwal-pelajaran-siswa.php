@@ -17,6 +17,15 @@ $elvd_guru_options = array_map(
         ]
     )
 );
+
+global $wpdb;
+
+$elvd_tahun_aktif = (string) $wpdb->get_var(
+    $wpdb->prepare(
+        'SELECT nama FROM ' . elvd_table_name('elvd_tahun_ajaran') . ' WHERE status = %s ORDER BY mulai DESC, id DESC LIMIT 1',
+        'aktif'
+    )
+);
 ?>
 
 <div
@@ -144,11 +153,12 @@ $elvd_guru_options = array_map(
     }">
     <div class="elvd-table-panel" x-show="config.currentRole === 'siswa'">
 
-        <div class="text-center mb-3">
-            <h2 class="h5 mb-1"><?php echo esc_html__('Jadwal Pelajaran', 'elearning-vd'); ?></h2>
-            <p class="text-muted mb-0">
+        <div class="text-center mb-4">
+            <h2 class="h4 mb-1"><?php echo esc_html__('Jadwal Pelajaran', 'elearning-vd'); ?></h2>
+            <p class="text-muted mb-1">
                 <span x-text="className(kelasId)"></span>
             </p>
+            <p class="text-muted mb-0"><?php echo esc_html($elvd_tahun_aktif ?: '-'); ?></p>
         </div>
 
         <div class="alert alert-warning" x-show="config.currentRole !== 'siswa'">
