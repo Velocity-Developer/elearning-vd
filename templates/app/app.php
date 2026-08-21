@@ -141,6 +141,7 @@ if (! is_user_logged_in()) {
 
     // Data dashboard untuk role guru.
     $elvd_guru_jadwal = [];
+    $elvd_guru_mapel = [];
     $elvd_guru_tugas = [];
     $elvd_guru_materi = [];
     $elvd_guru_quiz = [];
@@ -171,6 +172,10 @@ if (! is_user_logged_in()) {
             'order' => 'DESC',
         ];
 
+        $elvd_guru_mapel = class_exists(\ElearningVD\Mapel::class)
+            ? \ElearningVD\Mapel::dapatkan_oleh_guru($elvd_current_user->ID)
+            : [];
+
         $elvd_guru_tugas = get_posts($elvd_guru_content_args('elvd_tugas'));
         $elvd_guru_materi = get_posts($elvd_guru_content_args('elvd_materi'));
         $elvd_guru_quiz = get_posts($elvd_guru_content_args('elvd_quiz'));
@@ -194,7 +199,7 @@ if (! is_user_logged_in()) {
         ],
         [
             'label' => __('Mata Pelajaran', 'elearning-vd'),
-            'value' => $count_table_rows('elvd_mata_pelajaran'),
+            'value' => count($elvd_guru_mapel),
             'tone' => 'warning',
         ],
         [
@@ -229,7 +234,7 @@ if (! is_user_logged_in()) {
         ],
         [
             'label' => __('Mata Pelajaran', 'elearning-vd'),
-            'value' => $count_table_rows('elvd_mata_pelajaran'),
+            'value' => count($elvd_guru_mapel),
             'tone' => 'warning',
         ],
         [
@@ -610,23 +615,20 @@ if (! is_user_logged_in()) {
                             <div class="elvd-panel elvd-panel-dark">
                                 <div class="elvd-panel-heading">
                                     <div>
-                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Aktivitas', 'elearning-vd'); ?></p>
-                                        <h2><?php echo esc_html__('Kegiatan Belajar', 'elearning-vd'); ?></h2>
+                                        <p class="elvd-eyebrow mb-1"><?php echo esc_html__('Mengajar', 'elearning-vd'); ?></p>
+                                        <h2><?php echo esc_html__('Daftar Mapel yang Diajar', 'elearning-vd'); ?></h2>
                                     </div>
                                 </div>
                                 <div class="elvd-activity-list">
-                                    <div class="elvd-activity-item">
-                                        <span><?php echo esc_html__('Pengerjaan Tugas', 'elearning-vd'); ?></span>
-                                        <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_pengerjaan_tugas'))); ?></strong>
-                                    </div>
-                                    <div class="elvd-activity-item">
-                                        <span><?php echo esc_html__('Pengerjaan Quiz', 'elearning-vd'); ?></span>
-                                        <strong><?php echo esc_html(number_format_i18n($count_table_rows('elvd_pengerjaan_quiz'))); ?></strong>
-                                    </div>
-                                    <div class="elvd-activity-item">
-                                        <span><?php echo esc_html__('Konten Belajar', 'elearning-vd'); ?></span>
-                                        <strong><?php echo esc_html(number_format_i18n((isset($tugas_counts->publish) ? (int) $tugas_counts->publish : 0) + (isset($materi_counts->publish) ? (int) $materi_counts->publish : 0) + (isset($quiz_counts->publish) ? (int) $quiz_counts->publish : 0))); ?></strong>
-                                    </div>
+                                    <?php if ([] === $elvd_guru_mapel) { ?>
+                                        <div class="elvd-activity-item"><span><?php echo esc_html__('Belum ada mata pelajaran yang diajar.', 'elearning-vd'); ?></span></div>
+                                    <?php } ?>
+                                    <?php foreach ($elvd_guru_mapel as $elvd_mapel) { ?>
+                                        <div class="elvd-activity-item">
+                                            <span><?php echo esc_html($elvd_mapel['nama'] ?? '-'); ?></span>
+                                            <strong><?php echo esc_html($elvd_mapel['kode'] ?? __('Mapel', 'elearning-vd')); ?></strong>
+                                        </div>
+                                    <?php } ?>
                                 </div>
                             </div>
                         </div>
