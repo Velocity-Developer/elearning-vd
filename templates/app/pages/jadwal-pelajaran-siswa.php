@@ -161,6 +161,14 @@ $elvd_tahun_aktif = (string) $wpdb->get_var(
             <p class="text-muted mb-0"><?php echo esc_html($elvd_tahun_aktif ?: '-'); ?></p>
         </div>
 
+        <div class="d-flex justify-content-end mb-3" x-show="config.currentRole === 'siswa' && kelasId">
+            <a
+                class="btn btn-danger"
+                href="<?php echo esc_url(add_query_arg('elvd_download_jadwal', 'pdf')); ?>">
+                <?php echo esc_html__('Download PDF', 'elearning-vd'); ?>
+            </a>
+        </div>
+
         <div class="alert alert-warning" x-show="config.currentRole !== 'siswa'">
             <?php echo esc_html__('Halaman ini hanya untuk siswa.', 'elearning-vd'); ?>
         </div>
