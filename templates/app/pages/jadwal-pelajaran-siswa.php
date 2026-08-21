@@ -102,6 +102,20 @@ $elvd_guru_options = array_map(
                 items: this.schedules.filter((item) => item.hari === day)
             }));
         },
+        timeSlots() {
+            const slots = this.schedules.map((item) => ({
+                key: `${item.jam_mulai || ''}-${item.jam_selesai || ''}`,
+                jam_mulai: item.jam_mulai || '',
+                jam_selesai: item.jam_selesai || ''
+            }));
+
+            return slots
+                .filter((slot, index, list) => list.findIndex((entry) => entry.key === slot.key) === index)
+                .sort((a, b) => String(a.jam_mulai).localeCompare(String(b.jam_mulai)));
+        },
+        scheduleByDayAndTime(day, slotKey) {
+            return this.schedules.find((item) => item.hari === day && `${item.jam_mulai || ''}-${item.jam_selesai || ''}` === slotKey) || null;
+        },
         className(id) {
             const classItem = this.classes.find((item) => Number(item.id) === Number(id));
             return classItem ? classItem.nama : '-';
@@ -118,6 +132,9 @@ $elvd_guru_options = array_map(
             const start = item.jam_mulai || '-';
             const end = item.jam_selesai || '-';
             return `${start} - ${end}`;
+        },
+        timeRangeFromSlot(slot) {
+            return `${slot.jam_mulai || '-'} - ${slot.jam_selesai || '-'}`;
         }
     }">
     <div class="elvd-table-panel" x-show="config.currentRole === 'siswa'">
@@ -143,35 +160,35 @@ $elvd_guru_options = array_map(
             <table class="table align-top mb-0 elvd-table">
                 <thead>
                     <tr>
-                        <template x-for="dayGroup in schedulesByDay()" :key="dayGroup.day">
-                            <th scope="col" class="text-center" x-text="dayGroup.day"></th>
+                        <th scope="col" class="text-center"><?php echo esc_html__('Waktu', 'elearning-vd'); ?></th>
+                        <template x-for="day in days" :key="day">
+                            <th scope="col" class="text-center" x-text="day"></th>
                         </template>
                     </tr>
                 </thead>
                 <tbody>
                     <tr x-show="loading">
-                        <td :colspan="days.length"><?php echo esc_html__('Memuat jadwal...', 'elearning-vd'); ?></td>
+                        <td :colspan="days.length + 1"><?php echo esc_html__('Memuat jadwal...', 'elearning-vd'); ?></td>
                     </tr>
-                    <tr x-show="!loading && schedules.length > 0">
-                        <template x-for="dayGroup in schedulesByDay()" :key="dayGroup.day">
-                            <td>
-                                <template x-if="dayGroup.items.length === 0">
-                                    <div class="text-muted small"><?php echo esc_html__('Tidak ada jadwal.', 'elearning-vd'); ?></div>
-                                </template>
-
-                                <div class="d-flex flex-column gap-2" x-show="dayGroup.items.length > 0">
-                                    <template x-for="item in dayGroup.items" :key="item.id">
+                    <template x-for="slot in timeSlots()" :key="slot.key">
+                        <tr x-show="!loading">
+                            <td class="text-nowrap" x-text="timeRangeFromSlot(slot)"></td>
+                            <template x-for="day in days" :key="`${slot.key}-${day}`">
+                                <td>
+                                    <template x-if="scheduleByDayAndTime(day, slot.key)">
                                         <div>
-                                            <div class="fw-semibold" x-text="subjectName(item.mata_pelajaran_id)"></div>
-                                            <div class="small" x-text="timeRange(item)"></div>
+                                            <div class="fw-semibold" x-text="subjectName(scheduleByDayAndTime(day, slot.key).mata_pelajaran_id)"></div>
                                         </div>
                                     </template>
-                                </div>
-                            </td>
-                        </template>
-                    </tr>
+                                    <template x-if="!scheduleByDayAndTime(day, slot.key)">
+                                        <div class="text-muted small">-</div>
+                                    </template>
+                                </td>
+                            </template>
+                        </tr>
+                    </template>
                     <tr x-show="!loading && schedules.length === 0">
-                        <td :colspan="days.length"><?php echo esc_html__('Belum ada jadwal pelajaran.', 'elearning-vd'); ?></td>
+                        <td :colspan="days.length + 1"><?php echo esc_html__('Belum ada jadwal pelajaran.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
             </table>
