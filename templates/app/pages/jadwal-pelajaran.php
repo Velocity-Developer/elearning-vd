@@ -520,10 +520,9 @@ $elvd_guru_options = array_map(
             <table class="table align-middle mb-0 elvd-table">
                 <thead>
                     <tr>
-                        <th scope="col"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Guru', 'elearning-vd'); ?></th>
-                        <th scope="col"><?php echo esc_html__('Tahun Ajaran', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Hari', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Jam', 'elearning-vd'); ?></th>
                         <th scope="col" class="text-end" x-show="config.currentRole === 'administrator'"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
@@ -535,12 +534,15 @@ $elvd_guru_options = array_map(
                     </tr>
                     <template x-for="item in pageItems()" :key="item.id">
                         <tr>
-                            <td>
-                                <strong x-text="className(item.kelas_id)"></strong>
+                            <td class="d-flex align-items-center">
+                                <span class="text-white px-2 rounded-circle me-1" style="width: 20px; height: 20px;" x-bind:style="{'backgroundColor': item.mata_pelajaran.kode_warna || '#dddddd'}"></span>
+                                <span class="fw-medium" x-text="item.mata_pelajaran.nama"></span>
                             </td>
-                            <td x-text="subjectName(item.mata_pelajaran_id)"></td>
+                            <td>
+                                <div class="fw-medium" x-text="className(item.kelas_id)"></div>
+                                <span class="small" x-text="yearName(item.tahun_ajaran_id)"></span>
+                            </td>
                             <td x-text="teacherName(item.guru_id)"></td>
-                            <td x-text="yearName(item.tahun_ajaran_id)"></td>
                             <td x-text="item.hari || '-'"></td>
                             <td x-text="timeRange(item)"></td>
                             <td class="text-end" x-show="config.currentRole === 'administrator'">
@@ -590,7 +592,7 @@ $elvd_guru_options = array_map(
                                     <td class="align-top">
                                         <template x-if="dayScheduleItem(dayGroup, slot)">
                                             <div class="elvd-day-schedule-item" x-data="{ item: dayScheduleItem(dayGroup, slot) }">
-                                                <div class="fw-semibold" x-text="subjectName(item.mata_pelajaran_id)"></div>
+                                                <div class="fw-semibold" x-text="item.mata_pelajaran.nama"></div>
                                                 <div class="small text-muted" x-text="className(item.kelas_id)"></div>
                                                 <div class="small text-muted" x-text="teacherName(item.guru_id)"></div>
                                                 <div class="elvd-day-schedule-actions" x-show="config.currentRole === 'administrator'">

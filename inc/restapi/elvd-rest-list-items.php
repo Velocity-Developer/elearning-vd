@@ -36,11 +36,47 @@ function elvd_rest_list_items(WP_REST_Request $request): WP_REST_Response
         $where .= $wpdb->prepare(esc_sql('siswa_id') . ' = %d', $siswa_id);
     }
 
-    $items = $wpdb->get_results(
-        $wpdb->prepare("SELECT * FROM {$table} {$where} ORDER BY id DESC LIMIT %d OFFSET %d", $per_page, $offset),
-        ARRAY_A
-    );
+    if ('elvd_jadwal_pelajaran' === $resource['table']) {
+        $table_mapel = elvd_table_name('elvd_mata_pelajaran');
+
+        $items = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT t.*, mp.id AS mata_pelajaran_id, mp.nama AS mata_pelajaran_nama, mp.kode_warna AS mata_pelajaran_kode_warna
+                 FROM {$table} t
+                 LEFT JOIN {$table_mapel} mp ON mp.id = t.mata_pelajaran_id
+                 {$where}
+                 ORDER BY t.id DESC
+                 LIMIT %d OFFSET %d",
+                $per_page,
+                $offset
+            ),
+            ARRAY_A
+        );
+    } else {
+        $items = $wpdb->get_results(
+            $wpdb->prepare("SELECT * FROM {$table} {$where} ORDER BY id DESC LIMIT %d OFFSET %d", $per_page, $offset),
+            ARRAY_A
+        );
+    }
+
     $total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} {$where}");
+
+    if ('elvd_jadwal_pelajaran' === $resource['table']) {
+        foreach ($items as &$row) {
+            $row['mata_pelajaran'] = [
+                'id' => isset($row['mata_pelajaran_id']) ? (int) $row['mata_pelajaran_id'] : 0,
+                'nama' => isset($row['mata_pelajaran_nama']) ? (string) $row['mata_pelajaran_nama'] : '',
+                'kode_warna' => $row['mata_pelajaran_kode_warna'] !== null ? (string) $row['mata_pelajaran_kode_warna'] : null,
+            ];
+
+            unset(
+                $row['mata_pelajaran_id'],
+                $row['mata_pelajaran_nama'],
+                $row['mata_pelajaran_kode_warna']
+            );
+        }
+        unset($row);
+    }
 
     if ('elvd_pengerjaan_quiz' === $resource['table']) {
         foreach ($items as &$row) {
