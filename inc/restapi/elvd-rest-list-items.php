@@ -19,7 +19,7 @@ function elvd_rest_list_items(WP_REST_Request $request): WP_REST_Response
 
     $where = '';
 
-    foreach (['quiz_id', 'siswa_id', 'tugas_id', 'user_id'] as $field) {
+    foreach (['quiz_id', 'siswa_id', 'tugas_id', 'user_id', 'kelas_id', 'guru_id', 'mata_pelajaran_id', 'tahun_ajaran_id'] as $field) {
         $value = $request->get_param($field);
 
         if (null === $value || '' === $value || ! isset($resource['fields'][$field])) {

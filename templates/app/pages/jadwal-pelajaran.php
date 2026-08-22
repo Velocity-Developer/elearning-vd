@@ -132,8 +132,27 @@ $elvd_guru_options = array_map(
             this.error = '';
 
             const perPage = this.viewMode === 'day' ? 1000 : 100;
+            const params = new URLSearchParams({
+                per_page: String(perPage)
+            });
 
-            fetch(`${config.restUrl}/jadwal-pelajaran?per_page=${perPage}`, {
+            if (this.filters.kelas_id) {
+                params.set('kelas_id', this.filters.kelas_id);
+            }
+
+            if (this.filters.guru_id) {
+                params.set('guru_id', this.filters.guru_id);
+            }
+
+            if (this.filters.mata_pelajaran_id) {
+                params.set('mata_pelajaran_id', this.filters.mata_pelajaran_id);
+            }
+
+            if (this.filters.tahun_ajaran_id) {
+                params.set('tahun_ajaran_id', this.filters.tahun_ajaran_id);
+            }
+
+            fetch(`${config.restUrl}/jadwal-pelajaran?${params.toString()}`, {
                     headers: {
                         'X-WP-Nonce': config.nonce
                     }
