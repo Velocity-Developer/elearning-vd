@@ -218,6 +218,12 @@ $elvd_guru_options = array_map(
                     .sort((a, b) => String(a.jam_mulai || '').localeCompare(String(b.jam_mulai || '')))
             }));
         },
+        maxDayScheduleRows() {
+            return this.schedulesByDay().reduce((max, dayGroup) => Math.max(max, dayGroup.items.length), 0);
+        },
+        dayScheduleItem(dayGroup, index) {
+            return dayGroup.items[index] || null;
+        },
         goPage(p) {
             this.page = Math.min(Math.max(1, p), this.totalPages());
         },
@@ -541,23 +547,41 @@ $elvd_guru_options = array_map(
                     <tr x-show="loadingSchedules">
                         <td :colspan="days.length"><?php echo esc_html__('Memuat data jadwal pelajaran...', 'elearning-vd'); ?></td>
                     </tr>
-                    <tr x-show="!loadingSchedules && filteredSchedules().length > 0">
-                        <template x-for="dayGroup in schedulesByDay()" :key="dayGroup.day">
-                            <td class="align-top">
-                                <template x-if="dayGroup.items.length === 0">
-                                    <div class="text-muted small"><?php echo esc_html__('Tidak ada jadwal', 'elearning-vd'); ?></div>
+                    <template x-if="!loadingSchedules && filteredSchedules().length > 0">
+                        <template x-for="rowIndex in maxDayScheduleRows()" :key="`day-row-${rowIndex}`">
+                            <tr>
+                                <template x-for="dayGroup in schedulesByDay()" :key="`${dayGroup.day}-${rowIndex}`">
+                                    <td class="align-top">
+                                        <template x-if="dayScheduleItem(dayGroup, rowIndex - 1)">
+                                            <div class="elvd-day-schedule-item" x-data="{ item: dayScheduleItem(dayGroup, rowIndex - 1) }">
+                                                <div class="fw-semibold" x-text="subjectName(item.mata_pelajaran_id)"></div>
+                                                <div class="small text-muted" x-text="className(item.kelas_id)"></div>
+                                                <div class="small text-muted" x-text="teacherName(item.guru_id)"></div>
+                                                <div class="small" x-text="timeRange(item)"></div>
+                                                <div class="elvd-day-schedule-actions" x-show="config.currentRole === 'administrator'">
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-primary elvd-row-action"
+                                                        @click="openEdit(item)">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-danger elvd-row-action"
+                                                        @click="deleteSchedule(item)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!dayScheduleItem(dayGroup, rowIndex - 1)">
+                                            <span class="text-muted small">-</span>
+                                        </template>
+                                    </td>
                                 </template>
-                                <template x-for="item in dayGroup.items" :key="item.id">
-                                    <div class="border rounded p-2 mb-2">
-                                        <div class="fw-semibold" x-text="subjectName(item.mata_pelajaran_id)"></div>
-                                        <div class="small text-muted" x-text="className(item.kelas_id)"></div>
-                                        <div class="small text-muted" x-text="teacherName(item.guru_id)"></div>
-                                        <div class="small" x-text="timeRange(item)"></div>
-                                    </div>
-                                </template>
-                            </td>
+                            </tr>
                         </template>
-                    </tr>
+                    </template>
                     <tr x-show="!loadingSchedules && filteredSchedules().length === 0">
                         <td :colspan="days.length"><?php echo esc_html__('Belum ada jadwal pelajaran sesuai filter.', 'elearning-vd'); ?></td>
                     </tr>

@@ -635,6 +635,31 @@
     background: var(--elvd-cloud);
 }
 
+.elvd-day-schedule-item {
+    position: relative;
+}
+
+.elvd-day-schedule-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: opacity 160ms ease;
+}
+
+.elvd-table tbody td:hover .elvd-day-schedule-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.elvd-day-schedule-actions .elvd-row-action {
+    min-height: 28px;
+    padding: 7px 10px;
+}
+
 .elvd-profile-form {
     background: var(--elvd-canvas);
     border: 1px solid var(--elvd-hairline) !important;
