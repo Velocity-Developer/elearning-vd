@@ -589,12 +589,12 @@ $elvd_guru_options = array_map(
                             <tr>
                                 <td class="align-top text-nowrap fw-semibold" x-text="slot"></td>
                                 <template x-for="dayGroup in schedulesByDay()" :key="`${dayGroup.day}-${slot}`">
-                                    <td class="align-top">
+                                    <td class="align-top p-0">
                                         <template x-if="dayScheduleItem(dayGroup, slot)">
-                                            <div class="elvd-day-schedule-item" x-data="{ item: dayScheduleItem(dayGroup, slot) }">
+                                            <div class="elvd-day-schedule-item p-2 text-white" x-data="{ item: dayScheduleItem(dayGroup, slot) }" x-bind:style="{'backgroundColor': item.mata_pelajaran.kode_warna || '#333333'}">
                                                 <div class="fw-semibold" x-text="item.mata_pelajaran.nama"></div>
-                                                <div class="small text-muted" x-text="className(item.kelas_id)"></div>
-                                                <div class="small text-muted" x-text="teacherName(item.guru_id)"></div>
+                                                <div class="small" x-text="className(item.kelas_id)"></div>
+                                                <div class="small" x-text="teacherName(item.guru_id)"></div>
                                                 <div class="elvd-day-schedule-actions" x-show="config.currentRole === 'administrator'">
                                                     <button
                                                         type="button"
