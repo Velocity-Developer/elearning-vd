@@ -94,6 +94,7 @@ defined('ABSPATH') || exit;
                 id: item.id,
                 nama: item.nama || '',
                 kode: item.kode || '',
+                kode_warna: item.kode_warna || '#3b82f6',
                 deskripsi: item.deskripsi || ''
             };
             this.error = '';
@@ -124,6 +125,7 @@ defined('ABSPATH') || exit;
                     body: JSON.stringify({
                         nama: this.form.nama,
                         kode: this.form.kode,
+                        kode_warna: this.form.kode_warna,
                         deskripsi: this.form.deskripsi
                     })
                 })
@@ -233,11 +235,12 @@ defined('ABSPATH') || exit;
                 </thead>
                 <tbody>
                     <tr x-show="loadingSubjects">
-                        <td colspan="4"><?php echo esc_html__('Memuat data mata pelajaran...', 'elearning-vd'); ?></td>
+                        <td colspan="5"><?php echo esc_html__('Memuat data mata pelajaran...', 'elearning-vd'); ?></td>
                     </tr>
                     <template x-for="item in pageItems()" :key="item.id">
                         <tr>
                             <td>
+                                <span class="text-white px-2 rounded-pill me-2" x-bind:style="{'backgroundColor': item.kode_warna || '#dddddd'}"></span>
                                 <strong x-text="item.nama || '-'"></strong>
                             </td>
                             <td x-text="item.kode || '-'"></td>
