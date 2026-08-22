@@ -43,6 +43,7 @@ function elvd_create_tables(): void
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         nama VARCHAR(120) NOT NULL,
         kode VARCHAR(40) NULL,
+        kode_warna VARCHAR(7) NULL,
         deskripsi TEXT NULL,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -118,6 +119,7 @@ function elvd_create_tables(): void
     }
 
     elvd_maybe_add_jadwal_tahun_ajaran_column($wpdb);
+    elvd_maybe_add_mapel_kode_warna_column($wpdb);
 }
 
 /**
@@ -135,6 +137,25 @@ function elvd_maybe_add_jadwal_tahun_ajaran_column($wpdb): void
     if (! $found) {
         $wpdb->query(
             "ALTER TABLE `{$table}` ADD COLUMN tahun_ajaran_id BIGINT UNSIGNED NULL AFTER guru_id, ADD KEY tahun_ajaran_id (tahun_ajaran_id)"
+        );
+    }
+}
+
+/**
+ * Add kode_warna to mata_pelajaran on existing installs.
+ */
+function elvd_maybe_add_mapel_kode_warna_column($wpdb): void
+{
+    $table = elvd_table_name('elvd_mata_pelajaran');
+
+    $found = $wpdb->get_results(
+        "SHOW COLUMNS FROM `{$table}` LIKE 'kode_warna'",
+        ARRAY_A
+    );
+
+    if (! $found) {
+        $wpdb->query(
+            "ALTER TABLE `{$table}` ADD COLUMN kode_warna VARCHAR(7) NULL AFTER kode"
         );
     }
 }

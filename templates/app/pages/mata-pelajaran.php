@@ -37,6 +37,7 @@ defined('ABSPATH') || exit;
             id: null,
             nama: '',
             kode: '',
+            kode_warna: '#3b82f6',
             deskripsi: ''
         },
         init() {
@@ -79,6 +80,7 @@ defined('ABSPATH') || exit;
                 id: null,
                 nama: '',
                 kode: '',
+                kode_warna: '#3b82f6',
                 deskripsi: ''
             };
         },
@@ -331,6 +333,15 @@ defined('ABSPATH') || exit;
                             x-model="form.kode"
                             maxlength="40"
                             placeholder="<?php echo esc_attr__('Contoh: mtk', 'elearning-vd'); ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="elvd-mata-pelajaran-kode-warna"><?php echo esc_html__('Kode Warna', 'elearning-vd'); ?></label>
+                        <input
+                            type="color"
+                            class="form-control form-control-color"
+                            id="elvd-mata-pelajaran-kode-warna"
+                            x-model="form.kode_warna"
+                            title="<?php echo esc_attr__('Pilih warna mata pelajaran', 'elearning-vd'); ?>">
                     </div>
                     <div>
                         <label class="form-label" for="elvd-mata-pelajaran-deskripsi"><?php echo esc_html__('Deskripsi', 'elearning-vd'); ?></label>

@@ -29,7 +29,7 @@ final class Mapel
 
         $table = elvd_table_name('elvd_mata_pelajaran');
 
-        $sql = "SELECT id, nama, kode, deskripsi, created_at, updated_at
+        $sql = "SELECT id, nama, kode, kode_warna, deskripsi, created_at, updated_at
              FROM {$table}
              ORDER BY nama ASC";
 
@@ -44,6 +44,7 @@ final class Mapel
                 'id' => (int) $row['id'],
                 'nama' => (string) $row['nama'],
                 'kode' => $row['kode'] !== null ? (string) $row['kode'] : null,
+                'kode_warna' => $row['kode_warna'] !== null ? (string) $row['kode_warna'] : null,
                 'deskripsi' => $row['deskripsi'] !== null ? (string) $row['deskripsi'] : null,
                 'created_at' => isset($row['created_at']) ? (string) $row['created_at'] : null,
                 'updated_at' => isset($row['updated_at']) ? (string) $row['updated_at'] : null,
@@ -64,7 +65,7 @@ final class Mapel
         $table = elvd_table_name('elvd_mata_pelajaran');
 
         $sql = $wpdb->prepare(
-            "SELECT id, nama, kode, deskripsi, created_at, updated_at
+            "SELECT id, nama, kode, kode_warna, deskripsi, created_at, updated_at
              FROM {$table}
              WHERE id = %d
              LIMIT 1",
@@ -81,6 +82,7 @@ final class Mapel
             'id' => (int) $result['id'],
             'nama' => (string) $result['nama'],
             'kode' => $result['kode'] !== null ? (string) $result['kode'] : null,
+            'kode_warna' => $result['kode_warna'] !== null ? (string) $result['kode_warna'] : null,
             'deskripsi' => $result['deskripsi'] !== null ? (string) $result['deskripsi'] : null,
             'created_at' => isset($result['created_at']) ? (string) $result['created_at'] : null,
             'updated_at' => isset($result['updated_at']) ? (string) $result['updated_at'] : null,
@@ -129,7 +131,7 @@ final class Mapel
         $table_mapel = elvd_table_name('elvd_mata_pelajaran');
 
         $sql = $wpdb->prepare(
-            "SELECT p.id AS pivot_id, m.id, m.nama, m.kode, m.created_at, m.updated_at
+            "SELECT p.id AS pivot_id, m.id, m.nama, m.kode, m.kode_warna, m.created_at, m.updated_at
              FROM {$table_mapel} m
              INNER JOIN {$table_pivot} p ON p.mapel_id = m.id
              WHERE p.user_id = %d
@@ -149,6 +151,7 @@ final class Mapel
                 'id' => (int) $row['id'],
                 'nama' => (string) $row['nama'],
                 'kode' => $row['kode'] !== null ? (string) $row['kode'] : null,
+                'kode_warna' => $row['kode_warna'] !== null ? (string) $row['kode_warna'] : null,
                 'created_at' => isset($row['created_at']) ? (string) $row['created_at'] : null,
                 'updated_at' => isset($row['updated_at']) ? (string) $row['updated_at'] : null,
             ];

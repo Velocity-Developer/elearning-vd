@@ -33,6 +33,7 @@ function elvd_rest_resources(): array
             'fields' => [
                 'nama' => 'text',
                 'kode' => 'key',
+                'kode_warna' => 'text',
                 'deskripsi' => 'textarea',
             ],
         ],
