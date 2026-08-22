@@ -32,15 +32,11 @@ $elvd_tahun_aktif = (string) $wpdb->get_var(
     x-show="active === 'jadwal-pelajaran-siswa'"
     x-data="{
         schedules: [],
-        classes: [],
-        subjects: [],
-        teachers: [],
         loading: false,
         error: '',
         kelasId: Number(config.siswaKelasId || 0),
         days: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
         init() {
-            this.fetchRelations();
             this.fetchSchedules();
         },
         fetchSchedules() {
@@ -52,7 +48,12 @@ $elvd_tahun_aktif = (string) $wpdb->get_var(
             this.loading = true;
             this.error = '';
 
-            fetch(`${config.restUrl}/jadwal-pelajaran?per_page=100`, {
+            const params = new URLSearchParams({
+                per_page: '100',
+                kelas_id: String(this.kelasId)
+            });
+
+            fetch(`${config.restUrl}/jadwal-pelajaran?${params.toString()}`, {
                 headers: { 'X-WP-Nonce': config.nonce }
             })
             .then((response) => {
@@ -64,45 +65,21 @@ $elvd_tahun_aktif = (string) $wpdb->get_var(
             })
             .then((data) => {
                 const items = Array.isArray(data) ? data : [];
-                this.schedules = items
-                    .filter((item) => Number(item.kelas_id) === this.kelasId)
-                    .sort((a, b) => {
-                        const dayOrder = this.days.indexOf(a.hari || '') - this.days.indexOf(b.hari || '');
+                this.schedules = items.sort((a, b) => {
+                    const dayOrder = this.days.indexOf(a.hari || '') - this.days.indexOf(b.hari || '');
 
-                        if (dayOrder !== 0) {
-                            return dayOrder;
-                        }
+                    if (dayOrder !== 0) {
+                        return dayOrder;
+                    }
 
-                        return String(a.jam_mulai || '').localeCompare(String(b.jam_mulai || ''));
-                    });
+                    return String(a.jam_mulai || '').localeCompare(String(b.jam_mulai || ''));
+                });
             })
             .catch((error) => {
                 this.error = error.message || 'Gagal memuat jadwal pelajaran.';
             })
             .finally(() => {
                 this.loading = false;
-            });
-        },
-        fetchRelations() {
-            Promise.all([
-                fetch(`${config.restUrl}/kelas?per_page=100`, { headers: { 'X-WP-Nonce': config.nonce } }),
-                fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, { headers: { 'X-WP-Nonce': config.nonce } })
-            ])
-            .then((responses) => {
-                responses.forEach((response) => {
-                    if (!response.ok) {
-                        throw new Error('Gagal memuat data pendukung jadwal.');
-                    }
-                });
-
-                return Promise.all(responses.map((response) => response.json()));
-            })
-            .then(([classes, subjects]) => {
-                this.classes = Array.isArray(classes) ? classes : [];
-                this.subjects = Array.isArray(subjects) ? subjects : [];
-            })
-            .catch((error) => {
-                this.error = error.message || 'Gagal memuat data pendukung jadwal.';
             });
         },
         schedulesByDay() {
@@ -125,17 +102,23 @@ $elvd_tahun_aktif = (string) $wpdb->get_var(
         scheduleByDayAndTime(day, slotKey) {
             return this.schedules.find((item) => item.hari === day && `${item.jam_mulai || ''}-${item.jam_selesai || ''}` === slotKey) || null;
         },
-        className(id) {
-            const classItem = this.classes.find((item) => Number(item.id) === Number(id));
-            return classItem ? classItem.nama : '-';
+        className() {
+            if (!this.kelasId) {
+                return '-';
+            }
+
+            const item = this.schedules.find((schedule) => Number(schedule.kelas_id) === this.kelasId);
+
+            return item?.kelas_nama || `Kelas #${this.kelasId}`;
         },
-        subjectName(id) {
-            const subject = this.subjects.find((item) => Number(item.id) === Number(id));
-            return subject ? subject.nama : '-';
+        subjectName(item) {
+            return item?.mata_pelajaran?.nama || '-';
         },
-        teacherName(id) {
-            const teacher = this.teachers.find((item) => Number(item.id) === Number(id));
-            return teacher ? teacher.nama : '-';
+        subjectColor(item) {
+            return item?.mata_pelajaran?.kode_warna || '#f1f1f1';
+        },
+        subjectTextColor(item) {
+            return item?.mata_pelajaran?.kode_warna ? '#ffffff' : '#333333';
         },
         formatTime(value) {
             if (!value) {
@@ -156,7 +139,7 @@ $elvd_tahun_aktif = (string) $wpdb->get_var(
         <div class="text-center mb-4">
             <h2 class="h4 mb-1"><?php echo esc_html__('Jadwal Pelajaran', 'elearning-vd'); ?></h2>
             <p class="text-muted mb-1">
-                <span x-text="className(kelasId)"></span>
+                <span x-text="className()"></span>
             </p>
             <p class="text-muted mb-0"><?php echo esc_html($elvd_tahun_aktif ?: '-'); ?></p>
         </div>
@@ -180,12 +163,12 @@ $elvd_tahun_aktif = (string) $wpdb->get_var(
         <div class="alert alert-danger" x-show="error" x-text="error"></div>
 
         <div class="table-responsive" x-show="config.currentRole === 'siswa' && kelasId">
-            <table class="table align-top mb-0 elvd-table">
-                <thead>
+            <table class="table table-bordered align-top mb-0 elvd-table">
+                <thead class="thead-dark">
                     <tr>
-                        <th scope="col" class="text-center"><?php echo esc_html__('Waktu', 'elearning-vd'); ?></th>
+                        <th scope="col" class="text-center bg-dark text-white align-middle"><?php echo esc_html__('Waktu', 'elearning-vd'); ?></th>
                         <template x-for="day in days" :key="day">
-                            <th scope="col" class="text-center" x-text="day"></th>
+                            <th scope="col" class="text-center bg-dark text-white align-middle" x-text="day"></th>
                         </template>
                     </tr>
                 </thead>
@@ -197,10 +180,10 @@ $elvd_tahun_aktif = (string) $wpdb->get_var(
                         <tr x-show="!loading">
                             <td class="text-nowrap" x-text="timeRangeFromSlot(slot)"></td>
                             <template x-for="day in days" :key="`${slot.key}-${day}`">
-                                <td>
+                                <td class="p-0 text-center align-middle" :style="`background-color: ${subjectColor(scheduleByDayAndTime(day, slot.key))}; color: ${subjectTextColor(scheduleByDayAndTime(day, slot.key))};`">
                                     <template x-if="scheduleByDayAndTime(day, slot.key)">
-                                        <div>
-                                            <div class="fw-semibold" x-text="subjectName(scheduleByDayAndTime(day, slot.key).mata_pelajaran_id)"></div>
+                                        <div class="p-1" style="min-height: 1rem;min-width: 8rem;">
+                                            <span class="fw-semibold" x-text="subjectName(scheduleByDayAndTime(day, slot.key))"></span>
                                         </div>
                                     </template>
                                     <template x-if="!scheduleByDayAndTime(day, slot.key)">
