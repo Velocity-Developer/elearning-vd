@@ -35,10 +35,12 @@ $elvd_guru_options = array_map(
         page: 1,
         perPage: 20,
         filters: {
+            kelas_id: '',
             guru_id: '',
             mata_pelajaran_id: '',
             tahun_ajaran_id: ''
         },
+        urlKelas: '',
         urlGuru: '',
         urlMapel: '',
         urlTahun: '',
@@ -57,18 +59,35 @@ $elvd_guru_options = array_map(
             this.applyUrlFilters();
             this.fetchSchedules();
             this.fetchRelations();
-            this.$watch('filters.guru_id', () => this.syncUrl());
-            this.$watch('filters.mata_pelajaran_id', () => this.syncUrl());
-            this.$watch('filters.tahun_ajaran_id', () => this.syncUrl());
+            this.$watch('filters.kelas_id', () => {
+                this.syncUrl();
+                this.fetchSchedules();
+            });
+            this.$watch('filters.guru_id', () => {
+                this.syncUrl();
+                this.fetchSchedules();
+            });
+            this.$watch('filters.mata_pelajaran_id', () => {
+                this.syncUrl();
+                this.fetchSchedules();
+            });
+            this.$watch('filters.tahun_ajaran_id', () => {
+                this.syncUrl();
+                this.fetchSchedules();
+            });
         },
         applyUrlFilters() {
             const params = new URLSearchParams(window.location.search);
 
+            this.urlKelas = params.get('kelas') || '';
             this.urlGuru = params.get('guru') || '';
             this.urlMapel = params.get('mapel') || '';
             this.urlTahun = params.get('tahun') || '';
         },
         applyFiltersFromUrl() {
+            if (this.urlKelas) {
+                this.filters.kelas_id = this.urlKelas;
+            }
             if (this.urlGuru) {
                 this.filters.guru_id = this.urlGuru;
             } else if (config.currentRole === 'guru') {
@@ -86,6 +105,7 @@ $elvd_guru_options = array_map(
             const url = new URL(window.location.href);
             const params = url.searchParams;
             const map = {
+                kelas: this.filters.kelas_id,
                 guru: this.filters.guru_id,
                 mapel: this.filters.mata_pelajaran_id,
                 tahun: this.filters.tahun_ajaran_id
@@ -174,11 +194,12 @@ $elvd_guru_options = array_map(
         },
         filteredSchedules() {
             return this.schedules.filter((item) => {
+                const matchClass = !this.filters.kelas_id || Number(item.kelas_id) === Number(this.filters.kelas_id);
                 const matchTeacher = !this.filters.guru_id || Number(item.guru_id) === Number(this.filters.guru_id);
                 const matchSubject = !this.filters.mata_pelajaran_id || Number(item.mata_pelajaran_id) === Number(this.filters.mata_pelajaran_id);
                 const matchYear = !this.filters.tahun_ajaran_id || Number(item.tahun_ajaran_id) === Number(this.filters.tahun_ajaran_id);
 
-                return matchTeacher && matchSubject && matchYear;
+                return matchClass && matchTeacher && matchSubject && matchYear;
             });
         },
         totalPages() {
@@ -215,12 +236,13 @@ $elvd_guru_options = array_map(
         },
         resetFilters() {
             this.filters = {
+                kelas_id: '',
                 guru_id: '',
                 mata_pelajaran_id: '',
                 tahun_ajaran_id: ''
             };
             this.resetPage();
-            this.syncItems();
+            this.fetchSchedules();
         },
         resetForm() {
             this.form = {
@@ -387,8 +409,17 @@ $elvd_guru_options = array_map(
         <div class="elvd-resource-toolbar align-items-end">
             <div class="row g-2 flex-grow-1">
                 <div class="col-md-3">
+                    <label class="form-label" for="elvd-filter-jadwal-kelas"><?php echo esc_html__('Filter Kelas', 'elearning-vd'); ?></label>
+                    <select class="form-select" id="elvd-filter-jadwal-kelas" x-model="filters.kelas_id" @change="resetPage()" :disabled="loadingRelations">
+                        <option value="" x-text="loadingRelations ? 'Memuat kelas...' : 'Semua kelas'"></option>
+                        <template x-for="classItem in classes" :key="classItem.id">
+                            <option :value="String(classItem.id)" x-text="classItem.nama"></option>
+                        </template>
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label" for="elvd-filter-jadwal-tahun"><?php echo esc_html__('Filter Tahun Ajaran', 'elearning-vd'); ?></label>
-                    <select class="form-select" id="elvd-filter-jadwal-tahun" x-model="filters.tahun_ajaran_id" @change="resetPage(); syncItems()" :disabled="loadingRelations">
+                    <select class="form-select" id="elvd-filter-jadwal-tahun" x-model="filters.tahun_ajaran_id" @change="resetPage()" :disabled="loadingRelations">
                         <option value="" x-text="loadingRelations ? 'Memuat tahun...' : 'Semua tahun'"></option>
                         <template x-for="year in years" :key="year.id">
                             <option :value="String(year.id)" x-text="year.nama"></option>
@@ -397,7 +428,7 @@ $elvd_guru_options = array_map(
                 </div>
                 <div class="col-md-3">
                     <label class="form-label" for="elvd-filter-jadwal-guru"><?php echo esc_html__('Filter Guru', 'elearning-vd'); ?></label>
-                    <select class="form-select" id="elvd-filter-jadwal-guru" x-model="filters.guru_id" @change="resetPage(); syncItems()">
+                    <select class="form-select" id="elvd-filter-jadwal-guru" x-model="filters.guru_id" @change="resetPage()">
                         <option value=""><?php echo esc_html__('Semua guru', 'elearning-vd'); ?></option>
                         <template x-for="teacher in teachers" :key="teacher.id">
                             <option :value="String(teacher.id)" x-text="teacher.nama"></option>
@@ -406,38 +437,41 @@ $elvd_guru_options = array_map(
                 </div>
                 <div class="col-md-3">
                     <label class="form-label" for="elvd-filter-jadwal-mapel"><?php echo esc_html__('Filter Mapel', 'elearning-vd'); ?></label>
-                    <select class="form-select" id="elvd-filter-jadwal-mapel" x-model="filters.mata_pelajaran_id" @change="resetPage(); syncItems()" :disabled="loadingRelations">
+                    <select class="form-select" id="elvd-filter-jadwal-mapel" x-model="filters.mata_pelajaran_id" @change="resetPage()" :disabled="loadingRelations">
                         <option value="" x-text="loadingRelations ? 'Memuat mapel...' : 'Semua mapel'"></option>
                         <template x-for="subject in subjects" :key="subject.id">
                             <option :value="String(subject.id)" x-text="subject.nama"></option>
                         </template>
                     </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end gap-2">
-                    <button type="button" class="btn btn-secondary" @click="resetFilters()">
-                        <?php echo esc_html__('Reset Filter', 'elearning-vd'); ?>
-                    </button>
-                    <div class="form-check form-switch ms-md-2">
-                        <input
-                            class="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            id="elvd-jadwal-view-mode"
-                            :checked="viewMode === 'day'"
-                            @change="viewMode = $event.target.checked ? 'day' : 'table'">
-                        <label class="form-check-label small" for="elvd-jadwal-view-mode">
-                            <span x-text="viewMode === 'day' ? 'Per Hari' : 'Tabel'"></span>
-                        </label>
-                    </div>
-                </div>
             </div>
-            <button
-                type="button"
-                class="btn btn-primary elvd-action-button"
-                x-show="config.currentRole === 'administrator'"
-                @click="openCreate()">
-                <?php echo esc_html__('Tambah Jadwal', 'elearning-vd'); ?>
-            </button>
+        </div>
+
+        <div class="mb-3 d-flex justify-content-between">
+            <div class="form-check form-switch me-2">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="elvd-jadwal-view-mode"
+                    :checked="viewMode === 'day'"
+                    @change="viewMode = $event.target.checked ? 'day' : 'table'">
+                <label class="form-check-label small" for="elvd-jadwal-view-mode">
+                    <span x-text="viewMode === 'day' ? 'Per Hari' : 'Tabel'"></span>
+                </label>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button
+                    type="button"
+                    class="btn btn-primary elvd-action-button"
+                    x-show="config.currentRole === 'administrator'"
+                    @click="openCreate()">
+                    <?php echo esc_html__('Tambah Jadwal', 'elearning-vd'); ?>
+                </button>
+                <button type="button" class="btn btn-secondary ms-1" @click="resetFilters()">
+                    <?php echo esc_html__('Reset Filter', 'elearning-vd'); ?>
+                </button>
+            </div>
         </div>
 
         <div class="alert alert-danger" x-show="error" x-text="error"></div>
