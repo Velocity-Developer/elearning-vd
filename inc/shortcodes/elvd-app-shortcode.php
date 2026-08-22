@@ -116,9 +116,10 @@ function elvd_maybe_download_jadwal_siswa_pdf(): void
     };
 
     ob_start();
-    ?>
+?>
     <!DOCTYPE html>
     <html lang="id">
+
     <head>
         <meta charset="utf-8">
         <style>
@@ -127,48 +128,55 @@ function elvd_maybe_download_jadwal_siswa_pdf(): void
                 font-size: 11px;
                 color: #111827;
             }
+
             .header {
                 text-align: center;
                 margin-bottom: 16px;
             }
+
             .header h1 {
                 font-size: 18px;
                 margin: 0 0 6px;
             }
+
             .header p {
                 margin: 2px 0;
             }
+
             table {
                 width: 100%;
                 border-collapse: collapse;
             }
+
             th,
             td {
                 border: 1px solid #cbd5e1;
                 padding: 8px;
                 vertical-align: top;
             }
+
             th {
                 background: #e2e8f0;
                 text-align: center;
             }
+
             .time-cell {
                 width: 90px;
                 white-space: nowrap;
             }
+
             .empty {
                 color: #64748b;
                 text-align: center;
             }
         </style>
     </head>
+
     <body>
         <div class="header">
-            <h1><?php echo esc_html__('Jadwal Pelajaran Siswa', 'elearning-vd'); ?></h1>
+            <h1><?php echo esc_html__('Jadwal Pelajaran', 'elearning-vd'); ?></h1>
+            <p><?php echo esc_html($elvd_kelas_nama ?: '-') . ' | ' . esc_html($elvd_period); ?></p>
             <p><?php echo esc_html($elvd_school_name); ?></p>
-            <p><?php echo esc_html__('Nama Siswa:', 'elearning-vd') . ' ' . esc_html($elvd_student_name); ?></p>
-            <p><?php echo esc_html__('Kelas:', 'elearning-vd') . ' ' . esc_html($elvd_kelas_nama ?: '-'); ?></p>
-            <p><?php echo esc_html__('Tahun Ajaran:', 'elearning-vd') . ' ' . esc_html($elvd_period); ?></p>
         </div>
         <table>
             <thead>
@@ -197,8 +205,9 @@ function elvd_maybe_download_jadwal_siswa_pdf(): void
             </tbody>
         </table>
     </body>
+
     </html>
-    <?php
+<?php
     $elvd_html = (string) ob_get_clean();
 
     while (ob_get_level() > 0) {
