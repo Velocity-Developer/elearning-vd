@@ -1,6 +1,6 @@
 {
   "name": "elearning-vd",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Plugin WordPress Elearning",
   "keywords": [
     "wordpress",
@@ -22,6 +22,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node src/build.js",
+    "build:full": "composer install --no-dev --prefer-source && node src/build.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   }
 }

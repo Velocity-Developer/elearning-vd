@@ -7,7 +7,8 @@ const pluginSlug = path.basename(rootDir);
 const distDir = path.join(rootDir, 'dist');
 const outputFile = path.join(distDir, `${pluginSlug}.zip`);
 
-const excludedDirs = new Set(['.git', 'node_modules', 'src', 'dist','.github']);
+const excludedDirs = new Set(['.git', 'node_modules', 'dist', '.github']);
+const excludedRootDirs = new Set(['src']);
 const excludedFiles = new Set([
   'AGENTS.md',
   'DESIGN.md',
@@ -62,7 +63,14 @@ function shouldSkip(relativePath, dirent) {
   const baseName = dirent.name;
 
   if (dirent.isDirectory()) {
-    return excludedDirs.has(baseName);
+    if (excludedDirs.has(baseName)) {
+      return true;
+    }
+    // Only exclude 'src' at root level (relativePath = 'src')
+    if (relativePath === 'src' && excludedRootDirs.has(baseName)) {
+      return true;
+    }
+    return false;
   }
 
   return excludedFiles.has(baseName) || relativePath.endsWith('.zip');

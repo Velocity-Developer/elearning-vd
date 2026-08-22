@@ -38,7 +38,11 @@ jobs:
 
       - name: Install Composer dependencies
         if: steps.tag-check.outputs.exists == 'false'
-        run: composer install --no-interaction --no-dev --prefer-dist
+        run: composer install --no-interaction --no-dev --prefer-source
+
+      - name: Verify packaged vendor files
+        if: steps.tag-check.outputs.exists == 'false'
+        run: test -f vendor/sabberworm/php-css-parser/src/Rule/Rule.php
 
       - name: Build zip
         if: steps.tag-check.outputs.exists == 'false'
