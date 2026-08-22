@@ -71,7 +71,7 @@ function elvd_maybe_download_jadwal_siswa_pdf(): void
 
     $elvd_schedule_rows = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT j.hari, j.jam_mulai, j.jam_selesai, mp.nama AS mata_pelajaran
+            "SELECT j.hari, j.jam_mulai, j.jam_selesai, mp.nama AS mata_pelajaran, mp.kode_warna AS mata_pelajaran_kode_warna
              FROM %1\$s j
              LEFT JOIN %2\$s mp ON mp.id = j.mata_pelajaran_id
              WHERE j.kelas_id = %3\$d
@@ -96,7 +96,12 @@ function elvd_maybe_download_jadwal_siswa_pdf(): void
             ];
         }
 
-        $elvd_schedule_map[(string) $elvd_schedule_row->hari][$elvd_slot_key] = (string) $elvd_schedule_row->mata_pelajaran;
+        $elvd_color = sanitize_hex_color((string) $elvd_schedule_row->mata_pelajaran_kode_warna);
+
+        $elvd_schedule_map[(string) $elvd_schedule_row->hari][$elvd_slot_key] = [
+            'nama' => (string) $elvd_schedule_row->mata_pelajaran,
+            'kode_warna' => $elvd_color ?: '',
+        ];
     }
 
     uasort(
@@ -165,6 +170,10 @@ function elvd_maybe_download_jadwal_siswa_pdf(): void
                 white-space: nowrap;
             }
 
+            .subject-cell {
+                text-align: center;
+            }
+
             .empty {
                 color: #64748b;
                 text-align: center;
@@ -197,7 +206,14 @@ function elvd_maybe_download_jadwal_siswa_pdf(): void
                         <tr>
                             <td class="time-cell"><?php echo esc_html($elvd_format_time((string) $elvd_slot['jam_mulai']) . ' - ' . $elvd_format_time((string) $elvd_slot['jam_selesai'])); ?></td>
                             <?php foreach ($elvd_days as $elvd_day) : ?>
-                                <td><?php echo esc_html($elvd_schedule_map[$elvd_day][$elvd_slot_key] ?? '-'); ?></td>
+                                <?php $elvd_subject = $elvd_schedule_map[$elvd_day][$elvd_slot_key] ?? null; ?>
+                                <td
+                                    class="subject-cell"
+                                    <?php if (! empty($elvd_subject['kode_warna'])) : ?>
+                                    style="background: <?php echo esc_attr($elvd_subject['kode_warna']); ?>; color: #ffffff;"
+                                    <?php endif; ?>>
+                                    <?php echo esc_html($elvd_subject['nama'] ?? '-'); ?>
+                                </td>
                             <?php endforeach; ?>
                         </tr>
                     <?php endforeach; ?>
