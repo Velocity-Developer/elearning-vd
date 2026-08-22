@@ -31,7 +31,7 @@ $elvd_guru_options = array_map(
         saving: false,
         modalOpen: false,
         error: '',
-        viewMode: 'table',
+        viewMode: 'day',
         page: 1,
         perPage: 20,
         filters: {
@@ -99,6 +99,12 @@ $elvd_guru_options = array_map(
             }
             if (this.urlTahun) {
                 this.filters.tahun_ajaran_id = this.urlTahun;
+                return;
+            }
+
+            const activeYear = this.years.find((year) => year.status === 'aktif');
+            if (activeYear) {
+                this.filters.tahun_ajaran_id = String(activeYear.id);
             }
         },
         syncUrl() {
@@ -218,11 +224,20 @@ $elvd_guru_options = array_map(
                     .sort((a, b) => String(a.jam_mulai || '').localeCompare(String(b.jam_mulai || '')))
             }));
         },
-        maxDayScheduleRows() {
-            return this.schedulesByDay().reduce((max, dayGroup) => Math.max(max, dayGroup.items.length), 0);
+        dayScheduleSlots() {
+            const slots = [];
+
+            this.filteredSchedules().forEach((item) => {
+                const slot = this.timeRange(item);
+                if (slot !== '-' && !slots.includes(slot)) {
+                    slots.push(slot);
+                }
+            });
+
+            return slots.sort((a, b) => String(a).localeCompare(String(b)));
         },
-        dayScheduleItem(dayGroup, index) {
-            return dayGroup.items[index] || null;
+        dayScheduleItem(dayGroup, slot) {
+            return dayGroup.items.find((item) => this.timeRange(item) === slot) || null;
         },
         goPage(p) {
             this.page = Math.min(Math.max(1, p), this.totalPages());
@@ -538,6 +553,7 @@ $elvd_guru_options = array_map(
             <table class="table align-middle mb-0 elvd-table">
                 <thead>
                     <tr>
+                        <th scope="col" class="text-center"><?php echo esc_html__('Jam', 'elearning-vd'); ?></th>
                         <template x-for="dayGroup in schedulesByDay()" :key="dayGroup.day">
                             <th scope="col" class="text-center" x-text="dayGroup.day"></th>
                         </template>
@@ -545,19 +561,19 @@ $elvd_guru_options = array_map(
                 </thead>
                 <tbody>
                     <tr x-show="loadingSchedules">
-                        <td :colspan="days.length"><?php echo esc_html__('Memuat data jadwal pelajaran...', 'elearning-vd'); ?></td>
+                        <td :colspan="days.length + 1"><?php echo esc_html__('Memuat data jadwal pelajaran...', 'elearning-vd'); ?></td>
                     </tr>
                     <template x-if="!loadingSchedules && filteredSchedules().length > 0">
-                        <template x-for="rowIndex in maxDayScheduleRows()" :key="`day-row-${rowIndex}`">
+                        <template x-for="slot in dayScheduleSlots()" :key="`day-row-${slot}`">
                             <tr>
-                                <template x-for="dayGroup in schedulesByDay()" :key="`${dayGroup.day}-${rowIndex}`">
+                                <td class="align-top text-nowrap fw-semibold" x-text="slot"></td>
+                                <template x-for="dayGroup in schedulesByDay()" :key="`${dayGroup.day}-${slot}`">
                                     <td class="align-top">
-                                        <template x-if="dayScheduleItem(dayGroup, rowIndex - 1)">
-                                            <div class="elvd-day-schedule-item" x-data="{ item: dayScheduleItem(dayGroup, rowIndex - 1) }">
+                                        <template x-if="dayScheduleItem(dayGroup, slot)">
+                                            <div class="elvd-day-schedule-item" x-data="{ item: dayScheduleItem(dayGroup, slot) }">
                                                 <div class="fw-semibold" x-text="subjectName(item.mata_pelajaran_id)"></div>
                                                 <div class="small text-muted" x-text="className(item.kelas_id)"></div>
                                                 <div class="small text-muted" x-text="teacherName(item.guru_id)"></div>
-                                                <div class="small" x-text="timeRange(item)"></div>
                                                 <div class="elvd-day-schedule-actions" x-show="config.currentRole === 'administrator'">
                                                     <button
                                                         type="button"
@@ -574,7 +590,7 @@ $elvd_guru_options = array_map(
                                                 </div>
                                             </div>
                                         </template>
-                                        <template x-if="!dayScheduleItem(dayGroup, rowIndex - 1)">
+                                        <template x-if="!dayScheduleItem(dayGroup, slot)">
                                             <span class="text-muted small">-</span>
                                         </template>
                                     </td>
@@ -583,7 +599,7 @@ $elvd_guru_options = array_map(
                         </template>
                     </template>
                     <tr x-show="!loadingSchedules && filteredSchedules().length === 0">
-                        <td :colspan="days.length"><?php echo esc_html__('Belum ada jadwal pelajaran sesuai filter.', 'elearning-vd'); ?></td>
+                        <td :colspan="days.length + 1"><?php echo esc_html__('Belum ada jadwal pelajaran sesuai filter.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
             </table>
