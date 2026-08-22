@@ -107,9 +107,7 @@ $elvd_tahun_aktif = (string) $wpdb->get_var(
                 return '-';
             }
 
-            const item = this.schedules.find((schedule) => Number(schedule.kelas_id) === this.kelasId);
-
-            return item?.kelas_nama || `Kelas #${this.kelasId}`;
+            return config.siswaKelasNama || `Kelas #${this.kelasId}`;
         },
         subjectName(item) {
             return item?.mata_pelajaran?.nama || '-';

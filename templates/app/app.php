@@ -27,6 +27,7 @@ if (! is_user_logged_in()) {
     );
 
     $elvd_siswa_kelas_id = 0;
+    $elvd_siswa_kelas_nama = '';
 
     if ('siswa' === $elvd_current_role) {
         $elvd_kelas_meta = (string) get_user_meta($elvd_current_user->ID, 'elvd_kelas', true);
@@ -36,7 +37,7 @@ if (! is_user_logged_in()) {
 
             $elvd_kelas_row = $wpdb->get_row(
                 $wpdb->prepare(
-                    'SELECT id FROM `%1$s` WHERE id = %2$d OR nama = %3$s LIMIT 1',
+                    'SELECT id, nama FROM `%1$s` WHERE id = %2$d OR nama = %3$s LIMIT 1',
                     elvd_table_name('elvd_kelas'),
                     absint($elvd_kelas_meta),
                     $elvd_kelas_meta
@@ -45,6 +46,7 @@ if (! is_user_logged_in()) {
 
             if ($elvd_kelas_row) {
                 $elvd_siswa_kelas_id = (int) $elvd_kelas_row->id;
+                $elvd_siswa_kelas_nama = (string) $elvd_kelas_row->nama;
             }
         }
     }
@@ -56,6 +58,7 @@ if (! is_user_logged_in()) {
         'currentRole' => $elvd_current_role,
         'userId' => (int) $elvd_current_user->ID,
         'siswaKelasId' => $elvd_siswa_kelas_id,
+        'siswaKelasNama' => $elvd_siswa_kelas_nama,
     ];
 
     $school_name = trim((string) get_option(ELVD::OPTION_SCHOOL_NAME, get_bloginfo('name')));
