@@ -14,365 +14,422 @@ $elvd_class_options = 'guru' === $elvd_current_role
     : [];
 ?>
 
-<div x-show="active === 'quiz-form'" x-data="{
-    restUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url('wp/v2/elvd_quiz')))); ?>,
-    questionRestUrl: <?php echo esc_attr(wp_json_encode(untrailingslashit(rest_url('wp/v2/elvd_quiz_question')))); ?>,
-    baseUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_base_url)); ?>,
-    backUrl: <?php echo esc_attr(wp_json_encode($elvd_quiz_back_url)); ?>,
-    quizId: <?php echo esc_attr((string) $elvd_quiz_id); ?>,
-    view: 'form',
-    classes: <?php echo esc_attr(wp_json_encode($elvd_class_options)); ?>,
-    subjects: [],
-    loading: false,
-    loadingRelations: false,
-    saving: false,
-    saved: false,
-    error: '',
-    form: {
-        judul: '',
-        tipe: 'pilihan_ganda',
-        durasi_menit: 30,
-        keamanan: false,
-        kelas_id: '',
-        mata_pelajaran_id: '',
-        pertanyaan: ''
-    },
-    questions: [],
-    loadingQuestions: false,
-    savingQuestion: false,
-    questionError: '',
-    editingQuestion: null,
-    openJawabanIndex: -1,
-    init() {
-        this.fetchRelations();
-        if (this.quizId) {
-            this.loadQuiz();
-            this.fetchQuestions();
-        }
-    },
-    metaValue(item, key) {
-        return item.meta && item.meta[key] ? item.meta[key] : '';
-    },
-    titleOf(item) {
-        return (item.title && (item.title.rendered || item.title.raw)) ? (item.title.rendered || item.title.raw) : '';
-    },
-    contentOf(item) {
-        if (item.content && item.content.raw) {
-            return item.content.raw;
-        }
-
-        if (item.content && item.content.rendered) {
-            const div = document.createElement('div');
-            div.innerHTML = item.content.rendered;
-            return div.textContent || div.innerText || '';
-        }
-
-        return '';
-    },
-    fetchRelations() {
-        this.loadingRelations = true;
-
-        Promise.all([
-            fetch(`${config.restUrl}/kelas?per_page=100`, { headers: { 'X-WP-Nonce': config.nonce } }),
-            fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, { headers: { 'X-WP-Nonce': config.nonce } })
-        ])
-        .then((responses) => {
-            responses.forEach((response) => {
-                if (!response.ok) {
-                    throw new Error('Gagal memuat data pilihan quiz.');
-                }
-            });
-
-            return Promise.all(responses.map((response) => response.json()));
-        })
-        .then(([classes, subjects]) => {
-            const fetchedClasses = Array.isArray(classes) ? classes : [];
-            this.classes = config.currentRole === 'guru'
-                ? fetchedClasses.filter((item) => this.classes.some((classItem) => Number(classItem.id) === Number(item.id)))
-                : fetchedClasses;
-            this.subjects = Array.isArray(subjects) ? subjects : [];
-        })
-        .catch((error) => {
-            this.error = error.message || 'Gagal memuat data pilihan quiz.';
-        })
-        .finally(() => {
-            this.loadingRelations = false;
-        });
-    },
-    loadQuiz() {
-        this.loading = true;
-        this.error = '';
-
-        fetch(`${this.restUrl}/${this.quizId}`, { headers: { 'X-WP-Nonce': config.nonce } })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error('Gagal memuat data quiz.');
-            }
-
-            return response.json();
-        })
-        .then((item) => {
-            this.form = {
-                judul: this.titleOf(item),
-                tipe: this.metaValue(item, 'elvd_quiz_tipe') || 'pilihan_ganda',
-                durasi_menit: Number(this.metaValue(item, 'elvd_durasi_menit')) || 30,
-                keamanan: Boolean(this.metaValue(item, 'elvd_keamanan')),
-                kelas_id: this.metaValue(item, 'elvd_kelas_id') ? String(this.metaValue(item, 'elvd_kelas_id')) : '',
-                mata_pelajaran_id: this.metaValue(item, 'elvd_mata_pelajaran_id') ? String(this.metaValue(item, 'elvd_mata_pelajaran_id')) : '',
-                pertanyaan: this.contentOf(item)
-            };
-        })
-        .catch((error) => {
-            this.error = error.message || 'Gagal memuat data quiz.';
-        })
-        .finally(() => {
-            this.loading = false;
-        });
-    },
-    submitForm() {
-        this.saving = true;
-        this.error = '';
-        this.saved = false;
-
-        const url = this.quizId ? `${this.restUrl}/${this.quizId}` : this.restUrl;
-
-        const payload = {
-            title: this.form.judul,
-            content: this.form.pertanyaan,
-            status: 'publish',
-            meta: {
-                elvd_quiz_tipe: this.form.tipe,
-                elvd_durasi_menit: Number(this.form.durasi_menit) || 0,
-                elvd_keamanan: Boolean(this.form.keamanan),
-                elvd_kelas_id: this.form.kelas_id ? Number(this.form.kelas_id) : 0,
-                elvd_mata_pelajaran_id: this.form.mata_pelajaran_id ? Number(this.form.mata_pelajaran_id) : 0
-            }
-        };
-
-        fetch(url, {
-            method: this.quizId ? 'PUT' : 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-WP-Nonce': config.nonce
-            },
-            body: JSON.stringify(payload)
-        })
-        .then((response) => response.json().then((data) => ({ response, data })))
-        .then(({ response, data }) => {
-            if (!response.ok) {
-                throw new Error(data?.message || 'Gagal menyimpan quiz.');
-            }
-
-            if (!this.quizId) {
-                this.quizId = Number(data.id);
-                this.view = 'questions';
-                this.$nextTick(() => this.fetchQuestions());
-            }
-
-            this.saved = true;
-        })
-        .catch((error) => {
-            this.error = error.message || 'Gagal menyimpan quiz.';
-        })
-        .finally(() => {
-            this.saving = false;
-        });
-    },
-    setView(next) {
-        if (next === 'questions' && !this.quizId) {
-            return;
-        }
-
-        this.view = next;
-    },
-    blankQuestion() {
+<script>
+    function elvdQuizForm() {
         return {
-            id: null,
-            pertanyaan: '',
-            tipe: this.form.tipe || 'pilihan_ganda',
-            poin: 1,
-            opsi: [
-                { id: 'new-0', text: '' },
-                { id: 'new-1', text: '' }
-            ],
-            jawaban_benar: ''
-        };
-    },
-    openCreateQuestion() {
-        this.editingQuestion = this.blankQuestion();
-        this.openJawabanIndex = -1;
-        this.questionError = '';
-    },
-    openEditQuestion(item) {
-        let parsed = [];
-
-        try {
-            parsed = JSON.parse(this.metaValue(item, 'elvd_opsi') || '[]');
-        } catch (err) {
-            parsed = [];
-        }
-
-        if (!Array.isArray(parsed)) {
-            parsed = [];
-        }
-
-        const opsi = parsed.map((text, i) => ({ id: `opsi-${i}`, text: String(text ?? '') }));
-
-        this.editingQuestion = {
-            id: Number(item.id),
-            pertanyaan: this.titleOf(item),
-            tipe: this.form.tipe || 'pilihan_ganda',
-            poin: Number(this.metaValue(item, 'elvd_poin')) || 1,
-            opsi: opsi.length ? opsi : [{ id: 'new-0', text: '' }, { id: 'new-1', text: '' }],
-            jawaban_benar: this.metaValue(item, 'elvd_jawaban_benar')
-        };
-
-        this.openJawabanIndex = this.editingQuestion.opsi.findIndex((opsiItem, i) => this.editingQuestion.jawaban_benar === String(i));
-        this.questionError = '';
-    },
-    closeQuestion() {
-        this.editingQuestion = null;
-        this.questionError = '';
-    },
-    addOpsi() {
-        this.editingQuestion.opsi.push({ id: `opsi-${Date.now()}`, text: '' });
-    },
-    removeOpsi(index) {
-        if (this.editingQuestion.jawaban_benar === String(index)) {
-            this.editingQuestion.jawaban_benar = '';
-            this.openJawabanIndex = -1;
-        }
-
-        this.editingQuestion.opsi.splice(index, 1);
-    },
-    selectJawaban(index) {
-        this.editingQuestion.jawaban_benar = String(index);
-        this.openJawabanIndex = index;
-    },
-    saveQuestion() {
-        if (!this.quizId) {
-            this.questionError = 'Simpan quiz dahulu sebelum menambah pertanyaan.';
-            this.view = 'form';
-            return;
-        }
-
-        if (this.editingQuestion.tipe === 'pilihan_ganda') {
-            const filled = this.editingQuestion.opsi.filter((opsi) => (opsi.text || '').trim() !== '');
-
-            if (filled.length < 2) {
-                this.questionError = 'Pilihan ganda minimal memiliki 2 opsi.';
-                return;
-            }
-
-            if (this.editingQuestion.jawaban_benar === '') {
-                this.questionError = 'Pilih jawaban yang benar.';
-                return;
-            }
-        }
-
-        this.savingQuestion = true;
-        this.questionError = '';
-
-        const isEdit = Boolean(this.editingQuestion.id);
-        const url = isEdit ? `${this.questionRestUrl}/${this.editingQuestion.id}` : this.questionRestUrl;
-
-        const payload = {
-            title: this.editingQuestion.pertanyaan,
-            content: '',
-            status: 'publish',
-            meta: {
-                elvd_quiz_id: Number(this.quizId),
-                elvd_pertanyaan_tipe: this.editingQuestion.tipe,
-                elvd_poin: this.editingQuestion.tipe === 'essay' ? (Number(this.editingQuestion.poin) || 0) : 0,
-                elvd_opsi: this.editingQuestion.tipe === 'pilihan_ganda'
-                    ? JSON.stringify(this.editingQuestion.opsi.map((o) => o.text))
-                    : '',
-                elvd_jawaban_benar: this.editingQuestion.jawaban_benar
-            }
-        };
-
-        fetch(url, {
-            method: isEdit ? 'PUT' : 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-WP-Nonce': config.nonce
+            restUrl: <?php echo wp_json_encode(untrailingslashit(rest_url('wp/v2/elvd_quiz'))); ?>,
+            questionRestUrl: <?php echo wp_json_encode(untrailingslashit(rest_url('wp/v2/elvd_quiz_question'))); ?>,
+            baseUrl: <?php echo wp_json_encode($elvd_quiz_base_url); ?>,
+            backUrl: <?php echo wp_json_encode($elvd_quiz_back_url); ?>,
+            quizId: <?php echo (int) $elvd_quiz_id; ?>,
+            view: 'form',
+            classes: <?php echo wp_json_encode($elvd_class_options); ?>,
+            subjects: [],
+            loading: false,
+            loadingRelations: false,
+            saving: false,
+            saved: false,
+            error: '',
+            form: {
+                judul: '',
+                tipe: 'pilihan_ganda',
+                durasi_menit: 30,
+                keamanan: false,
+                kelas_id: '',
+                mata_pelajaran_id: '',
+                pertanyaan: ''
             },
-            body: JSON.stringify(payload)
-        })
-        .then((response) => response.json().then((data) => ({ response, data })))
-        .then(({ response, data }) => {
-            if (!response.ok) {
-                throw new Error(data?.message || 'Gagal menyimpan pertanyaan.');
+            questions: [],
+            loadingQuestions: false,
+            savingQuestion: false,
+            questionError: '',
+            editingQuestion: null,
+            openJawabanIndex: -1,
+            init() {
+                this.fetchRelations();
+                if (this.quizId) {
+                    this.loadQuiz();
+                    this.fetchQuestions();
+                }
+            },
+            metaValue(item, key) {
+                return item.meta && item.meta[key] ? item.meta[key] : '';
+            },
+            titleOf(item) {
+                return (item.title && (item.title.rendered || item.title.raw)) ? (item.title.rendered || item.title.raw) : '';
+            },
+            contentOf(item) {
+                if (item.content && item.content.raw) {
+                    return item.content.raw;
+                }
+
+                if (item.content && item.content.rendered) {
+                    const div = document.createElement('div');
+                    div.innerHTML = item.content.rendered;
+                    return div.textContent || div.innerText || '';
+                }
+
+                return '';
+            },
+            fetchRelations() {
+                this.loadingRelations = true;
+
+                Promise.all([
+                        fetch(`${config.restUrl}/kelas?per_page=100`, {
+                            headers: {
+                                'X-WP-Nonce': config.nonce
+                            }
+                        }),
+                        fetch(`${config.restUrl}/mata-pelajaran?per_page=100`, {
+                            headers: {
+                                'X-WP-Nonce': config.nonce
+                            }
+                        })
+                    ])
+                    .then((responses) => {
+                        responses.forEach((response) => {
+                            if (!response.ok) {
+                                throw new Error('Gagal memuat data pilihan quiz.');
+                            }
+                        });
+
+                        return Promise.all(responses.map((response) => response.json()));
+                    })
+                    .then(([classes, subjects]) => {
+                        const fetchedClasses = Array.isArray(classes) ? classes : [];
+                        this.classes = config.currentRole === 'guru' ?
+                            fetchedClasses.filter((item) => this.classes.some((classItem) => Number(classItem.id) === Number(item.id))) :
+                            fetchedClasses;
+                        this.subjects = Array.isArray(subjects) ? subjects : [];
+                    })
+                    .catch((error) => {
+                        this.error = error.message || 'Gagal memuat data pilihan quiz.';
+                    })
+                    .finally(() => {
+                        this.loadingRelations = false;
+                    });
+            },
+            loadQuiz() {
+                this.loading = true;
+                this.error = '';
+
+                fetch(`${this.restUrl}/${this.quizId}`, {
+                        headers: {
+                            'X-WP-Nonce': config.nonce
+                        }
+                    })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error('Gagal memuat data quiz.');
+                        }
+
+                        return response.json();
+                    })
+                    .then((item) => {
+                        this.form = {
+                            judul: this.titleOf(item),
+                            tipe: this.metaValue(item, 'elvd_quiz_tipe') || 'pilihan_ganda',
+                            durasi_menit: Number(this.metaValue(item, 'elvd_durasi_menit')) || 30,
+                            keamanan: Boolean(this.metaValue(item, 'elvd_keamanan')),
+                            kelas_id: this.metaValue(item, 'elvd_kelas_id') ? String(this.metaValue(item, 'elvd_kelas_id')) : '',
+                            mata_pelajaran_id: this.metaValue(item, 'elvd_mata_pelajaran_id') ? String(this.metaValue(item, 'elvd_mata_pelajaran_id')) : '',
+                            pertanyaan: this.contentOf(item)
+                        };
+                    })
+                    .catch((error) => {
+                        this.error = error.message || 'Gagal memuat data quiz.';
+                    })
+                    .finally(() => {
+                        this.loading = false;
+                    });
+            },
+            submitForm() {
+                this.saving = true;
+                this.error = '';
+                this.saved = false;
+
+                const url = this.quizId ? `${this.restUrl}/${this.quizId}` : this.restUrl;
+
+                const payload = {
+                    title: this.form.judul,
+                    content: this.form.pertanyaan,
+                    status: 'publish',
+                    meta: {
+                        elvd_quiz_tipe: this.form.tipe,
+                        elvd_durasi_menit: Number(this.form.durasi_menit) || 0,
+                        elvd_keamanan: Boolean(this.form.keamanan),
+                        elvd_kelas_id: this.form.kelas_id ? Number(this.form.kelas_id) : 0,
+                        elvd_mata_pelajaran_id: this.form.mata_pelajaran_id ? Number(this.form.mata_pelajaran_id) : 0
+                    }
+                };
+
+                fetch(url, {
+                        method: this.quizId ? 'PUT' : 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': config.nonce
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then((response) => response.json().then((data) => ({
+                        response,
+                        data
+                    })))
+                    .then(({
+                        response,
+                        data
+                    }) => {
+                        if (!response.ok) {
+                            throw new Error(data?.message || 'Gagal menyimpan quiz.');
+                        }
+
+                        if (!this.quizId) {
+                            this.quizId = Number(data.id);
+                            this.view = 'questions';
+                            this.$nextTick(() => this.fetchQuestions());
+                        }
+
+                        this.saved = true;
+                    })
+                    .catch((error) => {
+                        this.error = error.message || 'Gagal menyimpan quiz.';
+                    })
+                    .finally(() => {
+                        this.saving = false;
+                    });
+            },
+            setView(next) {
+                if (next === 'questions' && !this.quizId) {
+                    return;
+                }
+
+                this.view = next;
+            },
+            blankQuestion() {
+                return {
+                    id: null,
+                    pertanyaan: '',
+                    tipe: this.form.tipe || 'pilihan_ganda',
+                    poin: 1,
+                    opsi: [{
+                            id: 'new-0',
+                            text: ''
+                        },
+                        {
+                            id: 'new-1',
+                            text: ''
+                        }
+                    ],
+                    jawaban_benar: ''
+                };
+            },
+            openCreateQuestion() {
+                this.editingQuestion = this.blankQuestion();
+                this.openJawabanIndex = -1;
+                this.questionError = '';
+            },
+            openEditQuestion(item) {
+                let parsed = [];
+
+                try {
+                    parsed = JSON.parse(this.metaValue(item, 'elvd_opsi') || '[]');
+                } catch (err) {
+                    parsed = [];
+                }
+
+                if (!Array.isArray(parsed)) {
+                    parsed = [];
+                }
+
+                const opsi = parsed.map((text, i) => ({
+                    id: `opsi-${i}`,
+                    text: String(text ?? '')
+                }));
+
+                this.editingQuestion = {
+                    id: Number(item.id),
+                    pertanyaan: this.titleOf(item),
+                    tipe: this.form.tipe || 'pilihan_ganda',
+                    poin: Number(this.metaValue(item, 'elvd_poin')) || 1,
+                    opsi: opsi.length ? opsi : [{
+                        id: 'new-0',
+                        text: ''
+                    }, {
+                        id: 'new-1',
+                        text: ''
+                    }],
+                    jawaban_benar: this.metaValue(item, 'elvd_jawaban_benar')
+                };
+
+                this.openJawabanIndex = this.editingQuestion.opsi.findIndex((opsiItem, i) => this.editingQuestion.jawaban_benar === String(i));
+                this.questionError = '';
+            },
+            closeQuestion() {
+                this.editingQuestion = null;
+                this.questionError = '';
+            },
+            addOpsi() {
+                this.editingQuestion.opsi.push({
+                    id: `opsi-${Date.now()}`,
+                    text: ''
+                });
+            },
+            removeOpsi(index) {
+                if (this.editingQuestion.jawaban_benar === String(index)) {
+                    this.editingQuestion.jawaban_benar = '';
+                    this.openJawabanIndex = -1;
+                }
+
+                this.editingQuestion.opsi.splice(index, 1);
+            },
+            selectJawaban(index) {
+                this.editingQuestion.jawaban_benar = String(index);
+                this.openJawabanIndex = index;
+            },
+            saveQuestion() {
+                if (!this.quizId) {
+                    this.questionError = 'Simpan quiz dahulu sebelum menambah pertanyaan.';
+                    this.view = 'form';
+                    return;
+                }
+
+                if (this.editingQuestion.tipe === 'pilihan_ganda') {
+                    const filled = this.editingQuestion.opsi.filter((opsi) => (opsi.text || '').trim() !== '');
+
+                    if (filled.length < 2) {
+                        this.questionError = 'Pilihan ganda minimal memiliki 2 opsi.';
+                        return;
+                    }
+
+                    if (this.editingQuestion.jawaban_benar === '') {
+                        this.questionError = 'Pilih jawaban yang benar.';
+                        return;
+                    }
+                }
+
+                this.savingQuestion = true;
+                this.questionError = '';
+
+                const isEdit = Boolean(this.editingQuestion.id);
+                const url = isEdit ? `${this.questionRestUrl}/${this.editingQuestion.id}` : this.questionRestUrl;
+
+                const payload = {
+                    title: this.editingQuestion.pertanyaan,
+                    content: '',
+                    status: 'publish',
+                    meta: {
+                        elvd_quiz_id: Number(this.quizId),
+                        elvd_pertanyaan_tipe: this.editingQuestion.tipe,
+                        elvd_poin: this.editingQuestion.tipe === 'essay' ? (Number(this.editingQuestion.poin) || 0) : 0,
+                        elvd_opsi: this.editingQuestion.tipe === 'pilihan_ganda' ?
+                            JSON.stringify(this.editingQuestion.opsi.map((o) => o.text)) : '',
+                        elvd_jawaban_benar: this.editingQuestion.jawaban_benar
+                    }
+                };
+
+                fetch(url, {
+                        method: isEdit ? 'PUT' : 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': config.nonce
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then((response) => response.json().then((data) => ({
+                        response,
+                        data
+                    })))
+                    .then(({
+                        response,
+                        data
+                    }) => {
+                        if (!response.ok) {
+                            throw new Error(data?.message || 'Gagal menyimpan pertanyaan.');
+                        }
+
+                        this.fetchQuestions();
+                        this.closeQuestion();
+                    })
+                    .catch((error) => {
+                        this.questionError = error.message || 'Gagal menyimpan pertanyaan.';
+                    })
+                    .finally(() => {
+                        this.savingQuestion = false;
+                    });
+            },
+            deleteQuestion(item) {
+                if (!window.confirm('Hapus pertanyaan ini?')) {
+                    return;
+                }
+
+                fetch(`${this.questionRestUrl}/${item.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-WP-Nonce': config.nonce
+                        }
+                    })
+                    .then((response) => response.json().then((data) => ({
+                        response,
+                        data
+                    })))
+                    .then(({
+                        response
+                    }) => {
+                        if (!response.ok) {
+                            throw new Error('Gagal menghapus pertanyaan.');
+                        }
+
+                        this.fetchQuestions();
+                    })
+                    .catch((error) => {
+                        this.questionError = error.message || 'Gagal menghapus pertanyaan.';
+                    });
+            },
+            fetchQuestions() {
+                if (!this.quizId) {
+                    return;
+                }
+
+                this.loadingQuestions = true;
+
+                fetch(`${this.questionRestUrl}?per_page=100`, {
+                        headers: {
+                            'X-WP-Nonce': config.nonce
+                        }
+                    })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const all = Array.isArray(data) ? data : [];
+
+                        this.questions = all.filter((item) => Number(this.metaValue(item, 'elvd_quiz_id')) === Number(this.quizId));
+                    })
+                    .catch(() => {
+                        this.questions = [];
+                    })
+                    .finally(() => {
+                        this.loadingQuestions = false;
+                    });
+            },
+            previewOpsi(item) {
+                let parsed = [];
+
+                try {
+                    parsed = JSON.parse(this.metaValue(item, 'elvd_opsi') || '[]');
+                } catch (err) {
+                    parsed = [];
+                }
+
+                if (!Array.isArray(parsed) || parsed.length === 0) {
+                    return '-';
+                }
+
+                return parsed.map((text, i) => `${['A', 'B', 'C', 'D', 'E', 'F'][i] || (i + 1)}. ${text}`).join(' | ');
             }
-
-            this.fetchQuestions();
-            this.closeQuestion();
-        })
-        .catch((error) => {
-            this.questionError = error.message || 'Gagal menyimpan pertanyaan.';
-        })
-        .finally(() => {
-            this.savingQuestion = false;
-        });
-    },
-    deleteQuestion(item) {
-        if (!window.confirm('Hapus pertanyaan ini?')) {
-            return;
-        }
-
-        fetch(`${this.questionRestUrl}/${item.id}`, {
-            method: 'DELETE',
-            headers: { 'X-WP-Nonce': config.nonce }
-        })
-        .then((response) => response.json().then((data) => ({ response, data })))
-        .then(({ response }) => {
-            if (!response.ok) {
-                throw new Error('Gagal menghapus pertanyaan.');
-            }
-
-            this.fetchQuestions();
-        })
-        .catch((error) => {
-            this.questionError = error.message || 'Gagal menghapus pertanyaan.';
-        });
-    },
-    fetchQuestions() {
-        if (!this.quizId) {
-            return;
-        }
-
-        this.loadingQuestions = true;
-
-        fetch(`${this.questionRestUrl}?per_page=100`, { headers: { 'X-WP-Nonce': config.nonce } })
-        .then((response) => response.json())
-        .then((data) => {
-            const all = Array.isArray(data) ? data : [];
-
-            this.questions = all.filter((item) => Number(this.metaValue(item, 'elvd_quiz_id')) === Number(this.quizId));
-        })
-        .catch(() => {
-            this.questions = [];
-        })
-        .finally(() => {
-            this.loadingQuestions = false;
-        });
-    },
-    previewOpsi(item) {
-        let parsed = [];
-
-        try {
-            parsed = JSON.parse(this.metaValue(item, 'elvd_opsi') || '[]');
-        } catch (err) {
-            parsed = [];
-        }
-
-        if (!Array.isArray(parsed) || parsed.length === 0) {
-            return '-';
-        }
-
-        return parsed.map((text, i) => `${['A', 'B', 'C', 'D', 'E', 'F'][i] || (i + 1)}. ${text}`).join(' | ');
+        };
     }
-}">
+</script>
+
+<div x-show="active === 'quiz-form'" x-data="elvdQuizForm">
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">
             <a class="btn btn-secondary elvd-text-button" :href="backUrl">
@@ -439,7 +496,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="elvd-quiz-mapel"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></label>
-                        <select class="form-select" id="elvd-quiz-mapel" x-model="form.mata_pelajaran_id" required :disabled="loadingRelations">
+                        <select class="form-select" id="elvd-quiz-mapel" x-model.number="form.mata_pelajaran_id" required :disabled="loadingRelations">
                             <option value="" x-text="loadingRelations ? 'Memuat mapel...' : 'Pilih mata pelajaran'"></option>
                             <template x-for="subject in subjects" :key="subject.id">
                                 <option :value="String(subject.id)" x-text="subject.nama"></option>
@@ -448,7 +505,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="elvd-quiz-kelas"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></label>
-                        <select class="form-select" id="elvd-quiz-kelas" x-model="form.kelas_id" required :disabled="loadingRelations">
+                        <select class="form-select" id="elvd-quiz-kelas" x-model.number="form.kelas_id" required :disabled="loadingRelations">
                             <option value="" x-text="loadingRelations ? 'Memuat kelas...' : 'Pilih kelas'"></option>
                             <template x-for="classItem in classes" :key="classItem.id">
                                 <option :value="String(classItem.id)" x-text="classItem.nama"></option>

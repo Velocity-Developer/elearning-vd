@@ -69,7 +69,10 @@ $elvd_class_options = 'guru' === $elvd_current_role
             return response.json();
         })
         .then((data) => {
-            this.quizzes = Array.isArray(data) ? data : [];
+            const quizzes = Array.isArray(data) ? data : [];
+            this.quizzes = config.currentRole === 'siswa'
+                ? quizzes.filter((item) => Number(this.metaValue(item, 'elvd_kelas_id')) === Number(config.siswaKelasId))
+                : quizzes;
             this.$dispatch('elvd-items-updated', { items: this.quizzes });
         })
         .catch((error) => {
