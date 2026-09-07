@@ -74,6 +74,11 @@ function elvd_register_post_meta(): void
                     'single' => true,
                     'sanitize_callback' => 'absint',
                 ],
+                'elvd_keamanan' => [
+                    'type' => 'boolean',
+                    'single' => true,
+                    'sanitize_callback' => 'rest_sanitize_boolean',
+                ],
                 'elvd_pertanyaan' => [
                     'type' => 'string',
                     'single' => true,

@@ -32,6 +32,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
         judul: '',
         tipe: 'pilihan_ganda',
         durasi_menit: 30,
+        keamanan: false,
         kelas_id: '',
         mata_pelajaran_id: '',
         pertanyaan: ''
@@ -115,6 +116,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
                 judul: this.titleOf(item),
                 tipe: this.metaValue(item, 'elvd_quiz_tipe') || 'pilihan_ganda',
                 durasi_menit: Number(this.metaValue(item, 'elvd_durasi_menit')) || 30,
+                keamanan: Boolean(this.metaValue(item, 'elvd_keamanan')),
                 kelas_id: this.metaValue(item, 'elvd_kelas_id') ? String(this.metaValue(item, 'elvd_kelas_id')) : '',
                 mata_pelajaran_id: this.metaValue(item, 'elvd_mata_pelajaran_id') ? String(this.metaValue(item, 'elvd_mata_pelajaran_id')) : '',
                 pertanyaan: this.contentOf(item)
@@ -141,6 +143,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
             meta: {
                 elvd_quiz_tipe: this.form.tipe,
                 elvd_durasi_menit: Number(this.form.durasi_menit) || 0,
+                elvd_keamanan: Boolean(this.form.keamanan),
                 elvd_kelas_id: this.form.kelas_id ? Number(this.form.kelas_id) : 0,
                 elvd_mata_pelajaran_id: this.form.mata_pelajaran_id ? Number(this.form.mata_pelajaran_id) : 0
             }
@@ -452,6 +455,14 @@ $elvd_class_options = 'guru' === $elvd_current_role
                             </template>
                         </select>
                     </div>
+                </div>
+
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="elvd-quiz-keamanan" x-model="form.keamanan">
+                    <label class="form-check-label" for="elvd-quiz-keamanan">
+                        <?php echo esc_html__('Keamanan', 'elearning-vd'); ?>
+                    </label>
+                    <div class="form-text"><?php echo esc_html__('Jika aktif, ujian dianggap selesai jika meninggalkan browser.', 'elearning-vd'); ?></div>
                 </div>
 
                 <div class="mt-3">
