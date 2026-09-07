@@ -49,7 +49,7 @@ final class ELVD_Updater
         return $transient;
     }
 
-    public static function plugin_info(object $result, string $action, object $args): object
+    public static function plugin_info(object|false $result, string $action, object $args): object|false
     {
         if ('plugin_information' !== $action) {
             return $result;
