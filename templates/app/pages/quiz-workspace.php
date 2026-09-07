@@ -28,6 +28,8 @@ $elvd_ws_result_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
     answers: {},
     currentIndex: 0,
     durasiMenit: 0,
+    keamanan: false,
+    meninggalkanCount: 0,
     remaining: 0,
     startedAt: '',
     timerId: null,
@@ -47,6 +49,35 @@ $elvd_ws_result_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
         }
 
         this.loadQuiz();
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.warnLeaving();
+            }
+        });
+        window.addEventListener('beforeunload', (event) => {
+            if (this.shouldWarnLeaving()) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
+    },
+    shouldWarnLeaving() {
+        return this.keamanan && this.view === 'work' && !this.submitted;
+    },
+    warnLeaving() {
+        if (!this.shouldWarnLeaving()) {
+            return;
+        }
+
+        this.meninggalkanCount += 1;
+
+        if (this.meninggalkanCount >= 3) {
+            window.alert('Quiz selesai karena Anda meninggalkan browser atau tab sebanyak 3 kali.');
+            this.submit(true);
+            return;
+        }
+
+        window.alert(`Peringatan: meninggalkan browser atau tab ini terdeteksi (${this.meninggalkanCount}/3).`);
     },
     metaValue(item, key) {
         return item.meta && item.meta[key] ? item.meta[key] : '';
@@ -94,6 +125,7 @@ $elvd_ws_result_url = untrailingslashit(ELVD::app_route()) . '/quiz-answer';
         .then(([quiz, allQuestions, attempts]) => {
             this.quiz = quiz;
             this.durasiMenit = Number(this.metaValue(quiz, 'elvd_durasi_menit')) || 0;
+            this.keamanan = Boolean(this.metaValue(quiz, 'elvd_keamanan'));
             this.questions = (Array.isArray(allQuestions) ? allQuestions : [])
                 .filter((item) => Number(this.metaValue(item, 'elvd_quiz_id')) === Number(this.quizId))
                 .sort((a, b) => Number(a.id) - Number(b.id));
