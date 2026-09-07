@@ -125,6 +125,26 @@ $elvd_qa_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pe
     closeKoreksi() {
         this.openAttempt = null;
     },
+    deleteAttempt(item) {
+        if (!window.confirm('Yakin hapus pengerjaan ini?')) {
+            return;
+        }
+
+        fetch(`${this.pengerjaanUrl}/${item.id}`, {
+            method: 'DELETE',
+            headers: { 'X-WP-Nonce': config.nonce }
+        })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Gagal menghapus pengerjaan.');
+            }
+
+            this.attempts = this.attempts.filter((attempt) => Number(attempt.id) !== Number(item.id));
+        })
+        .catch((error) => {
+            this.error = error.message || 'Gagal menghapus pengerjaan.';
+        });
+    },
     saveNilai() {
         if (!this.openAttempt) {
             return;
@@ -239,7 +259,7 @@ $elvd_qa_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pe
                                     <th><?php echo esc_html__('Mulai', 'elearning-vd'); ?></th>
                                     <th><?php echo esc_html__('Selesai', 'elearning-vd'); ?></th>
                                     <th><?php echo esc_html__('Nilai', 'elearning-vd'); ?></th>
-                                    <th class="text-end"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
+                                    <th scope="col" class="text-end"><?php echo esc_html__('Aksi', 'elearning-vd'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -257,6 +277,10 @@ $elvd_qa_rest_pengerjaan = untrailingslashit(rest_url(ELVD_REST_NAMESPACE . '/pe
                                                 class="btn btn-sm btn-primary elvd-row-action"
                                                 x-show="quizTipe() === 'essay'"
                                                 @click="openKoreksi(item)"><?php echo esc_html__('Koreksi', 'elearning-vd'); ?></button>
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-danger elvd-row-action"
+                                                @click="deleteAttempt(item)"><?php echo esc_html__('Hapus', 'elearning-vd'); ?></button>
                                         </td>
                                     </tr>
                                 </template>
