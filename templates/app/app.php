@@ -318,7 +318,7 @@ if (! is_user_logged_in()) {
             load() {
                 const hiddenTabs = this.config.currentRole !== "guru" ? ["guru", "siswa"] : ["tahun-ajaran", "guru"];
 
-                if ([...hiddenTabs, "dashboard", "jadwal-pelajaran-siswa", "tugas", "materi", "siswa", "siswa-profil", "guru-profil", "profil-guru", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
+                if ([...hiddenTabs, "dashboard", "jadwal-pelajaran-siswa", "tugas", "materi", "siswa", "siswa-profil", "guru-profil", "profil-guru", "quiz", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
                     this.items = [];
                     this.loading = false;
                     return;

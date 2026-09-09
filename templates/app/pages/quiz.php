@@ -52,11 +52,22 @@ $elvd_class_options = 'guru' === $elvd_current_role
     titleOf(item) {
         return (item.title && (item.title.rendered || item.title.raw)) ? (item.title.rendered || item.title.raw) : '-';
     },
+    authorName(item) {
+        if (item.author_name) {
+            return item.author_name;
+        }
+
+        if (item._embedded && item._embedded.author && item._embedded.author[0]) {
+            return item._embedded.author[0].display_name || '-';
+        }
+
+        return '-';
+    },
     fetchQuizzes() {
         this.loading = true;
         this.error = '';
 
-        const params = new URLSearchParams({ per_page: '100' });
+        const params = new URLSearchParams({ per_page: '100', _embed: 'true' });
 
         if (this.filterTipe) {
             params.set('elvd_filter_tipe', this.filterTipe);
@@ -296,6 +307,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
                 <thead>
                     <tr>
                         <th scope="col"><?php echo esc_html__('Judul', 'elearning-vd'); ?></th>
+                        <th scope="col" x-show="config.currentRole !== 'administrator'"><?php echo esc_html__('Penulis', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Tipe', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></th>
@@ -305,11 +317,12 @@ $elvd_class_options = 'guru' === $elvd_current_role
                 </thead>
                 <tbody>
                     <tr x-show="loading">
-                        <td colspan="6"><?php echo esc_html__('Memuat data quiz...', 'elearning-vd'); ?></td>
+                        <td :colspan="config.currentRole === 'administrator' ? 6 : 7"><?php echo esc_html__('Memuat data quiz...', 'elearning-vd'); ?></td>
                     </tr>
                     <template x-for="item in quizzes" :key="item.id">
                         <tr>
                             <td x-text="titleOf(item)"></td>
+                            <td x-show="config.currentRole !== 'administrator'" x-text="authorName(item)"></td>
                             <td x-text="tipeLabel(metaValue(item, 'elvd_quiz_tipe'))"></td>
                             <td x-text="subjectName(metaValue(item, 'elvd_mata_pelajaran_id'))"></td>
                             <td x-text="className(metaValue(item, 'elvd_kelas_id'))"></td>
@@ -357,7 +370,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
                         </tr>
                     </template>
                     <tr x-show="!loading && quizzes.length === 0">
-                        <td colspan="6"><?php echo esc_html__('Belum ada quiz.', 'elearning-vd'); ?></td>
+                        <td :colspan="config.currentRole === 'administrator' ? 6 : 7"><?php echo esc_html__('Belum ada quiz.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
             </table>
