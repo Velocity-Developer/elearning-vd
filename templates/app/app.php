@@ -843,7 +843,7 @@ if (! is_user_logged_in()) {
                 }
                 ?>
 
-                <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'jadwal-pelajaran-siswa', 'guru', 'siswa', 'siswa-profil', 'guru-profil', 'tugas', 'materi', 'quiz', 'quiz-form', 'quiz-workspace', 'quiz-answer', 'tugas-answer'].includes(active)">
+                <div class="elvd-table-panel" x-show="!['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'jadwal-pelajaran-siswa', 'guru', 'siswa', 'siswa-profil', 'guru-profil', 'profil-guru', 'tugas', 'materi', 'quiz', 'quiz-form', 'quiz-workspace', 'quiz-answer', 'tugas-answer'].includes(active)">
                     <div class="table-responsive">
                         <table class="table align-middle mb-0 elvd-table">
                             <thead>
