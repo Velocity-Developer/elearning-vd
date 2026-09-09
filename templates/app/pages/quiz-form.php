@@ -657,12 +657,14 @@ $elvd_class_options = 'guru' === $elvd_current_role
                                             :placeholder="'Opsi ' + (['A','B','C','D','E','F'][index] || (index + 1))">
                                         <button
                                             type="button"
-                                            class="btn btn-success"
-                                            :class="{ 'active': openJawabanIndex === index }"
+                                            class="btn btn-outline-success"
+                                            :class="{ 'btn-success text-white': openJawabanIndex === index }"
                                             @click="selectJawaban(index)"
-                                            x-show="(opsi.text || '').trim() !== ''"
+                                            :disabled="(opsi.text || '').trim() === ''"
+                                            :title="openJawabanIndex === index ? 'Jawaban benar' : 'Tandai sebagai jawaban benar'"
                                             :aria-label="'Tandai opsi ' + (['A','B','C','D','E','F'][index] || (index + 1)) + ' sebagai jawaban benar'">
-                                            <?php echo esc_html__('Jawaban', 'elearning-vd'); ?>
+                                            <i class="bi bi-check-lg" aria-hidden="true"></i>
+                                            <span class="visually-hidden"><?php echo esc_html__('Jawaban benar', 'elearning-vd'); ?></span>
                                         </button>
                                         <button
                                             type="button"
@@ -678,7 +680,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
                                     + <?php echo esc_html__('Tambah Opsi', 'elearning-vd'); ?>
                                 </button>
                                 <div class="form-text">
-                                    <?php echo esc_html__('Klik tombol Jawaban untuk menandai jawaban yang benar.', 'elearning-vd'); ?>
+                                    <?php echo esc_html__('Klik tanda centang pada opsi untuk menandai jawaban yang benar.', 'elearning-vd'); ?>
                                 </div>
                             </div>
 
