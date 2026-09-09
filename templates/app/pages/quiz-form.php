@@ -459,6 +459,10 @@ $elvd_class_options = 'guru' === $elvd_current_role
 
         <div class="alert alert-danger" x-show="error" x-text="error"></div>
 
+        <div class="alert alert-success" x-show="saved" x-cloak>
+            <?php echo esc_html__('Quiz berhasil disimpan.', 'elearning-vd'); ?>
+        </div>
+
         <div x-show="view === 'form'">
             <form class="p-4" @submit.prevent="submitForm()">
                 <h2 class="h4 mb-4" x-text="quizId ? 'Edit Quiz' : 'Tambah Quiz'"></h2>
@@ -545,9 +549,6 @@ $elvd_class_options = 'guru' === $elvd_current_role
         </div>
 
         <div x-show="view === 'questions'" x-cloak>
-            <div class="alert alert-success" x-show="saved" x-cloak>
-                <?php echo esc_html__('Quiz berhasil disimpan.', 'elearning-vd'); ?>
-            </div>
 
             <div class="d-flex justify-content-between align-items-center p-4 pb-0">
                 <h2 class="h4 mb-0"><?php echo esc_html__('Daftar Pertanyaan', 'elearning-vd'); ?></h2>
