@@ -12,6 +12,9 @@ function elvd_register_post_meta(): void
             'type' => 'integer',
             'single' => true,
             'sanitize_callback' => 'absint',
+            'auth_callback' => static function (bool $allowed, string $meta_key, int $post_id, int $user_id): bool {
+                return user_can($user_id, $post_id > 0 ? 'edit_post' : 'edit_posts', $post_id);
+            },
         ],
         'elvd_mata_pelajaran_id' => [
             'type' => 'integer',
@@ -126,7 +129,6 @@ function elvd_register_post_meta(): void
                 array_merge(
                     [
                         'show_in_rest' => true,
-                        'auth_callback' => 'elvd_can_manage_meta',
                     ],
                     $args
                 )

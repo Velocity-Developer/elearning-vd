@@ -26,13 +26,17 @@ function elvd_register_roles(): void
     $guru = get_role('guru');
 
     if ($guru) {
-        foreach ([
-            'read',
-            'upload_files',
-            'edit_posts',
-            'delete_posts',
-            'publish_posts',
-        ] as $capability) {
+        foreach (
+            [
+                'read',
+                'upload_files',
+                'edit_posts',
+                'delete_posts',
+                'publish_posts',
+                'edit_published_posts',
+                'delete_published_posts',
+            ] as $capability
+        ) {
             $guru->add_cap($capability);
         }
     }
