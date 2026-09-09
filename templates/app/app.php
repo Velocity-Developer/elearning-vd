@@ -268,7 +268,7 @@ if (! is_user_logged_in()) {
                         'siswa' === $elvd_current_role
                             ? ['dashboard', 'jadwal-pelajaran-siswa', 'tugas', 'materi', 'quiz']
                             : ('guru' === $elvd_current_role
-                                ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz', 'siswa', 'kelas', 'mata-pelajaran']
+                                ? ['dashboard', 'jadwal-pelajaran', 'tugas', 'materi', 'quiz', 'siswa', 'kelas', 'mata-pelajaran', 'profil-guru']
                                 : ['dashboard', 'tahun-ajaran', 'kelas', 'mata-pelajaran', 'jadwal-pelajaran', 'tugas', 'materi', 'guru', 'siswa', 'quiz']
                             )
                     ); ?>,
@@ -289,7 +289,8 @@ if (! is_user_logged_in()) {
                 "quiz-form": "Form Quiz",
                 "quiz-workspace": "Kerjakan Quiz",
                 "quiz-answer": "Hasil Quiz",
-                "tugas-answer": "Hasil Tugas"
+                "tugas-answer": "Hasil Tugas",
+                "profil-guru": "Profil"
             },
             icons: {
                 "dashboard": "bi bi-grid-1x2",
@@ -301,6 +302,7 @@ if (! is_user_logged_in()) {
                 "tugas": "bi bi-clipboard-check",
                 "materi": "bi bi-journal-text",
                 "guru": "bi bi-person-badge",
+                "profil-guru": "bi bi-person-circle",
                 "siswa": "bi bi-people",
                 "quiz": "bi bi-patch-question"
             },
@@ -316,7 +318,7 @@ if (! is_user_logged_in()) {
             load() {
                 const hiddenTabs = this.config.currentRole !== "guru" ? ["guru", "siswa"] : ["tahun-ajaran", "guru"];
 
-                if ([...hiddenTabs, "dashboard", "jadwal-pelajaran-siswa", "tugas", "materi", "siswa", "siswa-profil", "guru-profil", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
+                if ([...hiddenTabs, "dashboard", "jadwal-pelajaran-siswa", "tugas", "materi", "siswa", "siswa-profil", "guru-profil", "profil-guru", "quiz-form", "quiz-workspace", "quiz-answer", "tugas-answer"].includes(this.active)) {
                     this.items = [];
                     this.loading = false;
                     return;

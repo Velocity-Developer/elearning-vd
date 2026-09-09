@@ -356,7 +356,7 @@ if ($elvd_guru_valid && $elvd_guru instanceof WP_User) {
     }
 </script>
 
-<div x-show="active === 'guru-profil'" x-data="guruProfil()">
+<div x-show="active === 'guru-profil' || active === 'profil-guru'" x-data="guruProfil()">
     <?php
     if ('' !== $elvd_guru_notice) {
         echo $elvd_guru_notice; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
