@@ -307,7 +307,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
                 <thead>
                     <tr>
                         <th scope="col"><?php echo esc_html__('Judul', 'elearning-vd'); ?></th>
-                        <th scope="col" x-show="config.currentRole !== 'administrator'"><?php echo esc_html__('Penulis', 'elearning-vd'); ?></th>
+                        <th scope="col"><?php echo esc_html__('Penulis', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Tipe', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Mata Pelajaran', 'elearning-vd'); ?></th>
                         <th scope="col"><?php echo esc_html__('Kelas', 'elearning-vd'); ?></th>
@@ -317,12 +317,12 @@ $elvd_class_options = 'guru' === $elvd_current_role
                 </thead>
                 <tbody>
                     <tr x-show="loading">
-                        <td :colspan="config.currentRole === 'administrator' ? 6 : 7"><?php echo esc_html__('Memuat data quiz...', 'elearning-vd'); ?></td>
+                        <td colspan="7"><?php echo esc_html__('Memuat data quiz...', 'elearning-vd'); ?></td>
                     </tr>
                     <template x-for="item in quizzes" :key="item.id">
                         <tr>
                             <td x-text="titleOf(item)"></td>
-                            <td x-show="config.currentRole !== 'administrator'" x-text="authorName(item)"></td>
+                            <td x-text="authorName(item)"></td>
                             <td x-text="tipeLabel(metaValue(item, 'elvd_quiz_tipe'))"></td>
                             <td x-text="subjectName(metaValue(item, 'elvd_mata_pelajaran_id'))"></td>
                             <td x-text="className(metaValue(item, 'elvd_kelas_id'))"></td>
@@ -370,7 +370,7 @@ $elvd_class_options = 'guru' === $elvd_current_role
                         </tr>
                     </template>
                     <tr x-show="!loading && quizzes.length === 0">
-                        <td :colspan="config.currentRole === 'administrator' ? 6 : 7"><?php echo esc_html__('Belum ada quiz.', 'elearning-vd'); ?></td>
+                        <td colspan="7"><?php echo esc_html__('Belum ada quiz.', 'elearning-vd'); ?></td>
                     </tr>
                 </tbody>
             </table>
