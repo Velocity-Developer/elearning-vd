@@ -31,6 +31,14 @@ $elvd_class_options = 'guru' === $elvd_current_role
     filterTipe: '',
     filterKelas: '',
     myAttempts: {},
+    deleting: false,
+    toast: {
+        show: false,
+        loading: false,
+        type: 'info',
+        message: ''
+    },
+    toastTimer: null,
     init() {
         this.fetchQuizzes();
         this.fetchRelations();
@@ -158,10 +166,31 @@ $elvd_class_options = 'guru' === $elvd_current_role
     myAttempt(quizId) {
         return this.myAttempts[Number(quizId)] || null;
     },
+    showToast(type, message, loading = false, sticky = false) {
+        clearTimeout(this.toastTimer);
+        this.toast.type = type;
+        this.toast.message = message;
+        this.toast.loading = loading;
+        this.toast.show = true;
+
+        if (!loading && !sticky) {
+            this.toastTimer = setTimeout(() => {
+                this.toast.show = false;
+            }, 3500);
+        }
+    },
+    hideToast() {
+        clearTimeout(this.toastTimer);
+        this.toast.show = false;
+        this.toast.loading = false;
+    },
     deleteQuiz(item) {
         if (!window.confirm('Yakin hapus quiz ini?')) {
             return;
         }
+
+        this.deleting = true;
+        this.showToast('info', 'Menghapus quiz...', true);
 
         fetch(`${this.restUrl}/${item.id}`, {
             method: 'DELETE',
@@ -175,12 +204,60 @@ $elvd_class_options = 'guru' === $elvd_current_role
 
             this.quizzes = this.quizzes.filter((quiz) => Number(quiz.id) !== Number(item.id));
             this.$dispatch('elvd-items-updated', { items: this.quizzes });
+            this.showToast('success', 'Quiz berhasil dihapus.');
         })
         .catch((error) => {
             this.error = error.message || 'Gagal menghapus quiz.';
+            this.showToast('danger', this.error);
+        })
+        .finally(() => {
+            this.deleting = false;
         });
     }
 }">
+    <div x-show="toast.show" class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index: 1100;">
+        <div
+            class="toast align-items-center border-0"
+            :class="{
+                'text-bg-danger': toast.type === 'danger',
+                'text-bg-success': toast.type === 'success',
+                'text-bg-primary': toast.type === 'info' && !toast.loading,
+                'text-bg-light border': toast.loading
+            }"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            x-show="toast.show"
+            x-cloak
+            x-transition.opacity.duration.250ms>
+            <div class="d-flex align-items-center">
+                <div class="toast-body d-flex align-items-center gap-2">
+                    <span
+                        x-show="toast.loading"
+                        class="spinner-border spinner-border-sm"
+                        role="status"
+                        aria-hidden="true"></span>
+                    <i
+                        x-show="!toast.loading && toast.type === 'success'"
+                        class="bi bi-check-circle-fill"></i>
+                    <i
+                        x-show="!toast.loading && toast.type === 'danger'"
+                        class="bi bi-x-circle-fill"></i>
+                    <i
+                        x-show="!toast.loading && toast.type === 'info'"
+                        class="bi bi-info-circle-fill"></i>
+                    <span x-text="toast.message"></span>
+                </div>
+                <button
+                    type="button"
+                    class="btn-close me-2 m-auto"
+                    :class="{ 'btn-close-white': toast.type !== 'info' || !toast.loading }"
+                    aria-label="<?php echo esc_attr__('Tutup', 'elearning-vd'); ?>"
+                    @click="hideToast()"></button>
+            </div>
+        </div>
+    </div>
+
     <div class="elvd-table-panel">
         <div class="elvd-resource-toolbar">
             <div></div>
